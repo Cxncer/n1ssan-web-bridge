@@ -22,3 +22,10 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+# n1ssan runtime data artifacts (not source)
+n1ssan-data.json.bak
+n1ssan-data.json.tmp
+n1ssan-data.json.recovery.tmp
+n1ssan-data.json.corrupt-*
+n1ssan-data.manual-backup.json
