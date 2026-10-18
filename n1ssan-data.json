@@ -1,0 +1,53 @@
+{
+  "version": 1,
+  "nextLoadoutId": 11,
+  "skins": [
+    {
+      "id": 11259161,
+      "weapon": "Desert Eagle",
+      "name": "Ocean Drive",
+      "type": "Pistols",
+      "rarity": "Covert",
+      "color": "green",
+      "art": "DE",
+      "description": "As expensive as it is powerful, the Desert Eagle is an iconic pistol that is difficult to master but surprisingly accurate at long range. It has been custom painted using oversaturated colors and different shapes.\\n\\n<i>Can't miss—both the colors and when using the weapon</i>",
+      "image": "https://community.akamai.steamstatic.com/economy/image/i0CoZ81Ui0m-9KwlBY1L_18myuGuq1wfhWSaZgMttyVfPaERSR0Wqmu7LAocGIGz3UqlXOLrxM-vMGmW8VNxu5Dx60noTyL1m5fn8Sdk7OeRbKFsJ_yWMWyZ1e1-j-1gSCGn2x5-sG7Wzdyvc3OSbgcnXpR5FO9bukTtm9WzMePhswaN2N5CmCj_jyhXrnE8ibjhEyc",
+      "minFloat": 0,
+      "maxFloat": 1,
+      "slot": "weapon",
+      "equippedFor": "Desert Eagle",
+      "team": "T",
+      "float": 0.5,
+      "seed": 0
+    },
+    {
+      "id": 2728596660,
+      "weapon": "MP9",
+      "name": "Hydra",
+      "type": "SMGs",
+      "rarity": "Classified",
+      "color": "green",
+      "art": "MP9",
+      "description": "Manufactured in Switzerland, the cutting-edge MP9 SMG is an ergonomic polymer weapon favored by private security firms. A custom paint job referencing Operation Hydra, CS:GO's 8th Operation, has been applied.\\n\\n<i>Worth the wait</i>",
+      "image": "https://community.akamai.steamstatic.com/economy/image/i0CoZ81Ui0m-9KwlBY1L_18myuGuq1wfhWSaZgMttyVfPaERSR0Wqmu7LAocGIGz3UqlXOLrxM-vMGmW8VNxu5Dx60noTyL8js_f_jdk4uL3V6x0JOKSMWuZxuZi_rQ9H363xU5_4GrWnIr8IHqfbwBxA5R2QuZZshm6kdO2Mum35Q3ajoJbjXKp1xQlWoY",
+      "minFloat": 0,
+      "maxFloat": 1,
+      "slot": "weapon",
+      "equippedFor": "MP9",
+      "team": "CT",
+      "float": 0.5,
+      "seed": 0
+    }
+  ],
+  "loadout": {
+    "id": 10,
+    "profile": "Loadout 1",
+    "team": "CT",
+    "teams": [
+      "T",
+      "CT"
+    ],
+    "receivedAt": "2026-10-17T14:12:46.350Z",
+    "itemCount": 2
+  }
+}

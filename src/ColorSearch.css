@@ -1,0 +1,26 @@
+/* Visible color filters for the catalogue and loadout pickers */
+.catalogue-color-filter{margin:0 0 16px;padding:13px 14px;background:#141615;border:1px solid #2d322e;border-radius:7px}
+.catalogue-color-heading{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:10px;color:#aeb5af;font-size:9px;font-weight:850;letter-spacing:1.2px}
+.catalogue-color-heading small{color:#6f786f;font-size:10px;font-weight:500;letter-spacing:0}
+.catalogue-color-swatches,.lb-color-swatches{display:flex;align-items:center;flex-wrap:wrap;gap:7px}
+.catalogue-color-chip,.lb-color-chip{padding:7px 10px;color:#bfc5bf;background:#1c201d;border:1px solid #373d38;border-radius:5px;font-size:10px;font-weight:700;transition:all .15s}
+.catalogue-color-chip:hover,.lb-color-chip:hover{border-color:#7a857b;color:#fff}
+.catalogue-color-chip.active,.lb-color-chip.active{color:#101510;background:#1ed760;border-color:#1ed760}
+.catalogue-color-swatch,.lb-color-swatch{display:inline-flex;align-items:center;gap:6px;padding:6px 8px;color:#b9c0ba;background:#191c1a;border:1px solid #303631;border-radius:5px;font-size:10px;transition:all .15s}
+.catalogue-color-swatch span,.lb-color-swatch span{display:inline-block;width:11px;height:11px;border:1px solid #ffffff42;border-radius:50%;box-shadow:0 0 0 1px #0004}
+.catalogue-color-swatch:hover,.lb-color-swatch:hover{color:#fff;border-color:#788178}
+.catalogue-color-swatch.active,.lb-color-swatch.active{color:#fff;background:#202a22;border-color:#1ed760;box-shadow:inset 0 0 0 1px #1ed76035}
+.lb-color-filter{margin:-4px 0 16px;padding:11px;background:#111312;border:1px solid #2e332f;border-radius:6px}
+.lb-color-filter-label{display:block;margin-bottom:9px;color:#89928b;font-size:9px;font-weight:850;letter-spacing:1.1px}
+.lb-color-swatch{padding:6px 7px}
+.lb-equipment-color-filter{margin-top:0}
+@media(max-width:600px){.catalogue-color-heading{align-items:flex-start;flex-direction:column;gap:4px}.catalogue-color-filter{padding:10px}.catalogue-color-swatches,.lb-color-swatches{gap:5px}.catalogue-color-swatch,.lb-color-swatch{padding:6px;font-size:9px}}
+
+/* Compact custom color input that fits the existing n1ssan controls. */
+.catalogue-custom-color,.lb-custom-color{display:inline-flex;align-items:center;gap:7px;padding:5px 8px;color:#b9c0ba;background:#191c1a;border:1px solid #303631;border-radius:5px;font-size:10px;font-weight:650;cursor:pointer;transition:all .15s}
+.catalogue-custom-color:hover,.lb-custom-color:hover{color:#fff;border-color:#788178}
+.catalogue-custom-color.active,.lb-custom-color.active{color:#fff;background:#202a22;border-color:#1ed760;box-shadow:inset 0 0 0 1px #1ed76035}
+.catalogue-custom-color input,.lb-custom-color input{width:19px;height:19px;min-width:19px;padding:0;border:1px solid #ffffff38;border-radius:4px;background:transparent;cursor:pointer;overflow:hidden}
+.catalogue-custom-color input::-webkit-color-swatch-wrapper,.lb-custom-color input::-webkit-color-swatch-wrapper{padding:0}
+.catalogue-custom-color input::-webkit-color-swatch,.lb-custom-color input::-webkit-color-swatch{border:0;border-radius:3px}
+.catalogue-custom-color input::-moz-color-swatch,.lb-custom-color input::-moz-color-swatch{border:0;border-radius:3px}
