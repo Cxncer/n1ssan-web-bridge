@@ -240,7 +240,6 @@ async function restoreState(): Promise<void> {
           return
         }
 
-        // FIXED: attach cause so the original backup error is preserved.
         throw new Error(
           `Primary save is missing and the backup cannot be read: ${String(backupError)}`,
           { cause: backupError },
@@ -256,7 +255,6 @@ async function restoreState(): Promise<void> {
   try {
     backup = await readValidState(backupFile)
   } catch (backupError) {
-    // FIXED: attach cause so the original primary error is preserved.
     throw new Error(
       'Bridge recovery failed. Neither the primary save nor its backup is usable. ' +
       'Preserve both files and inspect them before restarting.\n' +
@@ -274,7 +272,6 @@ async function restoreState(): Promise<void> {
     console.error(`Preserved the original primary save as: ${damagedCopy}`)
   } catch (error) {
     if ((error as NodeJS.ErrnoException).code !== 'ENOENT') {
-      // FIXED: attach cause so the original error is preserved.
       throw new Error(
         `A valid backup exists, but the primary file could not be preserved: ${String(error)}`,
         { cause: error },
@@ -347,7 +344,7 @@ app.post('/skins', async (req: Request, res: Response) => {
     return
   }
 
-  const { skins, profile, team } = req.body
+  const { skins, profile } = req.body
 
   if (!Array.isArray(skins)) {
     res.status(400).json({
@@ -373,14 +370,6 @@ app.post('/skins', async (req: Request, res: Response) => {
     return
   }
 
-  if (!isTeam(team)) {
-    res.status(400).json({
-      error: 'Invalid team',
-      details: ['Team must be T or CT'],
-    })
-    return
-  }
-
   const errors = skins.flatMap((skin, index) =>
     validateSkin(skin, index + 1),
   )
@@ -393,36 +382,11 @@ app.post('/skins', async (req: Request, res: Response) => {
     return
   }
 
-  if (skins.some(skin => skin.team !== team)) {
-    res.status(400).json({
-      error: 'Team mismatch',
-      details: ['Every submitted item must match the submitted team'],
-    })
-    return
-  }
-
   const acceptedSkins = skins as BridgeSkin[]
   const profileName = profile.trim()
 
-  // Preserve the other team's items when updating the same profile.
-  // A different profile starts a fresh saved loadout.
-  const preservedSkins =
-    latestLoadout?.profile === profileName
-      ? selectedSkins.filter(skin => skin.team !== team)
-      : []
-
-  const combinedSkins = [
-    ...preservedSkins,
-    ...acceptedSkins,
-  ]
-
-  if (combinedSkins.length > MAX_ITEMS) {
-    res.status(400).json({
-      error: 'Too many items in combined loadout',
-      details: [`Maximum allowed items across both teams: ${MAX_ITEMS}`],
-    })
-    return
-  }
+  // The builder always sends both teams, so just store what arrived.
+  const combinedSkins = acceptedSkins
 
   const loadoutId = nextLoadoutId++
 
@@ -430,10 +394,15 @@ app.post('/skins', async (req: Request, res: Response) => {
     ...new Set(combinedSkins.map(skin => skin.team)),
   ] as Team[]
 
+  // "team" on the loadout record reflects whichever team's items
+  // appear first in the payload. The important field for both teams
+  // is the "teams" array.
+  const primaryTeam: Team = combinedTeams[0] ?? 'T'
+
   const newLoadout: LoadoutInfo = {
     id: loadoutId,
     profile: profileName,
-    team,
+    team: primaryTeam,
     teams: combinedTeams,
     receivedAt: new Date().toISOString(),
     itemCount: combinedSkins.length,
@@ -447,7 +416,6 @@ app.post('/skins', async (req: Request, res: Response) => {
   }
 
   try {
-    // Persist the complete combined loadout before reporting success.
     await queueSave(newState)
 
     selectedSkins = combinedSkins

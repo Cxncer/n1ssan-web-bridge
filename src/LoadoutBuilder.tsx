@@ -398,34 +398,35 @@ export default function LoadoutBuilder({ skins }: LoadoutBuilderProps) {
   }
   function matches() { return true }
 
-  async function sendToBridge() {
+    async function sendToBridge() {
     const bridgeSkins: Record<string, unknown>[] = []
 
-    for (const [weapon, id] of Object.entries(currentLoadout)) {
-      if (id == null) continue
+    for (const side of ['T', 'CT'] as Team[]) {
+      const sideLoadout = loadouts[side]
+      const sideEquipment = equipment[side]
 
-      const skin = skins.find(item => item.id === id)
-      if (!skin) continue
+      for (const [weapon, id] of Object.entries(sideLoadout)) {
+        if (id == null) continue
+        const skin = skins.find(item => item.id === id)
+        if (!skin) continue
+        const settings = skinSettings[side][settingsKey(weapon, id)] ?? defaults(skin)
+        bridgeSkins.push({
+          ...skin,
+          slot: 'weapon',
+          equippedFor: weapon,
+          team: side,
+          float: settings.float,
+          seed: settings.seed,
+        })
+      }
 
-      const settings = skinSettings[team][settingsKey(weapon, id)] ?? defaults(skin)
-      bridgeSkins.push({
-        ...skin,
-        slot: 'weapon',
-        equippedFor: weapon,
-        team,
-        float: settings.float,
-        seed: settings.seed,
-      })
-    }
-
-    for (const slot of ['agent', 'knife', 'gloves', 'zeus'] as EquipmentSlot[]) {
-      const id = currentEquipment[slot]
-      if (id == null) continue
-
-      const item = skins.find(skin => skin.id === id)
-      if (!item) continue
-
-      bridgeSkins.push({ ...item, slot, team })
+      for (const slot of ['agent', 'knife', 'gloves', 'zeus'] as EquipmentSlot[]) {
+        const id = sideEquipment[slot]
+        if (id == null) continue
+        const item = skins.find(skin => skin.id === id)
+        if (!item) continue
+        bridgeSkins.push({ ...item, slot, team: side })
+      }
     }
 
     try {
@@ -434,7 +435,6 @@ export default function LoadoutBuilder({ skins }: LoadoutBuilderProps) {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           profile: activeProfile.name,
-          team,
           skins: bridgeSkins,
         }),
       })
@@ -443,8 +443,9 @@ export default function LoadoutBuilder({ skins }: LoadoutBuilderProps) {
         throw new Error(`Bridge returned HTTP ${response.status}`)
       }
 
-      const result = await response.json() as { received?: number }
-      alert(`n1ssan Bridge received ${result.received ?? bridgeSkins.length} items!`)
+      const result = await response.json() as { received?: number; teams?: string[] }
+      const teamsLabel = result.teams?.length ? ` (${result.teams.join(' + ')})` : ''
+      alert(`n1ssan Bridge received ${result.received ?? bridgeSkins.length} items${teamsLabel}!`)
     } catch (error) {
       console.error('n1ssan Bridge error:', error)
       alert('Could not connect to n1ssan Bridge. Make sure it is running at http://127.0.0.1:3210.')
