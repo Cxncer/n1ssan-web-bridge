@@ -1,4 +1,3 @@
-
 import express from 'express'
 import type { Request, Response, NextFunction } from 'express'
 import { copyFile, readFile, writeFile, rename } from 'node:fs/promises'
@@ -241,8 +240,10 @@ async function restoreState(): Promise<void> {
           return
         }
 
+        // FIXED: attach cause so the original backup error is preserved.
         throw new Error(
           `Primary save is missing and the backup cannot be read: ${String(backupError)}`,
+          { cause: backupError },
         )
       }
     }
@@ -255,10 +256,12 @@ async function restoreState(): Promise<void> {
   try {
     backup = await readValidState(backupFile)
   } catch (backupError) {
+    // FIXED: attach cause so the original primary error is preserved.
     throw new Error(
       'Bridge recovery failed. Neither the primary save nor its backup is usable. ' +
       'Preserve both files and inspect them before restarting.\n' +
       `Backup error: ${String(backupError)}`,
+      { cause: backupError },
     )
   }
 
@@ -271,8 +274,10 @@ async function restoreState(): Promise<void> {
     console.error(`Preserved the original primary save as: ${damagedCopy}`)
   } catch (error) {
     if ((error as NodeJS.ErrnoException).code !== 'ENOENT') {
+      // FIXED: attach cause so the original error is preserved.
       throw new Error(
         `A valid backup exists, but the primary file could not be preserved: ${String(error)}`,
+        { cause: error },
       )
     }
   }
@@ -474,7 +479,11 @@ app.use(
     err: Error & { status?: number },
     _req: Request,
     res: Response,
-    _next: NextFunction,
+    // FIXED: Express only recognises 4-argument middleware as an error
+    // handler. The `next` parameter must be present in the signature even
+    // though it is not called in this branch.
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    next: NextFunction,
   ) => {
     if (err instanceof SyntaxError && err.status === 400) {
       res.status(400).json({
