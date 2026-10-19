@@ -168,20 +168,24 @@ export default function LoadoutBuilder({ skins }: LoadoutBuilderProps) {
   const [profileMenuOpen, setProfileMenuOpen] = useState(false)
   const [dialog, setDialog] = useState<DialogState>(null)
 
+  // --- Color scan: weapon picker ---
   useEffect(() => {
-    if (!pickerColor || !activeWeapon) { setPickerColorMatchIds(null); setPickerColorBusy(false); return }
+    if (!pickerColor || !activeWeapon) return
     let cancelled = false
-    setPickerColorBusy(true); setPickerColorMatchIds(new Set())
     const eligible = skins.filter(s => s.weapon.toLowerCase() === activeWeapon.toLowerCase() && !!s.image)
-    findImageColorMatches(eligible, pickerColor, s => s.image || '').then(ids => { if (!cancelled) { setPickerColorMatchIds(ids); setPickerColorBusy(false) } })
+    findImageColorMatches(eligible, pickerColor, s => s.image || '').then(ids => {
+      if (!cancelled) { setPickerColorMatchIds(ids); setPickerColorBusy(false) }
+    })
     return () => { cancelled = true }
   }, [skins, activeWeapon, pickerColor])
+  // --- Color scan: equipment picker ---
   useEffect(() => {
-    if (!equipmentColor || !activeEquipment || activeEquipment === 'agent') { setEquipmentColorMatchIds(null); setEquipmentColorBusy(false); return }
+    if (!equipmentColor || !activeEquipment || activeEquipment === 'agent') return
     let cancelled = false
-    setEquipmentColorBusy(true); setEquipmentColorMatchIds(new Set())
     const eligible = skins.filter(s => equipmentCategory(s) === activeEquipment && !!s.image)
-    findImageColorMatches(eligible, equipmentColor, s => s.image || '').then(ids => { if (!cancelled) { setEquipmentColorMatchIds(ids); setEquipmentColorBusy(false) } })
+    findImageColorMatches(eligible, equipmentColor, s => s.image || '').then(ids => {
+      if (!cancelled) { setEquipmentColorMatchIds(ids); setEquipmentColorBusy(false) }
+    })
     return () => { cancelled = true }
   }, [skins, activeEquipment, equipmentColor])
 
@@ -198,17 +202,13 @@ export default function LoadoutBuilder({ skins }: LoadoutBuilderProps) {
     [loadouts.CT, equipment.CT],
   )
 
+  // Persist the active profile's data + the profiles list to localStorage.
   useEffect(() => {
     try {
       localStorage.setItem(PROFILES_STORAGE_KEY, JSON.stringify(profiles))
       localStorage.setItem(ACTIVE_PROFILE_STORAGE_KEY, activeProfileId)
     } catch { console.warn('n1ssan could not save profiles to browser storage.') }
   }, [profiles, activeProfileId])
-  useEffect(() => {
-    setProfiles(prev => prev.map(p => p.id === activeProfileId ? {
-      ...p, loadouts: clone(loadouts), skinSettings: clone(skinSettings), equipment: clone(equipment),
-    } : p))
-  }, [activeProfileId, loadouts, skinSettings, equipment])
   useEffect(() => {
     try {
       localStorage.setItem(STORAGE_KEY, JSON.stringify(loadouts))
@@ -226,6 +226,36 @@ export default function LoadoutBuilder({ skins }: LoadoutBuilderProps) {
     window.addEventListener('keydown', onKey)
     return () => window.removeEventListener('keydown', onKey)
   }, [])
+
+  // Sync the active profile in `profiles` whenever a loadout field changes.
+  // Called by the mutation helpers below. Not an effect, so it never fires
+  // on every keystroke.
+  function syncActiveProfile(next: { loadouts: SavedLoadouts; skinSettings: SavedSkinSettings; equipment: SavedEquipment }) {
+    setProfiles(prev => prev.map(p => p.id === activeProfileId ? {
+      ...p, loadouts: clone(next.loadouts), skinSettings: clone(next.skinSettings), equipment: clone(next.equipment),
+    } : p))
+  }
+
+  function setPickerColorFilter(next: string) {
+    setPickerColor(next)
+    if (next) {
+      setPickerColorMatchIds(new Set())
+      setPickerColorBusy(true)
+    } else {
+      setPickerColorMatchIds(null)
+      setPickerColorBusy(false)
+    }
+  }
+  function setEquipmentColorFilter(next: string) {
+    setEquipmentColor(next)
+    if (next && activeEquipment && activeEquipment !== 'agent') {
+      setEquipmentColorMatchIds(new Set())
+      setEquipmentColorBusy(true)
+    } else {
+      setEquipmentColorMatchIds(null)
+      setEquipmentColorBusy(false)
+    }
+  }
 
   function resetTransient() {
     setTeam('T'); setPickerSearch(''); setPickerColor(''); setEquipmentSearch(''); setEquipmentColor(''); setSkinSort('popular')
@@ -257,8 +287,11 @@ export default function LoadoutBuilder({ skins }: LoadoutBuilderProps) {
       setActiveProfileId(next.id); setLoadouts(clone(next.loadouts)); setSkinSettings(clone(next.skinSettings)); setEquipment(clone(next.equipment))
       resetTransient()
     } else if (dialog.mode === 'clear') {
-      setLoadouts(prev => ({ ...prev, [team]: {} }))
-      setEquipment(prev => ({ ...prev, [team]: { ...emptyTeamEquipment } }))
+      const nextLoadouts = { ...loadouts, [team]: {} }
+      const nextEquipment = { ...equipment, [team]: { ...emptyTeamEquipment } }
+      setLoadouts(nextLoadouts)
+      setEquipment(nextEquipment)
+      syncActiveProfile({ loadouts: nextLoadouts, skinSettings, equipment: nextEquipment })
       setPickerSearch(''); setEquipmentSearch('')
     } else {
       const name = dialog.value.trim()
@@ -272,7 +305,6 @@ export default function LoadoutBuilder({ skins }: LoadoutBuilderProps) {
           skinSettings: dialog.mode === 'duplicate' ? clone(skinSettings) : clone(emptySettings),
           equipment: dialog.mode === 'duplicate' ? clone(equipment) : clone(emptyEquipment),
         }
-        // Activate directly. Do not call switchProfile against stale React state.
         const outgoing = { ...activeProfile, loadouts: clone(loadouts), skinSettings: clone(skinSettings), equipment: clone(equipment) }
         setProfiles(prev => [...prev.map(p => p.id === outgoing.id ? outgoing : p), next])
         setActiveProfileId(next.id); setLoadouts(clone(next.loadouts)); setSkinSettings(clone(next.skinSettings)); setEquipment(clone(next.equipment))
@@ -325,19 +357,25 @@ export default function LoadoutBuilder({ skins }: LoadoutBuilderProps) {
   }, [skins, activeEquipment, team, equipmentSearch, equipmentColor, equipmentColorMatchIds, equipmentSort])
 
   function equipSkin(weapon: string, id: number | null) {
-    setLoadouts(prev => ({ ...prev, [team]: { ...prev[team], [weapon]: id } }))
+    const nextLoadouts = { ...loadouts, [team]: { ...loadouts[team], [weapon]: id } }
+    let nextSkinSettings = skinSettings
     if (id !== null) {
       const s = skins.find(x => x.id === id), key = settingsKey(weapon, id)
-      setSkinSettings(prev => ({ ...prev, [team]: { ...prev[team], [key]: prev[team][key] ?? defaults(s) } }))
+      nextSkinSettings = { ...skinSettings, [team]: { ...skinSettings[team], [key]: skinSettings[team][key] ?? defaults(s) } }
+      setSkinSettings(nextSkinSettings)
     }
+    setLoadouts(nextLoadouts)
+    syncActiveProfile({ loadouts: nextLoadouts, skinSettings: nextSkinSettings, equipment })
     setPickerOpen(false); setPickerSearch('')
   }
   function equipItem(slot: EquipmentSlot, id: number | null) {
-    setEquipment(prev => ({ ...prev, [team]: { ...prev[team], [slot]: id } }))
+    const nextEquipment = { ...equipment, [team]: { ...equipment[team], [slot]: id } }
+    setEquipment(nextEquipment)
+    syncActiveProfile({ loadouts, skinSettings, equipment: nextEquipment })
     setActiveEquipment(null); setEquipmentSearch('')
   }
-  function openPicker(weapon: string) { setActiveWeapon(weapon); setPickerSearch(''); setPickerColor(''); setSkinSort('popular'); setPickerOpen(true); setSettingsOpen(false); setActiveEquipment(null) }
-  function openEquipmentPicker(slot: EquipmentSlot) { setEquipmentSearch(''); setEquipmentColor(''); setEquipmentSort('popular'); setActiveEquipment(slot); setPickerOpen(false); setSettingsOpen(false) }
+  function openPicker(weapon: string) { setActiveWeapon(weapon); setPickerSearch(''); setPickerColorFilter(''); setSkinSort('popular'); setPickerOpen(true); setSettingsOpen(false); setActiveEquipment(null) }
+  function openEquipmentPicker(slot: EquipmentSlot) { setEquipmentSearch(''); setEquipmentColorFilter(''); setEquipmentSort('popular'); setActiveEquipment(slot); setPickerOpen(false); setSettingsOpen(false) }
   function openSettings(weapon: string) {
     const s = selectedSkin(weapon)
     if (!s) { openPicker(weapon); return }
@@ -353,10 +391,12 @@ export default function LoadoutBuilder({ skins }: LoadoutBuilderProps) {
     if (!Number.isFinite(f) || !Number.isFinite(rawSeed)) return
     const value = Math.min(l.max, Math.max(l.min, f)), seed = Math.min(1000, Math.max(0, Math.round(rawSeed)))
     const key = settingsKey(activeWeapon, s.id)
-    setSkinSettings(prev => ({ ...prev, [team]: { ...prev[team], [key]: { float: Number(value.toFixed(6)), seed } } }))
+    const nextSkinSettings = { ...skinSettings, [team]: { ...skinSettings[team], [key]: { float: Number(value.toFixed(6)), seed } } }
+    setSkinSettings(nextSkinSettings)
+    syncActiveProfile({ loadouts, skinSettings: nextSkinSettings, equipment })
     setSettingsOpen(false)
   }
-  function matches(_weapon: string) { return true }
+  function matches() { return true }
 
   async function sendToBridge() {
     const bridgeSkins: Record<string, unknown>[] = []
@@ -516,7 +556,7 @@ export default function LoadoutBuilder({ skins }: LoadoutBuilderProps) {
     {pickerOpen && activeWeapon && <div className="lb-modal-backdrop" onClick={() => setPickerOpen(false)}><div className="lb-modal" role="dialog" aria-modal="true" aria-label={`Choose a skin for ${activeWeapon}`} onClick={e => e.stopPropagation()}>
       <div className="lb-modal-header"><div><p className="lb-eyebrow">SKIN PICKER</p><h3>{activeWeapon}</h3><p className="lb-modal-subtitle">{weaponSkins.length} matching {weaponSkins.length === 1 ? 'skin' : 'skins'} · Search and sort finishes</p></div><button className="lb-close-button" type="button" onClick={() => { setPickerOpen(false); setPickerSearch('') }} aria-label="Close skin picker">×</button></div>
       <div className="lb-picker-controls"><input className="lb-search" type="search" placeholder={`Search ${activeWeapon} skins by name...`} value={pickerSearch} onChange={e => setPickerSearch(e.target.value)} aria-label={`Search ${activeWeapon} skins`} /><label className="lb-sort-control"><span>Sort by</span><select value={skinSort} onChange={e => setSkinSort(e.target.value as 'rarity' | 'az' | 'popular')}><option value="rarity">Rarity</option><option value="az">A–Z</option><option value="popular">Popular</option></select></label></div>
-      <div className="lb-color-filter"><span className="lb-color-filter-label">FILTER BY COLOR</span><div className="lb-color-swatches"><button type="button" className={`lb-color-chip ${!pickerColor ? 'active' : ''}`} onClick={() => setPickerColor('')}>All colors</button>{COLOR_OPTIONS.map(c => <button key={c.name} type="button" title={c.name} aria-label={`Filter ${activeWeapon} skins by ${c.name}`} aria-pressed={pickerColor === c.name.toLowerCase()} className={`lb-color-swatch ${pickerColor === c.name.toLowerCase() ? 'active' : ''}`} onClick={() => setPickerColor(pickerColor === c.name.toLowerCase() ? '' : c.name.toLowerCase())}><span style={{ background: c.hex }} />{c.name}</button>)}<label className={`lb-custom-color ${pickerColor.startsWith('#') ? 'active' : ''}`} title="Pick any color"><input type="color" value={pickerColor.startsWith('#') ? pickerColor : '#e34b4b'} onChange={e => setPickerColor(e.target.value.toLowerCase())} aria-label={`Pick a custom color for ${activeWeapon}`} /><span>Custom</span></label></div></div>
+      <div className="lb-color-filter"><span className="lb-color-filter-label">FILTER BY COLOR</span><div className="lb-color-swatches"><button type="button" className={`lb-color-chip ${!pickerColor ? 'active' : ''}`} onClick={() => setPickerColorFilter('')}>All colors</button>{COLOR_OPTIONS.map(c => <button key={c.name} type="button" title={c.name} aria-label={`Filter ${activeWeapon} skins by ${c.name}`} aria-pressed={pickerColor === c.name.toLowerCase()} className={`lb-color-swatch ${pickerColor === c.name.toLowerCase() ? 'active' : ''}`} onClick={() => setPickerColorFilter(pickerColor === c.name.toLowerCase() ? '' : c.name.toLowerCase())}><span style={{ background: c.hex }} />{c.name}</button>)}<label className={`lb-custom-color ${pickerColor.startsWith('#') ? 'active' : ''}`} title="Pick any color"><input type="color" value={pickerColor.startsWith('#') ? pickerColor : '#e34b4b'} onChange={e => setPickerColorFilter(e.target.value.toLowerCase())} aria-label={`Pick a custom color for ${activeWeapon}`} /><span>Custom</span></label></div></div>
       {pickerColor && pickerColorBusy && <div className="lb-empty"><p>Analyzing skin images for color matches…</p></div>}
       <div className="lb-picker-grid">{weaponSkins.map(s => <button key={s.id} type="button" className={`lb-picker-card ${currentLoadout[activeWeapon] === s.id ? 'selected' : ''}`} onClick={() => equipSkin(activeWeapon, s.id)}><div className="lb-picker-image"><img src={imageOf(s)} alt={s.name} /></div><strong>{s.name}</strong><small className="lb-rarity-label" style={{ color: rarityColor(s.rarity), backgroundColor: `${rarityColor(s.rarity)}18`, borderColor: `${rarityColor(s.rarity)}70` }}>{s.rarity}</small></button>)}</div>
       {!weaponSkins.length && <div className="lb-empty"><p>{pickerSearch || pickerColor ? 'No skins match those search and color filters.' : 'No skins for this weapon are in your catalogue yet.'}</p></div>}
@@ -527,7 +567,7 @@ export default function LoadoutBuilder({ skins }: LoadoutBuilderProps) {
       <div className="lb-modal-header"><div><p className="lb-eyebrow">{team === 'T' ? 'TERRORIST LOADOUT' : 'COUNTER-TERRORIST LOADOUT'}</p><h3>Choose {activeEquipmentTitle}</h3><p className="lb-modal-subtitle">{equipmentChoices.length} available {activeEquipmentTitle.toLowerCase()}{equipmentChoices.length === 1 ? '' : 's'}{activeEquipment === 'agent' ? ` for ${team}` : ''}</p></div><button className="lb-close-button" type="button" onClick={() => setActiveEquipment(null)} aria-label="Close equipment picker">×</button></div>
       <input className="lb-search lb-equipment-search" type="search" placeholder={`Search ${activeEquipmentTitle.toLowerCase()}...`} value={equipmentSearch} onChange={e => setEquipmentSearch(e.target.value)} aria-label={`Search ${activeEquipmentTitle}`} />
       <div className="lb-picker-controls lb-equipment-picker-controls"><label className="lb-sort-control"><span>Sort by</span><select value={equipmentSort} onChange={e => setEquipmentSort(e.target.value as 'rarity' | 'az' | 'popular')}><option value="rarity">Rarity</option><option value="az">A–Z</option><option value="popular">Popular</option></select></label></div>
-      {activeEquipment !== 'agent' && <div className="lb-color-filter lb-equipment-color-filter"><span className="lb-color-filter-label">FILTER BY COLOR</span><div className="lb-color-swatches"><button type="button" className={`lb-color-chip ${!equipmentColor ? 'active' : ''}`} onClick={() => setEquipmentColor('')}>All colors</button>{COLOR_OPTIONS.map(c => <button key={c.name} type="button" title={c.name} aria-label={`Filter ${activeEquipmentTitle} by ${c.name}`} aria-pressed={equipmentColor === c.name.toLowerCase()} className={`lb-color-swatch ${equipmentColor === c.name.toLowerCase() ? 'active' : ''}`} onClick={() => setEquipmentColor(equipmentColor === c.name.toLowerCase() ? '' : c.name.toLowerCase())}><span style={{ background: c.hex }} />{c.name}</button>)}<label className={`lb-custom-color ${equipmentColor.startsWith('#') ? 'active' : ''}`} title="Pick any color"><input type="color" value={equipmentColor.startsWith('#') ? equipmentColor : '#e34b4b'} onChange={e => setEquipmentColor(e.target.value.toLowerCase())} aria-label={`Pick a custom color for ${activeEquipmentTitle}`} /><span>Custom</span></label></div></div>}
+      {activeEquipment !== 'agent' && <div className="lb-color-filter lb-equipment-color-filter"><span className="lb-color-filter-label">FILTER BY COLOR</span><div className="lb-color-swatches"><button type="button" className={`lb-color-chip ${!equipmentColor ? 'active' : ''}`} onClick={() => setEquipmentColorFilter('')}>All colors</button>{COLOR_OPTIONS.map(c => <button key={c.name} type="button" title={c.name} aria-label={`Filter ${activeEquipmentTitle} by ${c.name}`} aria-pressed={equipmentColor === c.name.toLowerCase()} className={`lb-color-swatch ${equipmentColor === c.name.toLowerCase() ? 'active' : ''}`} onClick={() => setEquipmentColorFilter(equipmentColor === c.name.toLowerCase() ? '' : c.name.toLowerCase())}><span style={{ background: c.hex }} />{c.name}</button>)}<label className={`lb-custom-color ${equipmentColor.startsWith('#') ? 'active' : ''}`} title="Pick any color"><input type="color" value={equipmentColor.startsWith('#') ? equipmentColor : '#e34b4b'} onChange={e => setEquipmentColorFilter(e.target.value.toLowerCase())} aria-label={`Pick a custom color for ${activeEquipmentTitle}`} /><span>Custom</span></label></div></div>}
       {equipmentColor && equipmentColorBusy && <div className="lb-empty"><p>Analyzing item images for color matches…</p></div>}
       <div className="lb-picker-grid">{equipmentChoices.map(item => <button key={item.id} type="button" className={`lb-picker-card ${currentEquipment[activeEquipment] === item.id ? 'selected' : ''}`} onClick={() => equipItem(activeEquipment, item.id)}><div className="lb-picker-image">{imageOf(item) ? <img src={imageOf(item)} alt={item.name} loading="lazy" /> : <span>{item.weapon}</span>}</div><strong>{item.name}</strong><small>{item.weapon}</small><small className="lb-rarity-label" style={{ color: rarityColor(item.rarity), backgroundColor: `${rarityColor(item.rarity)}18`, borderColor: `${rarityColor(item.rarity)}70` }}>{item.rarity}</small></button>)}</div>
       {!equipmentChoices.length && <div className="lb-empty"><h3>No matching items</h3><p>Try another search or check the generated catalogue's item categories.</p></div>}
