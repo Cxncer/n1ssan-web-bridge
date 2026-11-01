@@ -317,16 +317,20 @@ app.use((req: Request, res: Response, next: NextFunction) => {
 
 app.use(express.json({ limit: '500kb' }))
 
+
 app.get('/health', (_req: Request, res: Response) => {
   res.json({
     app: 'n1ssan-bridge',
     status: 'online',
     port: PORT,
     hasLoadout: latestLoadout !== null,
+    loadoutName: latestLoadout?.profile ?? null,
+    loadoutId: latestLoadout?.id ?? null,
     itemCount: selectedSkins.length,
     storage: 'json-file',
   })
 })
+
 
 app.get('/skins', (_req: Request, res: Response) => {
   res.json({
