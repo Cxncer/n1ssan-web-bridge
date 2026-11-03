@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict'
 import { test } from 'node:test'
 import { validateArmoryDocument } from '../src/armory/contracts.ts'
+import { migrateLegacyInventory } from '../src/armory/migrate-legacy.ts'
 
 const timestamp = '2026-11-03T08:00:00.000Z'
 
@@ -90,4 +91,61 @@ test('rejects customization on independent sticker and charm inventory entries',
   assert.ok(validateArmoryDocument(document).some(error =>
     error.includes('only skins may have skin customization'),
   ))
+})
+
+
+test('migrates Obsidian local profiles into Armory without losing supported item data', () => {
+  const migrated = migrateLegacyInventory([
+    {
+      id: 'profile-main',
+      name: 'Main inventory',
+      updatedAt: 'Just now',
+      items: [{
+        instanceId: 'old-skin-1',
+        definitionId: 12345,
+        kind: 'skin',
+        quantity: 1,
+        float: '0.01842',
+        seed: '413',
+        stattrak: true,
+        customName: 'Night Shift',
+      }, {
+        instanceId: 'old-sticker',
+        definitionId: 'sticker:team-logo',
+        kind: 'sticker',
+        quantity: 4,
+        float: '',
+        seed: '',
+        stattrak: false,
+        customName: '',
+      }],
+    },
+    {
+      id: 'profile-clean',
+      name: 'Clean setup',
+      updatedAt: timestamp,
+      items: [],
+    },
+  ], 'profile-clean', timestamp)
+
+  assert.deepEqual(validateArmoryDocument(migrated), [])
+  assert.equal(migrated.activeProfileId, 'profile-clean')
+  assert.equal(migrated.profiles[0].items[0].definitionId, '12345')
+  assert.equal(migrated.profiles[0].items[0].customization?.float, 0.01842)
+  assert.equal(migrated.profiles[0].items[0].customization?.seed, 413)
+  assert.deepEqual(migrated.profiles[0].items[0].customization?.statTrak, {
+    enabled: true,
+    kills: 0,
+  })
+  assert.equal(migrated.profiles[0].items[1].quantity, 4)
+  assert.equal(migrated.profiles[0].items[1].customization, null)
+})
+
+test('creates a safe empty profile when legacy storage is missing or unusable', () => {
+  const migrated = migrateLegacyInventory(null, 'missing-profile', timestamp)
+
+  assert.deepEqual(validateArmoryDocument(migrated), [])
+  assert.equal(migrated.activeProfileId, 'profile-main')
+  assert.equal(migrated.profiles.length, 1)
+  assert.equal(migrated.profiles[0].items.length, 0)
 })
