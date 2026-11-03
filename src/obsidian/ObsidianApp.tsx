@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import skinData from '../skins.json'
 import './obsidian.css'
 
@@ -33,11 +33,20 @@ const initialItems = (): InventoryItem[] => {
 }
 const seedItems = initialItems()
 const initialProfiles: InventoryProfile[] = [{ id: 'profile-main', name: 'Main inventory', items: seedItems, updatedAt: 'Just now' }, { id: 'profile-clean', name: 'Clean setup', items: seedItems.slice(0, 4).map((item, i) => ({ ...item, instanceId: `clean-${i}`, stattrak: false })), updatedAt: 'Preview' }]
+const STORAGE_KEY = 'n1ssan-obsidian-preview-v1'
+const loadProfiles = (): InventoryProfile[] => {
+  try {
+    const saved = window.localStorage.getItem(STORAGE_KEY)
+    if (!saved) return initialProfiles
+    const parsed: unknown = JSON.parse(saved)
+    return Array.isArray(parsed) && parsed.length ? parsed as InventoryProfile[] : initialProfiles
+  } catch { return initialProfiles }
+}
 
 export default function ObsidianApp() {
-  const [profiles, setProfiles] = useState(initialProfiles)
-  const [activeId, setActiveId] = useState(initialProfiles[0].id)
-  const [items, setItems] = useState(seedItems)
+  const [profiles, setProfiles] = useState(loadProfiles)
+  const [activeId, setActiveId] = useState(profiles[0]?.id ?? initialProfiles[0].id)
+  const [items, setItems] = useState(() => profiles[0]?.items.map(item => ({ ...item })) ?? seedItems)
   const [category, setCategory] = useState('All items')
   const [search, setSearch] = useState('')
   const [sort, setSort] = useState('Recently added')
@@ -47,7 +56,6 @@ export default function ObsidianApp() {
   const [profileName, setProfileName] = useState('')
   const [notice, setNotice] = useState('')
 
-  const activeProfile = profiles.find(p => p.id === activeId) ?? profiles[0]
   const owned = useMemo(() => items.map(item => ({ item, skin: catalogue.find(s => s.id === item.definitionId) })).filter((x): x is { item: InventoryItem; skin: Skin } => !!x.skin), [items])
   const visible = useMemo(() => {
     const q = search.trim().toLowerCase()
@@ -91,6 +99,10 @@ export default function ObsidianApp() {
     if (!selected) return
     updateItems(items.filter(item => item.instanceId !== selected.item.instanceId)); setSelectedInstance(null); setDialog(null); setNotice('Item removed from inventory')
   }
+  useEffect(() => {
+    window.localStorage.setItem(STORAGE_KEY, JSON.stringify(profiles))
+  }, [profiles])
+
   const candidates = useMemo(() => {
     const q = catalogueSearch.trim().toLowerCase()
     return catalogue.filter(s => (!q || `${s.weapon} ${s.name} ${s.type}`.toLowerCase().includes(q))).slice(0, 80)
