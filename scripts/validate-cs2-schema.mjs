@@ -100,7 +100,8 @@ async function main() {
   const unresolvedDefinitions = []
   const missingPaintKits = []
   const missingPaintKitFileDefinitions = []
-  const mapKeyMismatches = []
+  const paintKitMapKeyMismatches = []
+  const checkedDefinitionIds = new Set()
 
   const catalogueRows = [
     ...staticSkins.map((row) => ({ ...row, catalogueSource: 'n1ssan-skins' })),
@@ -124,22 +125,16 @@ async function main() {
       continue
     }
 
-    const liveDefinition = liveItems.get(expectedDefinitionId)
-
-    if (!liveDefinition) {
-      missingDefinitions.push({
-        source: row.catalogueSource,
-        weapon: row.weapon ?? null,
-        name: row.name,
-        expectedDefinitionId,
-      })
-    } else if (numericId(liveDefinition.mapKey, true) !== expectedDefinitionId) {
-      mapKeyMismatches.push({
-        domain: 'itemDefinition',
-        expectedId: expectedDefinitionId,
-        mapKey: liveDefinition.mapKey,
-        itemName: liveDefinition.itemName,
-      })
+    if (!checkedDefinitionIds.has(expectedDefinitionId)) {
+      checkedDefinitionIds.add(expectedDefinitionId)
+      if (!liveItems.has(expectedDefinitionId)) {
+        missingDefinitions.push({
+          source: row.catalogueSource,
+          weapon: row.weapon ?? null,
+          name: row.name,
+          expectedDefinitionId,
+        })
+      }
     }
 
     const paintKitId = numericId(row.paintKit ?? row.paintIndex, true)
@@ -174,7 +169,7 @@ async function main() {
 
   for (const [id, kit] of livePaintKits) {
     if (numericId(kit.mapKey, true) !== id) {
-      mapKeyMismatches.push({
+      paintKitMapKeyMismatches.push({
         domain: 'paintKit',
         expectedId: id,
         mapKey: kit.mapKey,
@@ -215,8 +210,8 @@ async function main() {
     errors.push(`${missingPaintKitFileDefinitions.length} catalogue rows reference paint kits absent from items_game.txt.`)
   }
 
-  if (mapKeyMismatches.length) {
-    errors.push(`${mapKeyMismatches.length} live schema map keys do not match their object IDs.`)
+  if (paintKitMapKeyMismatches.length) {
+    errors.push(`${paintKitMapKeyMismatches.length} live paint-kit map keys do not match their paint-kit IDs.`)
   }
 
   const report = {
@@ -224,6 +219,7 @@ async function main() {
     createdAtUtc: snapshot.createdAtUtc ?? null,
     counts: {
       catalogueRows: catalogueRows.length,
+      uniqueCatalogueDefinitionIdsChecked: checkedDefinitionIds.size,
       liveItemDefinitions: liveItems.size,
       livePaintKits: livePaintKits.size,
       paintKitFileDefinitions: paintKitDefinitions.size,
@@ -235,7 +231,8 @@ async function main() {
       missingDefinitions: missingDefinitions.length,
       missingPaintKits: missingPaintKits.length,
       missingPaintKitFileDefinitions: missingPaintKitFileDefinitions.length,
-      mapKeyMismatches: mapKeyMismatches.length,
+      itemDefinitionMapKeyComparison: 'not applicable; internal map keys are distinct from definitionIndex',
+      paintKitMapKeyMismatches: paintKitMapKeyMismatches.length,
       warnings: warnings.length,
       paintKitCompatibility: 'not evaluated; requires per-item generated-material checks',
     },
@@ -245,7 +242,7 @@ async function main() {
       missingDefinitions: missingDefinitions.slice(0, 25),
       missingPaintKits: missingPaintKits.slice(0, 25),
       missingPaintKitFileDefinitions: missingPaintKitFileDefinitions.slice(0, 25),
-      mapKeyMismatches: mapKeyMismatches.slice(0, 25),
+      paintKitMapKeyMismatches: paintKitMapKeyMismatches.slice(0, 25),
       warnings: warnings.slice(0, 25),
     },
   }
