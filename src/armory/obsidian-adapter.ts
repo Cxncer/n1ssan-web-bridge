@@ -3,6 +3,7 @@ import type {
   ArmoryItemKind,
   InventoryProfile as ArmoryProfile,
 } from './contracts.ts'
+import { catalogueDefinitionId } from './catalogue-identity.ts'
 
 export type ObsidianInventoryItem = {
   instanceId: string
@@ -56,7 +57,7 @@ export function fromArmoryDocument(document: ArmoryDocument): {
     updatedAt: profile.updatedAt,
     items: profile.items.map(item => ({
       instanceId: item.id,
-      definitionId: item.definitionId,
+      definitionId: catalogueDefinitionId(item.kind, item.definitionId),
       kind: item.kind,
       quantity: item.quantity,
       float: item.customization?.float === null || item.customization?.float === undefined
@@ -116,7 +117,7 @@ export function toArmoryDocument(
 
       return {
         id: item.instanceId,
-        definitionId: String(item.definitionId),
+        definitionId: catalogueDefinitionId(kind, item.definitionId),
         kind,
         quantity: kind === 'skin' ? 1 : Math.max(1, Math.floor(Number(item.quantity) || 1)),
         customization: hasCustomization ? customization : null,
