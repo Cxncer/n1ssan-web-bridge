@@ -470,3 +470,14 @@ body,button,input,select{font-family:'Barlow',sans-serif}
 .rarity-card-classified,.rarity-card-extraordinary{--rarity:#d32ce6}
 .rarity-card-covert,.rarity-card-master{--rarity:#eb4b4b}
 .rarity-card-contraband{--rarity:#e4ae39}
+
+/* Final monochrome pass: rarity remains the sole intentional color-coded system. */
+.overview-stat .quantity,.overview-stat .quantity-rifles,.overview-stat .quantity-pistols,.overview-stat .quantity-knives,.overview-stat .quantity-gloves,.overview-stat .quantity-agents{color:#f0f0f0!important}
+.overview-total .metric-label,.overview-total small,.overview-stat small,.overview-stat .metric-index{color:#999!important}
+.overview-status,.status-ring,.live-dot,.cs2-status-dot,.diagnostic-state{filter:grayscale(1)!important}
+.ob-notification-icon,.ob-notification-timer,.ob-notification-stack,.ob-notification-copy span{filter:grayscale(1)!important}
+.dialog-actions .remove-item-button:hover,.item-remove-x:hover,.sticker-slot>button:hover{background:#242424!important;border-color:#aaa!important;color:#fff!important;box-shadow:none!important}
+.ob-filters button,.add-category-tabs button,.profile-select-label select,.ob-sort select{accent-color:#aaa}
+.ob-filters button.selected{background:#1d1d1d!important;border-color:#777!important}
+.add-category-tabs button.active{border-bottom-color:#ddd!important}
+.quantity-control button,.quantity-control input,.catalogue-state button{background:#171717!important;border-color:#444!important;color:#eee!important}
