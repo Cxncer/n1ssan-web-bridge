@@ -257,8 +257,12 @@ npm run armory:validate-schema
 node scripts/validate-cs2-schema.mjs path/to/n1ssan-cs2-schema.json
 ```
 
-The validator compares all 2,581 static catalogue rows against live base item
-definitions and paint-kit IDs, checks map-key consistency, and reports sticker
-and keychain definition counts. A successful ID-presence check is not yet a
+The validator compares the catalogue's unique base definition IDs against the live
+item schema, checks paint-kit IDs against both the live paint-kit map and
+`items_game.txt`, and reports sticker and keychain definition counts. The internal
+key stored in the sorted item-definition map is retained as diagnostic metadata;
+it is not expected to equal `CEconItemDefinition::m_DefinitionIndex` and is not
+used as catalogue identity. Paint-kit map keys are checked separately against
+their paint-kit object IDs. A successful ID-presence check is not yet a
 weapon/paint compatibility proof; that requires checking the generated material
 asset for each specific item/paint-kit pair and is intentionally a separate step.
