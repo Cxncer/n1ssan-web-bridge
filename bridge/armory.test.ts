@@ -159,6 +159,8 @@ test('Obsidian adapter round-trips profile snapshots and skin customization', ()
   const view = fromArmoryDocument(source)
 
   assert.equal(view.activeId, 'profile-main')
+  assert.equal(view.items[0].definitionId, 'cs2:skin:external:ak47-redline')
+  assert.equal(view.items[1].definitionId, 'cs2:sticker:bymykel-stickers:team-logo')
   assert.equal(view.items[0].float, '0.18')
   assert.equal(view.items[0].seed, '413')
   assert.equal(view.items[0].stattrak, true)
@@ -167,6 +169,7 @@ test('Obsidian adapter round-trips profile snapshots and skin customization', ()
 
   const restored = toArmoryDocument(view.profiles, view.activeId, source.revision)
   assert.deepEqual(validateArmoryDocument(restored), [])
+  assert.equal(restored.profiles[0].items[0].definitionId, 'cs2:skin:external:ak47-redline')
   assert.equal(restored.profiles[0].items[0].customization?.statTrak?.kills, 120)
   assert.equal(restored.profiles[0].items[1].customization, null)
 })
@@ -239,6 +242,10 @@ test('catalogue identities are stable, namespaced by item kind and inferred sour
   assert.equal(
     catalogueDefinitionId('skin', 'cs2:skin:n1ssan-skins:2718699708'),
     'cs2:skin:n1ssan-skins:2718699708',
+  )
+  assert.equal(
+    catalogueDefinitionId('skin', 'custom-entry', 'external'),
+    'cs2:skin:external:custom-entry',
   )
 })
 
