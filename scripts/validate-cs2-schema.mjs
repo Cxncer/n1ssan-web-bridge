@@ -18,7 +18,7 @@ function numericId(value, allowZero = false) {
 }
 
 function requireArray(value, field) {
-  if (!Array.isArray(value)) throw new Error(\`Snapshot field "\${field}" must be an array.\`)
+  if (!Array.isArray(value)) throw new Error(`Snapshot field "${field}" must be an array.`)
   return value
 }
 
@@ -28,12 +28,12 @@ function indexUnique(rows, getId, label, errors) {
   for (const row of rows) {
     const id = numericId(getId(row), true)
     if (id === null) {
-      errors.push(\`\${label}: invalid ID\`)
+      errors.push(`${label}: invalid ID`)
       continue
     }
 
     if (indexed.has(id)) {
-      errors.push(\`\${label}: duplicate ID \${id}\`)
+      errors.push(`${label}: duplicate ID ${id}`)
       continue
     }
 
@@ -49,11 +49,11 @@ async function main() {
   try {
     snapshot = JSON.parse(await readFile(snapshotPath, 'utf8'))
   } catch (error) {
-    throw new Error(\`Cannot read schema snapshot at \${snapshotPath}: \${error.message}\`)
+    throw new Error(`Cannot read schema snapshot at ${snapshotPath}: ${error.message}`)
   }
 
   if (snapshot.schemaVersion !== 1) {
-    throw new Error(\`Unsupported schema snapshot version: \${snapshot.schemaVersion ?? 'missing'}\`)
+    throw new Error(`Unsupported schema snapshot version: ${snapshot.schemaVersion ?? 'missing'}`)
   }
 
   const [staticSkins, expandedKnives, definitionIndex] = await Promise.all([
@@ -145,7 +145,7 @@ async function main() {
 
     if (paintKitId === null) {
       if (!isAgent) {
-        warnings.push(\`No paint-kit ID on \${row.weapon ?? 'unknown item'} | \${row.name}\`)
+        warnings.push(`No paint-kit ID on ${row.weapon ?? 'unknown item'} | ${row.name}`)
       }
       continue
     }
@@ -189,23 +189,23 @@ async function main() {
   }
 
   if (unresolvedDefinitions.length) {
-    errors.push(\`\${unresolvedDefinitions.length} catalogue rows have no provider definition mapping.\`)
+    errors.push(`${unresolvedDefinitions.length} catalogue rows have no provider definition mapping.`)
   }
 
   if (missingDefinitions.length) {
-    errors.push(\`\${missingDefinitions.length} catalogue rows reference definitions absent from the live game schema.\`)
+    errors.push(`${missingDefinitions.length} catalogue rows reference definitions absent from the live game schema.`)
   }
 
   if (missingPaintKits.length) {
-    errors.push(\`\${missingPaintKits.length} catalogue rows reference paint kits absent from the live game schema.\`)
+    errors.push(`${missingPaintKits.length} catalogue rows reference paint kits absent from the live game schema.`)
   }
 
   if (missingPaintKitFileDefinitions.length) {
-    errors.push(\`\${missingPaintKitFileDefinitions.length} catalogue rows reference paint kits absent from items_game.txt.\`)
+    errors.push(`${missingPaintKitFileDefinitions.length} catalogue rows reference paint kits absent from items_game.txt.`)
   }
 
   if (mapKeyMismatches.length) {
-    errors.push(\`\${mapKeyMismatches.length} live schema map keys do not match their object IDs.\`)
+    errors.push(`${mapKeyMismatches.length} live schema map keys do not match their object IDs.`)
   }
 
   const report = {
