@@ -296,3 +296,35 @@ test('catalogue normalization maps verified paint-kit fields but does not guess 
   assert.equal(charm.id, 'cs2:charm:bymykel-keychains:keychain-1')
   assert.equal(charm.keychainId, null)
 })
+
+
+test('canonical catalogue IDs retain their original source metadata when normalized again', () => {
+  const normalized = toCatalogueDefinition({
+    id: 'cs2:skin:n1ssan-knives:skin-95831ce7c492',
+    name: 'Fade',
+    weapon: 'Bayonet',
+    paintIndex: '38',
+  })
+
+  assert.equal(normalized.id, 'cs2:skin:n1ssan-knives:skin-95831ce7c492')
+  assert.equal(normalized.source, 'n1ssan-knives')
+  assert.equal(normalized.sourceId, 'skin-95831ce7c492')
+  assert.equal(normalized.paintKitId, 38)
+})
+
+test('canonical IDs normalize percent-encoded source IDs without changing identity', () => {
+  const id = catalogueDefinitionId('skin', 'cs2:skin:external:custom%2Ffinish')
+  assert.equal(id, 'cs2:skin:external:custom%2Ffinish')
+
+  const definition = toCatalogueDefinition({
+    id,
+    name: 'Custom Finish',
+  })
+  assert.equal(definition.source, 'external')
+  assert.equal(definition.sourceId, 'custom/finish')
+})
+
+test('malformed canonical-looking IDs are safely treated as source IDs', () => {
+  const id = catalogueDefinitionId('skin', 'cs2:skin:unknown:finish')
+  assert.equal(id, 'cs2:skin:external:cs2%3Askin%3Aunknown%3Afinish')
+})
