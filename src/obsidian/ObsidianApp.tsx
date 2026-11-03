@@ -1,0 +1,140 @@
+import { useMemo, useState } from 'react'
+import skinData from '../skins.json'
+import './obsidian.css'
+
+type Skin = { id: number; weapon: string; name: string; type: string; rarity: string; color: string; art: string; description: string; image?: string; minFloat?: number | null; maxFloat?: number | null }
+type InventoryItem = { instanceId: string; definitionId: number; float: string; seed: string; stattrak: boolean; customName: string }
+type InventoryProfile = { id: string; name: string; items: InventoryItem[]; updatedAt: string }
+const catalogue = skinData as Skin[]
+const makeId = () => `item-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`
+const profileId = () => `profile-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`
+const getCategory = (skin: Skin) => {
+  const type = (skin.type || '').toLowerCase(), weapon = (skin.weapon || '').toLowerCase()
+  if (type.includes('glove') || weapon.includes('glove')) return 'Gloves'
+  if (type.includes('knife') || weapon.includes('knife')) return 'Knives'
+  if (type.includes('agent')) return 'Agents'
+  if (type.includes('sniper') || ['awp', 'ssg 08', 'g3sg1', 'scar-20'].includes(weapon)) return 'Snipers'
+  if (type.includes('pistol') || ['glock-18','usp-s','p2000','p250','tec-9','five-seven','cz75-auto','desert eagle','r8 revolver','dual berettas'].includes(weapon)) return 'Pistols'
+  if (type.includes('smg') || type.includes('machine gun') || type.includes('shotgun') || ['mac-10','mp7','mp5-sd','mp9','ump-45','p90','pp-bizon','nova','xm1014','mag-7','sawed-off','m249','negev'].includes(weapon)) return 'Mid-Tier'
+  if (type.includes('rifle') || ['ak-47','m4a4','m4a1-s','famas','galil ar','aug','sg 553'].includes(weapon)) return 'Rifles'
+  return 'Other'
+}
+const rarityClass = (value: string) => value.toLowerCase().replace(/[^a-z]+/g, '-').replace(/^-|-$/g, '')
+const initialItems = (): InventoryItem[] => {
+  const picks = [
+    catalogue.find(s => s.weapon.toLowerCase() === 'ak-47'),
+    catalogue.find(s => s.weapon.toLowerCase() === 'awp'),
+    catalogue.find(s => s.weapon.toLowerCase() === 'glock-18'),
+    catalogue.find(s => s.weapon.toLowerCase() === 'm4a1-s'),
+    catalogue.find(s => getCategory(s) === 'Knives'),
+    catalogue.find(s => getCategory(s) === 'Gloves'),
+  ].filter((s): s is Skin => !!s)
+  return picks.map((s, i) => ({ instanceId: `demo-${i + 1}`, definitionId: s.id, float: ['0.01842','0.07135','0.12408','0.03211','0.00621','0.08417'][i], seed: ['413','28','721','156','492','318'][i], stattrak: i === 0, customName: '' }))
+}
+const seedItems = initialItems()
+const initialProfiles: InventoryProfile[] = [{ id: 'profile-main', name: 'Main inventory', items: seedItems, updatedAt: 'Just now' }, { id: 'profile-clean', name: 'Clean setup', items: seedItems.slice(0, 4).map((item, i) => ({ ...item, instanceId: `clean-${i}`, stattrak: false })), updatedAt: 'Preview' }]
+
+export default function ObsidianApp() {
+  const [profiles, setProfiles] = useState(initialProfiles)
+  const [activeId, setActiveId] = useState(initialProfiles[0].id)
+  const [items, setItems] = useState(seedItems)
+  const [category, setCategory] = useState('All items')
+  const [search, setSearch] = useState('')
+  const [sort, setSort] = useState('Recently added')
+  const [dialog, setDialog] = useState<'add' | 'detail' | 'profiles' | null>(null)
+  const [selectedInstance, setSelectedInstance] = useState<string | null>(null)
+  const [catalogueSearch, setCatalogueSearch] = useState('')
+  const [profileName, setProfileName] = useState('')
+  const [notice, setNotice] = useState('')
+
+  const activeProfile = profiles.find(p => p.id === activeId) ?? profiles[0]
+  const owned = useMemo(() => items.map(item => ({ item, skin: catalogue.find(s => s.id === item.definitionId) })).filter((x): x is { item: InventoryItem; skin: Skin } => !!x.skin), [items])
+  const visible = useMemo(() => {
+    const q = search.trim().toLowerCase()
+    const result = owned.filter(({ item, skin }) => (!q || `${skin.weapon} ${skin.name} ${skin.rarity}`.toLowerCase().includes(q)) && (category === 'All items' || getCategory(skin) === category))
+    if (sort === 'Name A–Z') result.sort((a,b) => a.skin.weapon.localeCompare(b.skin.weapon) || a.skin.name.localeCompare(b.skin.name))
+    if (sort === 'Float: lowest') result.sort((a,b) => Number(a.item.float) - Number(b.item.float))
+    return result
+  }, [owned, search, category, sort])
+  const selected = owned.find(x => x.item.instanceId === selectedInstance)
+  const counts = ['Rifles','Pistols','Knives','Gloves','Agents'].map(label => ({ label, count: owned.filter(x => getCategory(x.skin) === label).length }))
+  const updateItems = (next: InventoryItem[]) => {
+    setItems(next)
+    setProfiles(old => old.map(p => p.id === activeId ? { ...p, items: next, updatedAt: 'Just now' } : p))
+  }
+  const switchProfile = (id: string) => {
+    const next = profiles.find(p => p.id === id)
+    if (!next) return
+    setActiveId(id); setItems(next.items.map(item => ({ ...item }))); setNotice(`Loaded “${next.name}”`)
+  }
+  const saveProfile = () => {
+    const name = profileName.trim()
+    if (!name) return
+    const next = { id: profileId(), name, items: items.map(item => ({ ...item, instanceId: makeId() })), updatedAt: 'Just now' }
+    setProfiles(old => [...old, next]); setActiveId(next.id); setItems(next.items); setProfileName(''); setNotice('Inventory snapshot saved')
+  }
+  const deleteProfile = (id: string) => {
+    if (profiles.length < 2) { setNotice('Keep at least one inventory profile'); return }
+    const next = profiles.filter(p => p.id !== id)
+    setProfiles(next)
+    if (id === activeId) switchProfile(next[0].id)
+  }
+  const addSkin = (skin: Skin) => {
+    const next = [...items, { instanceId: makeId(), definitionId: skin.id, float: '0.00000', seed: '1', stattrak: false, customName: '' }]
+    updateItems(next); setDialog(null); setNotice(`${skin.weapon} · ${skin.name} added`)
+  }
+  const updateSelected = (patch: Partial<InventoryItem>) => {
+    if (!selected) return
+    updateItems(items.map(item => item.instanceId === selected.item.instanceId ? { ...item, ...patch } : item))
+  }
+  const removeSelected = () => {
+    if (!selected) return
+    updateItems(items.filter(item => item.instanceId !== selected.item.instanceId)); setSelectedInstance(null); setDialog(null); setNotice('Item removed from inventory')
+  }
+  const candidates = useMemo(() => {
+    const q = catalogueSearch.trim().toLowerCase()
+    return catalogue.filter(s => (!q || `${s.weapon} ${s.name} ${s.type}`.toLowerCase().includes(q))).slice(0, 80)
+  }, [catalogueSearch])
+
+  return <div className="obsidian-shell">
+    <header className="ob-topbar">
+      <a className="ob-brand" href="#inventory" aria-label="n1ssan Obsidian"><span className="ob-mark">n.</span><span>n1ssan</span><i /> <small>OBSIDIAN</small></a>
+      <nav className="ob-nav"><a className="active" href="#inventory">Inventory</a><button onClick={() => setDialog('profiles')}>Profiles <span className="nav-count">{profiles.length}</span></button></nav>
+      <div className="ob-top-right"><span className="connection-dot" />LOCAL PREVIEW <span className="avatar">N</span></div>
+    </header>
+
+    <main className="ob-main" id="inventory">
+      <div className="ob-breadcrumb"><span>WORKSPACE</span><b>/</b><strong>INVENTORY</strong></div>
+      <section className="ob-heading">
+        <div><div className="ob-kicker"><span className="kicker-line" /> PERSONAL ARMORY <span className="kicker-muted">/ 01</span></div><h1>Your inventory<span>.</span></h1><p>Every finish, in its place. Curate your collection and keep each version close.</p></div>
+        <div className="ob-heading-actions"><label className="profile-select-label">ACTIVE INVENTORY PROFILE<select value={activeId} onChange={e => switchProfile(e.target.value)}>{profiles.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}</select></label><button className="ob-button secondary" onClick={() => setDialog('profiles')}>Manage profiles <span>↗</span></button></div>
+      </section>
+
+      <section className="ob-overview">
+        <div className="overview-total"><span className="metric-label">ITEMS IN INVENTORY</span><strong>{String(items.length).padStart(2,'0')}</strong><small>Across your collection</small></div>
+        {counts.map((c, i) => <div className="overview-stat" key={c.label}><span className="metric-index">0{i + 1}</span><strong>{String(c.count).padStart(2,'0')}</strong><small>{c.label.toUpperCase()}</small></div>)}
+        <div className="overview-status"><span className="status-ring">✓</span><div><strong>All in order</strong><small>Preview data · stored locally</small></div></div>
+      </section>
+
+      <section className="ob-inventory-section">
+        <div className="ob-section-head"><div><div className="ob-kicker">THE COLLECTION</div><h2>Inventory <span>overview</span></h2></div><div className="ob-section-meta"><span className="live-dot" /> {visible.length} ITEMS DISPLAYED</div></div>
+        <div className="ob-toolbar"><label className="ob-search"><span>⌕</span><input value={search} onChange={e => setSearch(e.target.value)} placeholder="Search your inventory..." /><kbd>⌘ K</kbd></label><div className="ob-sort"><span>SORT BY</span><select value={sort} onChange={e => setSort(e.target.value)}><option>Recently added</option><option>Name A–Z</option><option>Float: lowest</option></select></div><button className="ob-button primary" onClick={() => { setCatalogueSearch(''); setDialog('add') }}><span>＋</span> Add item</button></div>
+        <div className="ob-filters">{['All items','Rifles','Pistols','Mid-Tier','Snipers','Knives','Gloves','Agents'].map(c => <button key={c} className={category === c ? 'selected' : ''} onClick={() => setCategory(c)}>{c}<small>{c === 'All items' ? items.length : owned.filter(x => getCategory(x.skin) === c).length}</small></button>)}</div>
+
+        {visible.length ? <div className="ob-item-grid">{visible.map(({ item, skin }, index) => <button className="ob-item-card" key={item.instanceId} onClick={() => { setSelectedInstance(item.instanceId); setDialog('detail') }}>
+          <div className={`ob-item-art rarity-${rarityClass(skin.rarity)}`}><span className="item-number">{String(index + 1).padStart(2,'0')}</span><span className="item-glow" />{skin.image ? <img src={skin.image} alt="" loading="lazy" /> : <span className="item-fallback">{skin.art}</span>}<span className="item-rarity">{skin.rarity}</span></div>
+          <div className="ob-item-copy"><div className="ob-item-weapon">{skin.weapon}{item.stattrak && <span className="stattrak">ST™</span>}</div><strong>{skin.name}</strong><div className="ob-item-foot"><span>FLOAT <b>{item.float}</b></span><span>SEED <b>{item.seed}</b></span></div></div><span className="item-open">↗</span>
+        </button>)}</div> : <div className="ob-empty"><span>⌕</span><h3>Nothing in this view</h3><p>Try another filter or add an item from the catalogue.</p><button className="ob-button secondary" onClick={() => { setCategory('All items'); setSearch('') }}>Clear filters</button></div>}
+      </section>
+      <footer className="ob-footer"><span>n1ssan <b>/</b> OBSIDIAN</span><span>INVENTORY WORKSPACE <i /> PREVIEW BUILD</span><span>COUNTER-STRIKE 2</span></footer>
+    </main>
+
+    {notice && <div className="ob-toast" role="status">{notice}<button onClick={() => setNotice('')}>×</button></div>}
+
+    {dialog && <div className="ob-overlay" onMouseDown={e => { if (e.target === e.currentTarget) setDialog(null) }}>
+      {dialog === 'add' && <section className="ob-dialog ob-add-dialog"><div className="dialog-head"><div><div className="ob-kicker">CATALOGUE</div><h2>Add to <span>inventory.</span></h2></div><button className="dialog-close" onClick={() => setDialog(null)}>×</button></div><label className="ob-search dialog-search"><span>⌕</span><input autoFocus value={catalogueSearch} onChange={e => setCatalogueSearch(e.target.value)} placeholder="Search weapons, finishes..." /></label><div className="ob-catalogue-list">{candidates.map(s => <button key={s.id} onClick={() => addSkin(s)}><div className="catalogue-thumb">{s.image && <img src={s.image} alt="" loading="lazy" />}</div><span><strong>{s.weapon}</strong><small>{s.name} · {s.rarity}</small></span><b>＋</b></button>)}</div><div className="dialog-foot">Showing up to 80 catalogue matches · Add creates a new inventory instance</div></section>}
+      {dialog === 'detail' && selected && <section className="ob-dialog ob-detail-dialog"><div className="dialog-head"><div><div className="ob-kicker">INVENTORY INSTANCE</div><h2>Item <span>details.</span></h2></div><button className="dialog-close" onClick={() => setDialog(null)}>×</button></div><div className="detail-preview"><div className="detail-preview-art">{selected.skin.image && <img src={selected.skin.image} alt="" />}</div><div><small>{selected.skin.weapon}</small><h3>{selected.skin.name}</h3><span>{selected.skin.rarity} · {getCategory(selected.skin)}</span></div></div><div className="ob-fields"><label>FLOAT VALUE<input value={selected.item.float} onChange={e => updateSelected({ float: e.target.value })} inputMode="decimal" /></label><label>PAINT SEED<input value={selected.item.seed} onChange={e => updateSelected({ seed: e.target.value })} inputMode="numeric" /></label><label className="field-wide">CUSTOM NAME<input value={selected.item.customName} onChange={e => updateSelected({ customName: e.target.value })} placeholder="Name this item..." /></label><label className="ob-toggle"><input type="checkbox" checked={selected.item.stattrak} onChange={e => updateSelected({ stattrak: e.target.checked })} /> StatTrak™ enabled</label></div><div className="dialog-actions"><button className="ob-button danger" onClick={removeSelected}>Remove item</button><button className="ob-button primary" onClick={() => setDialog(null)}>Done</button></div></section>}
+      {dialog === 'profiles' && <section className="ob-dialog ob-profiles-dialog"><div className="dialog-head"><div><div className="ob-kicker">SAVED SNAPSHOTS</div><h2>Inventory <span>profiles.</span></h2><p>Each profile stores a complete inventory snapshot. Switching replaces the active inventory.</p></div><button className="dialog-close" onClick={() => setDialog(null)}>×</button></div><div className="profile-list">{profiles.map(p => <div className={p.id === activeId ? 'profile-row current' : 'profile-row'} key={p.id}><button className="profile-load" onClick={() => switchProfile(p.id)}><span className="profile-radio">{p.id === activeId && <i />}</span><span><strong>{p.name}</strong><small>{p.items.length} items · {p.updatedAt}</small></span></button><button className="profile-delete" title="Delete profile" onClick={() => deleteProfile(p.id)} disabled={profiles.length < 2}>×</button></div>)}</div><div className="new-profile"><label>NEW INVENTORY PROFILE<input value={profileName} onChange={e => setProfileName(e.target.value)} placeholder="e.g. Tournament setup" onKeyDown={e => { if (e.key === 'Enter') saveProfile() }} /></label><button className="ob-button primary" onClick={saveProfile} disabled={!profileName.trim()}>Save snapshot <span>＋</span></button></div><div className="dialog-foot">Unlimited local preview profiles · Switching restores the saved snapshot, not a merge</div></section>}
+    </div>}
+  </div>
+}
