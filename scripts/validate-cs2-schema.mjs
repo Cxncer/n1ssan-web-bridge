@@ -233,6 +233,21 @@ async function main() {
     errors.push('Per-item generated-material compatibility scan was not successfully completed.')
   }
 
+  const compatibilityItemsChecked = numericId(snapshot.compatibilityItemsChecked, true)
+  const compatibilityPairsChecked = numericId(snapshot.compatibilityPairsChecked, true)
+  const compatiblePairsFound = numericId(snapshot.compatiblePairsFound, true)
+
+  if (
+    compatibilityItemsChecked === null ||
+    compatibilityItemsChecked === 0 ||
+    compatibilityPairsChecked === null ||
+    compatibilityPairsChecked === 0 ||
+    compatiblePairsFound === null ||
+    compatiblePairsFound > compatibilityPairsChecked
+  ) {
+    errors.push('Generated-material compatibility scan metadata is invalid or incomplete.')
+  }
+
   if (missingCompatibilityData.length) {
     errors.push(`${missingCompatibilityData.length} live item definitions have no compatibility scan data.`)
   }
