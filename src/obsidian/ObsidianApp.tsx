@@ -233,7 +233,9 @@ export default function ObsidianApp() {
         name: String(entry.name ?? '').replace(/^(Sticker|Charm)\\s*\\|\\s*/i, ''),
         type: kind === 'sticker' ? 'Stickers' : 'Charms', rarity: entry.rarity?.name ?? 'Unknown Grade',
         color: entry.rarity?.color ?? '#8c9b90', art: kind === 'sticker' ? 'ST' : 'CH',
-        description: entry.description ?? '', image: entry.image
+        description: entry.description ?? '', image: entry.image,
+        stickerKitId: kind === 'sticker' ? (/^\d+$/.test(String(entry.def_index ?? '')) ? Number(entry.def_index) : null) : null,
+        keychainId: kind === 'charm' ? (/^\d+$/.test(String(entry.def_index ?? '')) ? Number(entry.def_index) : null) : null
       }))
       setSpecialItems([...mapItems(stickers, 'sticker'), ...mapItems(charms, 'charm')])
       setSpecialError('')
