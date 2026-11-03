@@ -100,7 +100,7 @@ const isNonEmptyString = (value: unknown): value is string =>
 const isIsoDate = (value: unknown): value is string =>
   typeof value === 'string' &&
   Number.isFinite(Date.parse(value)) &&
-  /^\\d{4}-\\d{2}-\\d{2}T/.test(value)
+  /^\d{4}-\d{2}-\d{2}T/.test(value)
 
 const isItemKind = (value: unknown): value is ArmoryItemKind =>
   value === 'skin' || value === 'sticker' || value === 'charm'
