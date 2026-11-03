@@ -243,7 +243,8 @@ beside the DLL. It contains:
 - `itemDefinitions`: live base definition indices and their engine names.
 - `livePaintKits`: paint-kit IDs enumerated from the live `CEconItemSchema`.
 - `paintKitDefinitions`, `stickerKits`, and `keychainDefinitions`: matching
-  definitions parsed from the installed game's `scripts/items/items_game.txt`.
+  definitions parsed from `scripts/items/items_game.txt` through the game's
+  `VFileSystem017` interface and `GAME` search path, including VPK-backed files.
 - Snapshot metadata indicating whether the live paint-kit map and game file were
   successfully read.
 
