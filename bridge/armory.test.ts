@@ -359,6 +359,16 @@ test('static catalogues contain complete, collision-free canonical definition id
     ids.add(definition.id)
   }
 
+  for (const record of staticSkins) {
+    assert.equal(catalogueDefinitionId('skin', record.id), toCatalogueDefinition(record).id)
+  }
+  for (const record of expandedKnives) {
+    assert.equal(
+      catalogueDefinitionId('skin', record.id, 'n1ssan-knives'),
+      toCatalogueDefinition({ ...record, source: 'n1ssan-knives' }).id,
+    )
+  }
+
   assert.equal(ids.size, 2581)
 })
 
