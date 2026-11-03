@@ -106,6 +106,16 @@ export class ArmoryStore {
       const errors = validateArmoryDocument(candidate)
       if (errors.length > 0) throw new ArmoryValidationError(errors)
 
+      if (
+        typeof candidate !== 'object' ||
+        candidate === null ||
+        (candidate as Record<string, unknown>).revision !== expectedRevision
+      ) {
+        throw new ArmoryValidationError([
+          'data.revision: must match expectedRevision',
+        ])
+      }
+
       const next = {
         ...(candidate as ArmoryDocument),
         revision: this.document.revision + 1,
