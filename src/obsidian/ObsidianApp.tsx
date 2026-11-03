@@ -92,7 +92,7 @@ export default function ObsidianApp() {
     if (id === activeId) switchProfile(next[0].id)
   }
   const addSkin = (skin: Skin) => {
-    const next = [...items, { instanceId: makeId(), definitionId: skin.id, float: '0.00000', seed: '1', stattrak: false, customName: '' }]
+    const next = [...items, { instanceId: makeId(), definitionId: skin.id, float: isAgent(skin) ? '' : '0.00000', seed: isAgent(skin) ? '' : '1', stattrak: false, customName: '' }]
     updateItems(next); setDialog(null); setNotice(`${skin.weapon} · ${skin.name} added`)
   }
   const updateSelected = (patch: Partial<InventoryItem>) => {
@@ -144,7 +144,7 @@ export default function ObsidianApp() {
         <div className="ob-toolbar"><label className="ob-search"><span>⌕</span><input value={search} onChange={e => setSearch(e.target.value)} placeholder="Search your inventory..." /><kbd>⌘ K</kbd></label><div className="ob-sort"><span>SORT BY</span><select value={sort} onChange={e => setSort(e.target.value)}><option>Recently added</option><option>Name A–Z</option><option>Float: lowest</option><option>Rarity: highest</option></select></div><button className="ob-button primary" onClick={() => { setCatalogueSearch(''); setDialog('add') }}><span>＋</span> Add item</button></div>
         <div className="ob-filters">{['All items','Rifles','Pistols','Mid-Tier','Snipers','Knives','Gloves','Agents'].map(c => <button key={c} className={category === c ? 'selected' : ''} onClick={() => setCategory(c)}>{c}<small>{c === 'All items' ? items.length : owned.filter(x => getCategory(x.skin) === c).length}</small></button>)}</div>
 
-        {visible.length ? <div className={`ob-item-grid ${searching ? 'search-active' : ''}`}>{visible.map(({ item, skin }, index) => <button className={`ob-item-card rarity-card-${rarityClass(skin.rarity)}`} key={item.instanceId} onClick={() => { setSelectedInstance(item.instanceId); setDialog('detail') }}>
+        {visible.length ? <div className={`ob-item-grid ${searching ? 'search-active' : ''}`}>{visible.map(({ item, skin }, index) => <button className={`ob-item-card rarity-card-${rarityClass(skin.rarity)} item-category-${getCategory(skin).toLowerCase()}`} key={item.instanceId} onClick={() => { setSelectedInstance(item.instanceId); setDialog('detail') }}>
           <div className={`ob-item-art rarity-${rarityClass(skin.rarity)}`}><span className="item-number">{String(index + 1).padStart(2,'0')}</span><span className="item-glow" />{skin.image ? <img src={skin.image} alt="" loading="lazy" /> : <span className="item-fallback">{skin.art}</span>}<span className="item-rarity">{skin.rarity}</span></div>
           <div className="ob-item-copy"><div className="ob-item-weapon">{skin.weapon}{item.stattrak && <span className="stattrak">ST™</span>}</div><strong>{skin.name}</strong><div className="ob-item-foot">{!isAgent(skin) && <><span>FLOAT <b>{item.float}</b></span><span>SEED <b>{item.seed}</b></span></>}</div></div><span className="item-open">↗</span>
         </button>)}</div> : <div className="ob-empty"><span>⌕</span><h3>Nothing in this view</h3><p>Try another filter or add an item from the catalogue.</p><button className="ob-button secondary" onClick={() => { setCategory('All items'); setSearch('') }}>Clear filters</button></div>}
