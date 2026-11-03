@@ -85,11 +85,11 @@ export function resolveGameDefinitionId(weaponName: string, category = ''): numb
   const key = normalizeSchemaName(weaponName)
   if (!key) return null
 
-  const definitions = category.toLowerCase().includes('agent')
+  const definitions: Record<string, number> = category.toLowerCase().includes('agent')
     ? gameDefinitionIndex.agents
     : gameDefinitionIndex.weapons
 
-  return positiveInteger(definitions[key as keyof typeof definitions])
+  return positiveInteger(definitions[key])
 }
 
 /**
