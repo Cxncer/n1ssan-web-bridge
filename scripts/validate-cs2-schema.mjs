@@ -151,6 +151,8 @@ async function main() {
       continue
     }
 
+    if (paintKitId === 0) continue
+
     if (!livePaintKits.has(paintKitId)) {
       missingPaintKits.push({
         source: row.catalogueSource,
