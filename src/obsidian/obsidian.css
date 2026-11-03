@@ -108,3 +108,90 @@ button{cursor:pointer}
 @media(max-width:1000px){.ob-overview{grid-template-columns:1.3fr repeat(3,1fr)}.overview-stat:nth-of-type(5),.overview-stat:nth-of-type(6){display:none}.overview-status{display:none}.ob-item-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
 @media(max-width:680px){.ob-topbar{height:62px;padding:0 18px}.ob-nav{margin-left:30px;gap:18px}.ob-top-right{font-size:0}.ob-top-right .avatar{margin-left:4px}.ob-main{padding:23px 18px 0}.ob-heading{align-items:start;flex-direction:column;padding:34px 0 25px}.ob-heading-actions{width:100%;align-items:end}.profile-select-label{flex:1}.profile-select-label select{width:100%;min-width:0}.ob-overview{grid-template-columns:1.2fr 1fr 1fr}.overview-stat:nth-of-type(4),.overview-stat:nth-of-type(5),.overview-stat:nth-of-type(6){display:none}.overview-total,.overview-stat{padding:15px 12px}.overview-total strong{font-size:29px}.ob-inventory-section{padding-top:42px}.ob-toolbar{flex-wrap:wrap}.ob-search{max-width:none;flex-basis:100%}.ob-sort{margin-left:0;flex:1}.ob-sort select{max-width:145px}.ob-item-grid{gap:9px}.ob-item-art{height:135px}.ob-item-copy{padding:11px}.ob-item-copy>strong{font-size:12px}.ob-item-foot{gap:9px;font-size:7px}.ob-footer{gap:10px;flex-wrap:wrap;font-size:7px}.ob-footer span:last-child{display:none}}
 @media(max-width:420px){.ob-item-grid{grid-template-columns:1fr}.ob-item-art{height:180px}.ob-heading-actions{flex-direction:column;align-items:stretch}.profile-select-label select{width:100%}.ob-section-head{align-items:start;gap:12px;flex-direction:column}.ob-fields{grid-template-columns:1fr}.field-wide{grid-column:auto}.new-profile{align-items:stretch;flex-direction:column}}
+
+
+/* Obsidian refinement pass — rarity-led cards, pill controls and clearer hierarchy */
+:root{color:#f2f4f2}
+body,.obsidian-shell{color:#f2f4f2}
+.ob-heading p{color:#b0b8b2;font-size:14px}
+.ob-nav a,.ob-nav button{font-size:13px}
+.ob-top-right{font-size:10px;color:#9ba69e}
+.cs2-status-dot{width:7px;height:7px;border-radius:50%;background:#d4776f;box-shadow:0 0 11px #d4776f66}
+.cs2-status-text{color:#d5a09a;letter-spacing:1px}
+.preview-divider{height:15px;width:1px;background:#3a423d;margin:0 4px}
+.ob-kicker{font-size:10px}
+.metric-label,.overview-stat small{color:#9ba69f}
+.overview-total small,.overview-status small{color:#9aa49c}
+.overview-stat strong,.overview-total strong{color:#f3f5f3}
+.ob-section-head h2{font-size:27px}
+.ob-section-meta,.ob-sort,.ob-filters button{font-size:11px}
+.ob-search input{font-size:13px}
+.ob-search input::placeholder{color:#929c94}
+.ob-filters button{border-radius:999px;padding:9px 13px}
+.ob-filters button.selected{background:linear-gradient(145deg,#39413b,#1a201c);border-color:transparent;color:#fff;box-shadow:0 5px 16px #0005}
+.ob-button{border:0;border-radius:999px;padding:12px 19px;box-shadow:0 7px 20px #0005;transition:transform .2s,filter .2s,box-shadow .2s}
+.ob-button:hover{transform:translateY(-1px);filter:brightness(1.12);box-shadow:0 10px 25px #0007}
+.ob-button.secondary,.ob-button.primary{background:linear-gradient(145deg,#737b75 0%,#3d4540 48%,#171c19 100%);color:#f5f7f5}
+.ob-button.primary{background:linear-gradient(145deg,#929b94 0%,#535c55 46%,#242b26 100%);color:#fff}
+.ob-button.danger{background:linear-gradient(145deg,#9b625d,#482b29);color:#fff}
+.dialog-close,.profile-delete{border:0;border-radius:50%;background:linear-gradient(145deg,#646d66,#222823);color:#fff;box-shadow:0 5px 15px #0007}
+.profile-select-label select,.ob-sort select{border-radius:999px;background:linear-gradient(145deg,#272e29,#141916);border:0;color:#f0f3f0;padding-left:15px;box-shadow:0 5px 15px #0005}
+.ob-item-grid{grid-template-columns:repeat(5,minmax(0,1fr));gap:15px}
+.ob-item-card{--rarity:#a9b5ac;--rarity-rgb:169,181,172;border:1px solid color-mix(in srgb,var(--rarity) 28%,#252c28);border-radius:12px;background:linear-gradient(155deg,color-mix(in srgb,var(--rarity) 8%,#1b211d),#151a17 62%);box-shadow:0 9px 28px #0004;isolation:isolate}
+.ob-item-card:before{content:'';position:absolute;inset:0 0 auto;height:3px;background:linear-gradient(90deg,transparent,var(--rarity),transparent);opacity:.9;z-index:3}
+.ob-item-card:hover{border-color:color-mix(in srgb,var(--rarity) 75%,#fff);box-shadow:0 14px 32px #0008,0 0 22px rgba(var(--rarity-rgb),.12)}
+.ob-item-art{height:168px;background:radial-gradient(ellipse at 50% 58%,rgba(var(--rarity-rgb),.22),transparent 66%),linear-gradient(145deg,#262d28,#151a17 75%);border-bottom:1px solid color-mix(in srgb,var(--rarity) 23%,#2b322e)}
+.ob-item-art img{width:88%;height:82%;filter:drop-shadow(0 14px 17px #000b)}
+.ob-item-copy{padding:13px 14px 15px}
+.ob-item-weapon{font-size:10px;color:#c0c9c1}
+.ob-item-copy>strong{font-size:14px;color:#fff;line-height:1.35;min-height:38px}
+.item-rarity{color:var(--rarity);font-weight:500;text-shadow:0 1px 8px #000}
+.ob-item-foot{font-size:9px;color:#a0aaa2}
+.ob-item-foot b{color:#e4e9e4}
+.rarity-card-consumer-grade,.rarity-card-base-grade{--rarity:#b0c3d9;--rarity-rgb:176,195,217}
+.rarity-card-industrial-grade,.rarity-card-high-grade{--rarity:#5e98d9;--rarity-rgb:94,152,217}
+.rarity-card-mil-spec-grade,.rarity-card-remarkable{--rarity:#4b69ff;--rarity-rgb:75,105,255}
+.rarity-card-restricted,.rarity-card-exotic{--rarity:#8847ff;--rarity-rgb:136,71,255}
+.rarity-card-classified,.rarity-card-extraordinary{--rarity:#d32ce6;--rarity-rgb:211,44,230}
+.rarity-card-covert,.rarity-card-master{--rarity:#eb4b4b;--rarity-rgb:235,75,75}
+.rarity-card-contraband{--rarity:#e4ae39;--rarity-rgb:228,174,57}
+.item-category-knives .ob-item-art img{width:77%;height:73%;transform:scale(.91)}
+.item-category-knives:hover .ob-item-art img{transform:scale(.96)}
+.item-category-gloves .ob-item-art img{width:76%;height:74%}
+.ob-item-grid.search-active .ob-item-art{height:225px}
+.ob-item-grid.search-active .ob-item-art img{width:96%;height:88%}
+.ob-item-grid.search-active .item-category-knives .ob-item-art img{width:82%;height:80%}
+.ob-item-grid.search-active .ob-item-copy>strong{font-size:15px}
+.ob-item-weapon .stattrak{border:0;border-radius:999px;background:#d38a4a22;color:#efb47e;padding:3px 7px}
+.stattrak-toggle{grid-column:1/-1;display:flex;align-items:center;gap:12px;width:max-content;min-width:175px;padding:10px 14px;border:0;border-radius:999px;background:linear-gradient(145deg,#3a413c,#171c19);color:#e9eee9;box-shadow:0 7px 18px #0006;text-align:left}
+.stattrak-toggle>span:last-child{display:flex;flex-direction:column;gap:3px}
+.stattrak-toggle strong{font-size:12px}.stattrak-toggle small{font:9px 'DM Mono',monospace;color:#9aa59d}
+.st-toggle-track{width:34px;height:19px;border-radius:999px;background:#111613;padding:3px;box-shadow:inset 0 1px 4px #000b}
+.st-toggle-track i{display:block;width:13px;height:13px;border-radius:50%;background:#818b83;transition:transform .2s,background .2s}
+.stattrak-toggle.enabled .st-toggle-track{background:#526c59}
+.stattrak-toggle.enabled .st-toggle-track i{transform:translateX(15px);background:#d7e8d9}
+.ob-fields label{font-size:10px;color:#aab5ac}
+.ob-fields input,.new-profile input{font-size:13px;color:#fff}
+.ob-notification-stack{position:fixed;right:25px;top:88px;z-index:40;width:min(370px,calc(100vw - 36px));display:flex;align-items:center;gap:13px;padding:15px 16px 17px;border:1px solid #435348;border-radius:14px;background:linear-gradient(145deg,#29332c,#171d19);color:#f4f7f4;box-shadow:0 18px 50px #0009;animation:ob-notice-in .28s ease-out both;overflow:hidden}
+.ob-notification-icon{width:30px;height:30px;flex:none;display:grid;place-items:center;border-radius:50%;background:#78978025;color:#b6d1bc;font-size:15px}
+.ob-notification-copy{display:flex;flex:1;min-width:0;flex-direction:column;gap:4px}
+.ob-notification-copy strong{font:600 12px Manrope,sans-serif}
+.ob-notification-copy span{font-size:11px;color:#b2bdb4;overflow-wrap:anywhere}
+.ob-notification-stack>button{border:0;background:none;color:#aab5ac;font-size:19px}
+.ob-notification-timer{position:absolute;bottom:0;left:0;height:2px;width:100%;background:linear-gradient(90deg,#a6c3aa,#6e9277);transform-origin:left;animation:ob-notice-progress 3s linear forwards}
+.ob-notification-stack{animation:ob-notice-in .28s ease-out both,ob-notice-out .35s ease-in 2.65s forwards}
+@keyframes ob-notice-in{from{opacity:0;transform:translateY(-10px) scale(.98)}to{opacity:1;transform:translateY(0) scale(1)}}
+@keyframes ob-notice-out{to{opacity:0;transform:translateY(-8px) scale(.98);visibility:hidden}}
+@keyframes ob-notice-progress{to{transform:scaleX(0)}}
+.ob-diagnostics-dialog{width:min(620px,100%)}
+.diagnostic-list{padding:10px 24px 18px}
+.diagnostic-list>div{display:flex;align-items:center;gap:12px;padding:17px 4px;border-bottom:1px solid #2b342e}
+.diagnostic-list>div>span:nth-child(2){display:flex;flex:1;flex-direction:column;gap:5px}
+.diagnostic-list strong{font-size:12px;color:#f0f3f0}
+.diagnostic-list small{font-size:10px;color:#9aa69d}
+.diagnostic-list b{font:9px 'DM Mono',monospace;color:#c2a17a;white-space:nowrap}
+.diagnostic-state{width:8px;height:8px;border-radius:50%;background:#c49b65;box-shadow:0 0 10px #c49b6555}
+@media(max-width:1180px){.ob-item-grid{grid-template-columns:repeat(4,minmax(0,1fr))}}
+@media(max-width:900px){.ob-item-grid{grid-template-columns:repeat(3,minmax(0,1fr))}.ob-overview{grid-template-columns:1.3fr repeat(3,1fr)}}
+@media(max-width:680px){.ob-item-grid{grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}.ob-item-art{height:120px}.ob-item-copy{padding:10px 9px}.ob-item-copy>strong{font-size:11px;min-height:31px}.ob-item-foot{gap:5px;font-size:7px;flex-wrap:wrap}.ob-item-art img{width:95%;height:78%}.ob-item-grid.search-active .ob-item-art{height:160px}.ob-heading p{font-size:13px}.ob-top-right{gap:6px}.cs2-status-text{font-size:8px}}
+@media(max-width:420px){.ob-item-grid{grid-template-columns:repeat(3,minmax(0,1fr))}.ob-item-art{height:100px}.ob-item-copy>strong{font-size:10px}.ob-item-foot{font-size:6px}.ob-item-grid.search-active .ob-item-art{height:130px}}
