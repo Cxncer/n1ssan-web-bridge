@@ -81,7 +81,7 @@ are not Armory's persistence schema and must not be copied into the web domain.
 
 ## Catalogue identity and runtime resolution
 
-Every inventory `definitionId` now uses this canonical format:
+Obsidian's normalized inventory `definitionId` now uses this canonical format:
 
 ```text
 cs2:<kind>:<source>:<encoded-source-id>
@@ -99,7 +99,8 @@ Current source namespaces:
 The provider ID is retained as `sourceId`; it is never silently re-labelled as a
 CS2 item definition index. Obsidian, the Armory adapter, and legacy migration all
 use the same canonical ID helper. Existing raw numeric, generated knife, and
-kind-prefixed sticker/charm references are normalized on read and on write.
+kind-prefixed sticker/charm references are normalized in Obsidian on read and
+written back canonically on the next successful save.
 
 ### Verified mappings
 
