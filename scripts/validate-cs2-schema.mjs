@@ -9,7 +9,8 @@ function normalize(value) {
 }
 
 function numericId(value, allowZero = false) {
-  if (value === null || value === undefined || value === '') return null
+  if (typeof value !== 'number' && typeof value !== 'string') return null
+  if (value === '') return null
   if (typeof value === 'string' && !/^\d+$/.test(value.trim())) return null
   const parsed = Number(value)
   return Number.isSafeInteger(parsed) && (allowZero ? parsed >= 0 : parsed > 0)
@@ -186,6 +187,14 @@ async function main() {
 
   if (snapshot.paintKitMapAvailable !== true) {
     errors.push('The live paint-kit map was not successfully read.')
+  }
+
+  if (stickerKits.size === 0) {
+    errors.push('No sticker-kit definitions were parsed from items_game.txt.')
+  }
+
+  if (keychains.size === 0) {
+    errors.push('No keychain definitions were parsed from items_game.txt.')
   }
 
   if (unresolvedDefinitions.length) {
