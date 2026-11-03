@@ -393,3 +393,11 @@ body,button,input,select{font-family:'Barlow',sans-serif}
 .overview-stat small{font-size:8px;letter-spacing:.7px}
 @media(max-width:1100px){.ob-overview{grid-template-columns:repeat(4,minmax(0,1fr))}.overview-total,.overview-status{grid-column:span 2}}
 @media(max-width:680px){.ob-overview{grid-template-columns:repeat(2,minmax(0,1fr))}.overview-total,.overview-status{grid-column:span 2}}
+
+@property --beam-angle{syntax:'<angle>';initial-value:0deg;inherits:false}
+@keyframes obsidian-ocean-beam{to{--beam-angle:360deg}}
+.item-remove-x{position:absolute!important;z-index:5!important;top:9px;left:9px;width:25px;height:25px;display:grid;place-items:center;border:1px solid #59645c;border-radius:50%;background:#090e0be8;color:#dce5dd;font:18px/1 'Barlow',sans-serif;opacity:0;transform:translateY(-4px);transition:opacity .18s,transform .18s,border-color .18s,background .18s}
+.ob-item-card:hover .item-remove-x,.ob-item-card:focus-within .item-remove-x,.ob-item-card:focus-visible .item-remove-x{opacity:1;transform:translateY(0)}
+.item-remove-x:hover{background:#632b32;border-color:#e38b92;color:#fff}
+@media(prefers-reduced-motion:reduce){.ob-overview:before{animation:none;opacity:.4}}
+@media(max-width:680px){.item-remove-x{opacity:1;transform:none;width:23px;height:23px;top:6px;left:6px}}
