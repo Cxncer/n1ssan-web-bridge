@@ -10,6 +10,13 @@ export const ARMORY_SCHEMA_VERSION = 1 as const
 
 export type ArmoryItemKind = 'skin' | 'sticker' | 'charm'
 
+export type CatalogueSource =
+  | 'n1ssan-skins'
+  | 'n1ssan-knives'
+  | 'bymykel-stickers'
+  | 'bymykel-keychains'
+  | 'external'
+
 export type SkinCustomization = {
   float: number | null
   seed: number | null
@@ -22,10 +29,16 @@ export type SkinCustomization = {
 
 /** A catalogue definition describes what an item is, not who owns it. */
 export type CatalogueDefinition = {
+  /** Canonical identity: cs2:<kind>:<source>:<encoded source ID>. */
   id: string
+  source: CatalogueSource
+  sourceId: string
   kind: ArmoryItemKind
   displayName: string
+  /** Catalogue's display item name; not the engine's internal schema itemName. */
   itemName: string
+  /** Human-readable weapon label used for later runtime schema resolution. */
+  catalogueWeaponName: string | null
   category: string
   rarity: string | null
   image: string | null
