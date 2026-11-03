@@ -242,6 +242,9 @@ test('Armory API persists complete profiles and rejects stale or invalid writes'
 
   assert.equal(invalidResponse.status, 400)
 
+  await stopServer()
+  await startServer()
+
   const finalResponse = await fetch(`${BASE_URL}/armory`)
   const finalState = await finalResponse.json()
   assert.equal(finalState.data.revision, 1)
