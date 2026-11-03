@@ -876,3 +876,15 @@ body,button,input,select{font-family:'Barlow',sans-serif}
   font-size: 8px !important;
   line-height: 1;
 }
+
+
+.seed-hint {
+  display: block;
+  margin-top: 7px;
+  color: #858585;
+  font-size: 10px;
+  line-height: 1.5;
+  font-weight: 400;
+  letter-spacing: 0.01em;
+  text-transform: none;
+}
