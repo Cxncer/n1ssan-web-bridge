@@ -1,0 +1,40 @@
+{
+  "schemaVersion": 1,
+  "catalogueVersion": "cs2-items-game-2026-11",
+  "profiles": [
+    {
+      "profileId": "profile-main",
+      "name": "Main Collection",
+      "items": [
+        {
+          "instanceId": "item-glock-fade-001",
+          "definitionId": 4,
+          "type": "weapon",
+          "name": "Glock-18",
+          "finish": { "paintKitId": 38, "wear": 0.001, "seed": 661 },
+          "statTrak": { "enabled": false, "kills": null },
+          "customName": null,
+          "stickers": [],
+          "charm": null,
+          "metadata": { "source": "fixture", "favorite": true }
+        },
+        {
+          "instanceId": "item-specialist-gloves-fade-001",
+          "definitionId": 5034,
+          "type": "gloves",
+          "name": "Specialist Gloves",
+          "finish": { "paintKitId": 10063, "wear": 0.12, "seed": 0 },
+          "statTrak": { "enabled": false, "kills": null },
+          "customName": null,
+          "stickers": [],
+          "charm": null,
+          "metadata": {}
+        }
+      ],
+      "equipment": [
+        { "team": "T", "slot": "pistol1", "instanceId": "item-glock-fade-001" },
+        { "team": "T", "slot": "clothing_hands", "instanceId": "item-specialist-gloves-fade-001" }
+      ]
+    }
+  ]
+}
