@@ -7,7 +7,7 @@ import { catalogueDefinitionId } from './catalogue-identity.ts'
 
 export type ObsidianInventoryItem = {
   instanceId: string
-  definitionId: number | string
+  definitionId: string
   kind?: ArmoryItemKind
   quantity?: number
   float: string
