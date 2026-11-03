@@ -195,3 +195,55 @@ body,.obsidian-shell{color:#f2f4f2}
 @media(max-width:900px){.ob-item-grid{grid-template-columns:repeat(3,minmax(0,1fr))}.ob-overview{grid-template-columns:1.3fr repeat(3,1fr)}}
 @media(max-width:680px){.ob-item-grid{grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}.ob-item-art{height:120px}.ob-item-copy{padding:10px 9px}.ob-item-copy>strong{font-size:11px;min-height:31px}.ob-item-foot{gap:5px;font-size:7px;flex-wrap:wrap}.ob-item-art img{width:95%;height:78%}.ob-item-grid.search-active .ob-item-art{height:160px}.ob-heading p{font-size:13px}.ob-top-right{gap:6px}.cs2-status-text{font-size:8px}}
 @media(max-width:420px){.ob-item-grid{grid-template-columns:repeat(3,minmax(0,1fr))}.ob-item-art{height:100px}.ob-item-copy>strong{font-size:10px}.ob-item-foot{font-size:6px}.ob-item-grid.search-active .ob-item-art{height:130px}}
+
+
+/* Obsidian refinement — restrained shimmer controls, clearer inventory metrics */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;450;500;550;600;650;700;750;800&family=DM+Mono:wght@400;500&display=swap');
+:root{font-family:'Inter',sans-serif}
+body,button,input,select{font-family:'Inter',sans-serif}
+.ob-brand,.ob-kicker,.metric-label,.metric-index,.overview-stat small,.ob-section-meta,.ob-sort>span,.item-number,.item-rarity,.ob-item-weapon,.ob-item-foot,.ob-footer,.dialog-foot,.ob-fields label,.new-profile label,.diagnostic-list b{font-family:'DM Mono',monospace}
+.ob-heading h1,.ob-section-head h2,.dialog-head h2,.detail-preview h3,.ob-empty h3,.ob-notification-copy strong{font-family:'Inter',sans-serif;letter-spacing:-.045em}
+.ob-sort select,.profile-select-label select{background-color:#141916!important;color:#f0f3f0!important;border:1px solid #39443d}
+.ob-sort select option,.profile-select-label select option{background:#141916!important;color:#f0f3f0!important}
+.ob-sort select:focus,.profile-select-label select:focus{outline:1px solid #8eb49a;outline-offset:2px}
+.ob-button{position:relative;isolation:isolate;overflow:hidden;border:1px solid transparent;border-radius:999px;padding:12px 20px;background:#171d19;color:#f2f5f2;box-shadow:0 5px 18px #0006;transition:background .2s,border-color .2s,transform .2s,box-shadow .2s}
+.ob-button:hover{transform:translateY(-1px);background:#202a22;box-shadow:0 8px 22px #0008,0 0 16px #9bd3a31a}
+.ob-button:disabled{opacity:.45;cursor:not-allowed;transform:none}
+.ob-button.shimmer-button{border:1px solid #526d59;background:#111713;box-shadow:0 0 0 1px #9bc6a01a,0 6px 18px #0008}
+.ob-button.shimmer-button:before{content:'';position:absolute;inset:-1px;border-radius:inherit;padding:1px;background:conic-gradient(from var(--ob-shimmer-angle,0deg),#263b2b 0deg,#263b2b 230deg,#c6f2ce 270deg,#6eaa7c 292deg,#263b2b 330deg);-webkit-mask:linear-gradient(#000 0 0) content-box,linear-gradient(#000 0 0);-webkit-mask-composite:xor;mask-composite:exclude;animation:ob-shimmer-rotate 3.2s linear infinite;pointer-events:none;z-index:-1}
+.ob-button.shimmer-button:after{content:'';position:absolute;inset:1px;border-radius:inherit;background:linear-gradient(110deg,transparent 25%,#d8ffe51c 48%,transparent 68%);transform:translateX(-130%);animation:ob-shimmer-sweep 3.8s ease-in-out infinite;pointer-events:none;z-index:-1}
+.ob-button.shimmer-button:hover{border-color:#a3d7ad;background:#19231c;box-shadow:0 0 18px #a4d9ad24,0 8px 24px #0009}
+.ob-button.primary:not(.shimmer-button){background:#dce9df;color:#172019;border:1px solid #eaf4ed;box-shadow:0 5px 18px #0006}
+.ob-button.primary:not(.shimmer-button):hover{background:#eff8f0}
+@keyframes ob-shimmer-rotate{to{--ob-shimmer-angle:360deg}}
+@property --ob-shimmer-angle{syntax:'<angle>';initial-value:0deg;inherits:false}
+@keyframes ob-shimmer-sweep{0%,28%{transform:translateX(-130%)}58%,100%{transform:translateX(130%)}}
+.stattrak{background:transparent!important;border:0!important;padding:0 2px!important;border-radius:0!important;color:#e5a36d!important}
+.overview-total,.overview-stat{padding:25px 22px}
+.overview-total .metric-label{font-size:10px;letter-spacing:1.25px;color:#b3beb5}
+.overview-total strong{font-size:42px;line-height:1.05;margin:8px 0 4px}
+.overview-total small{font-size:12px}
+.overview-stat .metric-index{font-size:10px}
+.overview-stat strong{font-size:30px;line-height:1.1;margin:6px 0 4px}
+.overview-stat small{font-size:9px;letter-spacing:1.05px}
+.overview-stat .quantity{color:#e9eee9}
+.overview-stat .quantity-rifles{color:#83b8ed}
+.overview-stat .quantity-pistols{color:#b59af2}
+.overview-stat .quantity-knives{color:#e5bd70}
+.overview-stat .quantity-gloves{color:#8fd0a0}
+.overview-stat .quantity-agents{color:#e69bc8}
+.overview-total:after,.overview-stat:after{top:19px;bottom:19px}
+.ob-catalogue-list{padding:0 20px 14px}
+.ob-catalogue-list button{gap:17px;min-height:82px;padding:13px 8px}
+.catalogue-thumb{width:92px;height:62px;flex:none;border-radius:7px;background:#202923}
+.catalogue-thumb img{width:96%;height:96%}
+.ob-catalogue-list button>span{gap:6px}
+.ob-catalogue-list strong{font-size:14px;font-weight:600;color:#f4f6f4}
+.ob-catalogue-list small{font-size:12px;color:#a2ada4}
+.ob-catalogue-list button>b{font-size:21px;padding:0 8px}
+.ob-notification-stack{background:#080a09!important;border:1px solid #303a33!important;box-shadow:0 18px 50px #000c!important}
+.ob-notification-icon{background:#19251c;color:#a9d4b1}
+.ob-notification-copy span{color:#c0c8c1}
+.ob-notification-timer{background:#86b992}
+@media(max-width:1000px){.overview-total,.overview-stat{padding:20px 15px}}
+@media(max-width:680px){.overview-total,.overview-stat{padding:15px 12px}.overview-total strong{font-size:34px}.overview-stat strong{font-size:24px}.ob-catalogue-list button{min-height:74px}.catalogue-thumb{width:78px;height:54px}.ob-catalogue-list strong{font-size:13px}.ob-catalogue-list small{font-size:11px}}
