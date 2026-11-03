@@ -117,11 +117,22 @@ not assumed until deployment and multi-user requirements are defined.
 - Tests cover domain validation, legacy migration, full-document writes, stale
   revision rejection, and persistence across Bridge restart.
 
-Obsidian has not yet been switched to the API. Its localStorage preview remains
-untouched until the client migration slice is implemented and tested.
+Obsidian now loads its inventory from `GET /armory` and persists full snapshots
+through `PUT /armory`. `src/armory/obsidian-adapter.ts` translates between the
+Armory domain document and Obsidian's view model, preserving per-item timestamps,
+float, seed, StatTrak state/count, custom name, and independent sticker/charm stacks.
 
-## Next implementation slice
+On first connection, if the Bridge still has its pristine revision-0 empty profile,
+Obsidian migrates the existing `n1ssan-obsidian-preview-v1` localStorage profiles
+once. The old localStorage key is retained as a recovery copy; it is no longer the
+active persistence layer. Fresh installs start with an empty Main inventory rather
+than demo items.
 
-Connect Obsidian to `GET /armory` / `PUT /armory` through a small client adapter.
-Migrate localStorage once, verify the saved document, and only then make Bridge
-persistence authoritative. Keep the existing `/skins` loadout endpoint unchanged.
+Writes are debounced and serialized. Each write uses the latest revision; a stale
+write is rejected and the UI asks for a refresh instead of silently overwriting a
+second session. If the Bridge is unavailable or saving fails, Obsidian shows a
+blocking connection error rather than pretending the change was persisted.
+
+The existing `/skins` loadout endpoint remains unchanged. The next step is local
+runtime verification of migration, profile operations, and restart persistence,
+followed by a focused pass on failure recovery and concurrent sessions.
