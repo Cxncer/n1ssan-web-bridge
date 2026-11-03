@@ -216,3 +216,20 @@ and written back. Current runtime IDs that are not present in static catalogue
 sources remain explicitly unresolved. The next step is to expose a versioned CS2
 schema snapshot from the game integration and resolve definition / sticker / charm
 kit IDs against it, including compatibility checks for weapon paint kits.
+
+
+## CS2 schema identity alignment
+
+The Armory catalogue keeps n1ssan catalogue identity separate from CS2 schema identity:
+
+- `id` / `sourceId`: stable n1ssan catalogue identity. Numeric IDs in the generated main catalogue are hashes, not CS2 definition indices.
+- `gameDefinitionId`: base item definition index for weapons, knives, gloves and agents.
+- `paintKitId`: finish/paint kit ID from the skin source's `paintKit` or knife source's `paintIndex`.
+- `stickerKitId`: sticker-kit ID from the ByMykel sticker feed's `def_index`.
+- `keychainId`: keychain definition ID from the ByMykel keychain feed's `def_index`.
+
+`src/armory/game-definition-index.json` is generated from ByMykel's `base_weapons.json` and `agents.json`. Weapon and agent names are normalized only for lookup; ambiguous names are omitted rather than guessed. The catalogue build downloads those sources and refuses to write if a weapon/agent cannot be assigned an unambiguous positive definition index.
+
+Lootline remains the runtime reference: its `ItemSchema::BuildItemList` enumerates live `definitionIndex` values, `BuildPaintKitList` enumerates paint-kit IDs, and `BuildItemsGameLists` separately parses sticker-kit and keychain-definition IDs from `scripts/items/items_game.txt`. The generated provider index is a catalogue-side mapping source, not proof that a particular running CS2 build has accepted every ID. A live schema export/compatibility check is still required before runtime application.
+
+The static catalogue audit covers all 2,005 main entries and 576 expanded knife entries. Runtime sticker and charm entries preserve their provider IDs while carrying the provider's numeric `def_index` in the matching kit-ID field; they are never placed in `gameDefinitionId`.
