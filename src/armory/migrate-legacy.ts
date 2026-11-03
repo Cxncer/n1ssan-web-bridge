@@ -5,6 +5,7 @@ import {
   type InventoryItemInstance,
   type InventoryProfile,
 } from './contracts.ts'
+import { catalogueDefinitionId } from './catalogue-identity.ts'
 
 type LegacyRecord = Record<string, unknown>
 
@@ -79,7 +80,7 @@ function migrateItem(
 
   return {
     id,
-    definitionId,
+    definitionId: catalogueDefinitionId(kind, definitionId),
     kind,
     quantity,
     customization,
