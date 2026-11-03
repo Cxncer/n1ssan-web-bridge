@@ -124,6 +124,35 @@ the game's `sticker_kits` and `keychain_definitions`. This confirms that these
 are distinct identity domains and that the final game IDs should be resolved
 against a current CS2 schema snapshot, not inferred from display names.
 
+### Static catalogue integrity audit (2026-11-03)
+
+The current static catalogue files were audited together:
+
+- `src/skins.json`: 2,005 rows, including legacy knife entries.
+- `src/obsidian/knife-skins.json`: 576 expanded knife rows.
+- Combined: 2,581 rows and 2,581 unique canonical definition IDs.
+- Both files have complete source IDs and no duplicate source IDs or duplicate
+  weapon/name pairs within their own catalogue.
+- The main catalogue uses the `n1ssan-skins` namespace; the expanded knife
+  catalogue uses `n1ssan-knives`. Legacy knife rows remain available for
+  resolving older inventory references, while the expanded knife catalogue
+  supplies the current knife entries.
+- Paint-kit IDs are intentionally not unique per catalogue row. For example,
+  Fade uses paint kit 38 across multiple weapons. The weapon/source catalogue
+  identity remains unique and must not be replaced by the paint-kit ID.
+- The expanded knife catalogue contains 18 Ruby, 18 Sapphire, 18 Black Pearl,
+  and 10 Emerald entries. Doppler phase and pattern metadata remain separate.
+- Blue Gem is not a separate paint-kit catalogue entry: it is a Case Hardened
+  pattern outcome driven by the item's paint seed. The Karambit Case Hardened
+  entry is present with paint kit 44; the seed remains an inventory-instance
+  customization, not a new catalogue definition.
+
+The audit is encoded as tests in `bridge/armory.test.ts`, including canonical
+resolution checks for every static row. Sticker and charm catalogues are fetched
+from ByMykel at runtime, so they are not included in these static-file counts;
+their provider IDs remain kind/source-namespaced and are covered by identity
+normalization tests.
+
 ## Profile semantics
 
 - Profiles are complete snapshots, not deltas.
