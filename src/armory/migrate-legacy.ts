@@ -107,7 +107,10 @@ export function migrateLegacyInventory(
 
     const requestedId = nonEmptyString(source.id) ?? `profile-${profileIndex + 1}`
     let id = requestedId
-    if (usedProfileIds.has(id)) id = `${requestedId}-${profileIndex + 1}`
+    let profileSuffix = profileIndex + 1
+    while (usedProfileIds.has(id)) {
+      id = `${requestedId}-${profileSuffix++}`
+    }
     usedProfileIds.add(id)
 
     const updatedAt = isoDateOr(source.updatedAt, now)
@@ -117,7 +120,10 @@ export function migrateLegacyInventory(
       .filter((item): item is InventoryItemInstance => item !== null)
       .map((item, itemIndex) => {
         let itemId = item.id
-        if (usedItemIds.has(itemId)) itemId = `${itemId}-${itemIndex + 1}`
+        let itemSuffix = itemIndex + 2
+        while (usedItemIds.has(itemId)) {
+          itemId = `${item.id}-${itemSuffix++}`
+        }
         usedItemIds.add(itemId)
         return { ...item, id: itemId }
       })
