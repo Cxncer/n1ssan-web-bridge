@@ -401,3 +401,72 @@ body,button,input,select{font-family:'Barlow',sans-serif}
 .item-remove-x:hover{background:#632b32;border-color:#e38b92;color:#fff}
 @media(prefers-reduced-motion:reduce){.ob-overview:before{animation:none;opacity:.4}}
 @media(max-width:680px){.item-remove-x{opacity:1;transform:none;width:23px;height:23px;top:6px;left:6px}}
+
+/* Obsidian visual system — monochrome controls, fixed metrics, rarity hover */
+.ob-overview{width:100%;height:118px;min-height:118px;max-height:118px;box-sizing:border-box;grid-template-columns:minmax(165px,1.45fr) repeat(7,minmax(76px,1fr));overflow-x:auto;overflow-y:hidden;scrollbar-width:none}
+.ob-overview::-webkit-scrollbar{display:none}
+.ob-overview>.overview-total,.ob-overview>.overview-stat{height:100%;min-width:0;box-sizing:border-box}
+.ob-overview .overview-total{padding:18px 20px}
+.ob-overview .overview-stat{padding:18px 10px}
+.ob-overview .overview-stat small{white-space:nowrap;font-size:8px;letter-spacing:.55px}
+.ob-overview:before{background:conic-gradient(from var(--beam-angle,0deg),transparent 0deg,transparent 245deg,#777 276deg,#fff 294deg,#aaa 315deg,transparent 350deg)}
+.ob-overview:after{background:radial-gradient(ellipse at 0% 0%,#ffffff0a,transparent 55%)}
+@media(max-width:1100px){.ob-overview{grid-template-columns:minmax(150px,1.4fr) repeat(7,minmax(76px,1fr))}.ob-overview>.overview-total,.ob-overview>.overview-stat{grid-column:auto}}
+@media(max-width:680px){.ob-overview{height:108px;min-height:108px;max-height:108px;grid-template-columns:minmax(135px,1.3fr) repeat(7,minmax(68px,1fr))}.ob-overview .overview-total,.ob-overview .overview-stat{padding:14px 9px}.ob-overview .overview-total strong{font-size:31px}}
+/* The Configure Item dialog follows the 21st.dev Dialog pattern: centered, blurred overlay, restrained black surface. */
+.ob-overlay:has(.ob-customize-dialog){background:rgba(0,0,0,.78);backdrop-filter:blur(12px);padding:24px}
+.ob-customize-dialog{width:min(560px,100%);max-height:min(84vh,760px);overflow-y:auto;border:1px solid #343434;border-radius:12px;background:#080808!important;color:#f5f5f5;box-shadow:0 30px 110px #000e}
+.ob-customize-dialog .dialog-head{padding:23px 25px 18px;border-bottom:1px solid #242424}
+.ob-customize-dialog .dialog-head h2,.ob-customize-dialog .dialog-head h2 span{font:600 25px 'Barlow',sans-serif;letter-spacing:-.7px;color:#f5f5f5}
+.ob-customize-dialog .dialog-head p{font:400 12px 'Barlow',sans-serif;color:#929292}
+.ob-customize-dialog .ob-kicker{font:500 9px 'DM Mono',monospace;color:#858585;letter-spacing:1.2px}
+.ob-customize-dialog .detail-preview{margin:0 0 4px;padding:16px 25px;border-bottom:1px solid #242424;background:#0b0b0b}
+.ob-customize-dialog .detail-preview-art{background:#141414;border:1px solid #262626}
+.ob-customize-dialog .detail-preview small,.ob-customize-dialog .detail-preview span{font:10px 'Barlow',sans-serif;color:#969696}
+.ob-customize-dialog .detail-preview h3{font:600 16px 'Barlow',sans-serif;color:#f2f2f2}
+.ob-customize-dialog .ob-fields{padding:14px 25px 18px;gap:12px}
+.ob-customize-dialog .ob-fields label,.ob-customize-dialog .field-label{font:500 10px 'Barlow',sans-serif!important;color:#aaa!important;letter-spacing:.7px}
+.ob-customize-dialog .ob-fields input:not([type=range]),.ob-customize-dialog .ob-fields select{height:36px;padding:0 11px;border:1px solid #333;border-radius:6px;background:#111;color:#f2f2f2;font:12px 'Barlow',sans-serif;box-shadow:none}
+.ob-customize-dialog .ob-fields input:focus,.ob-customize-dialog .ob-fields select:focus{outline:none;border-color:#888}
+.ob-customize-dialog .float-slider-wrap{border:1px solid #292929;background:#101010}
+.ob-customize-dialog .float-slider{background:linear-gradient(90deg,#555,#ddd)}
+.ob-customize-dialog .float-slider::-webkit-slider-thumb{border-color:#eee;background:#777;box-shadow:0 0 0 2px #ffffff20}
+.ob-customize-dialog .float-slider::-moz-range-thumb{border-color:#eee;background:#777;box-shadow:0 0 0 2px #ffffff20}
+.ob-customize-dialog .float-slider-value,.ob-customize-dialog .float-slider-value b,.ob-customize-dialog .slider-marks{color:#ddd}
+.ob-customize-dialog .dialog-actions{padding:15px 25px 20px;border-top:1px solid #242424;background:#080808}
+.ob-customize-dialog .ob-button,.ob-customize-dialog .ob-button.secondary,.ob-customize-dialog .ob-button.shimmer-button{background:#171717!important;border:1px solid #3b3b3b!important;color:#eee!important;box-shadow:none!important}
+.ob-customize-dialog .ob-button:hover{background:#242424!important;border-color:#777!important}
+.ob-customize-dialog .ob-button:before,.ob-customize-dialog .ob-button:after{display:none!important}
+/* Remove the legacy green/colored gradient treatment from every site button. */
+.ob-button,.ob-button.secondary,.ob-button.primary,.ob-button.danger,.ob-button.shimmer-button,.shimmer-button,.ob-button.add-item-button{
+ background:#171717!important;background-image:none!important;border:1px solid #383838!important;color:#eee!important;box-shadow:0 4px 14px #0007!important;filter:none!important
+}
+.ob-button:before,.ob-button:after,.shimmer-button:before,.shimmer-button:after{display:none!important;animation:none!important}
+.ob-button:hover,.ob-button.secondary:hover,.ob-button.primary:hover,.ob-button.danger:hover,.ob-button.shimmer-button:hover,.shimmer-button:hover,.ob-button.add-item-button:hover{
+ background:#252525!important;background-image:none!important;border-color:#777!important;color:#fff!important;box-shadow:0 7px 20px #0009!important
+}
+.ob-button.primary:not(.shimmer-button){background:#eee!important;color:#111!important;border-color:#eee!important}
+.ob-button.primary:not(.shimmer-button):hover{background:#fff!important;color:#000!important}
+.ob-button:disabled{opacity:.4!important}
+.ob-toolbar:before,.ob-toolbar:after{background:linear-gradient(90deg,#fff,#777 48%,#171717 100%)!important}
+.ob-back-to-top{border-color:#444!important;background:#111!important;color:#eee!important}
+.ob-back-to-top:hover{border-color:#aaa!important;background:#242424!important}
+.home-hero,.home-panel,.home-panel-muted,.home-metrics{background:#111!important;border-color:#303030!important}
+.home-hero-copy .ob-kicker,.home-panel .ob-kicker,.home-hero h1 span,.home-panel h2 span,.home-panel button,.home-secondary,.hero-coordinate{color:#aaa!important}
+.home-hero-art{background:radial-gradient(circle,#ffffff0a,transparent 58%)!important}
+.hero-orbit,.orbit-two{border-color:#ffffff20!important}
+.hero-emblem{border-color:#777;background:linear-gradient(145deg,#222,#0b0b0b);box-shadow:0 0 70px #ffffff12,inset 0 0 35px #ffffff08;color:#eee}
+.hero-emblem span{color:#aaa}
+.item-display-name{border-color:#555!important;background:#191919!important;color:#eee!important}
+.stattrak-toggle>span.st-toggle-label{color:#ddd!important;text-shadow:none!important}
+.ob-filters button.selected,.add-category-tabs button.active{color:#fff!important;border-color:#aaa!important}
+.ob-filters button.selected small,.add-category-tabs button.active small{color:#bbb!important}
+.ob-item-card:hover{border-color:var(--rarity,#aaa)!important;box-shadow:0 0 0 1px var(--rarity,#aaa),0 8px 24px #0008!important}
+.ob-item-card{--rarity:#aaa}
+.rarity-card-consumer-grade,.rarity-card-base-grade{--rarity:#b0c3d9}
+.rarity-card-industrial-grade,.rarity-card-high-grade{--rarity:#5e98d9}
+.rarity-card-mil-spec-grade,.rarity-card-remarkable{--rarity:#4b69ff}
+.rarity-card-restricted,.rarity-card-exotic{--rarity:#8847ff}
+.rarity-card-classified,.rarity-card-extraordinary{--rarity:#d32ce6}
+.rarity-card-covert,.rarity-card-master{--rarity:#eb4b4b}
+.rarity-card-contraband{--rarity:#e4ae39}
