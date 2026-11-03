@@ -103,8 +103,25 @@ The exact storage implementation can evolve independently from the contract.
 The current JSON-file persistence is a safe starting point; database adoption is
 not assumed until deployment and multi-user requirements are defined.
 
-## Initial implementation boundary
+## Implemented on operation-02-armory
 
-This operation begins by introducing the domain contract and shared runtime
-validation. The next implementation slice will add Bridge persistence and tests,
-then migrate Obsidian through an adapter while preserving its current preview data.
+- `src/armory/contracts.ts`: versioned domain types, API envelopes, and shared
+  runtime validation.
+- `src/armory/migrate-legacy.ts`: pure migration from Obsidian's current local
+  profile shape, preserving supported values and normalizing string numbers.
+- `bridge/armory-store.ts`: JSON-file persistence, atomic replacement, backup
+  recovery, monotonic revisions, and optimistic concurrency checks.
+- `GET /armory` and `PUT /armory`: Bridge endpoints for reading and replacing the
+  complete multi-profile document. Stale revisions return HTTP 409; invalid
+  documents return HTTP 400.
+- Tests cover domain validation, legacy migration, full-document writes, stale
+  revision rejection, and persistence across Bridge restart.
+
+Obsidian has not yet been switched to the API. Its localStorage preview remains
+untouched until the client migration slice is implemented and tested.
+
+## Next implementation slice
+
+Connect Obsidian to `GET /armory` / `PUT /armory` through a small client adapter.
+Migrate localStorage once, verify the saved document, and only then make Bridge
+persistence authoritative. Keep the existing `/skins` loadout endpoint unchanged.
