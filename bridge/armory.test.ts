@@ -250,7 +250,7 @@ test('catalogue identities are stable, namespaced by item kind and inferred sour
   )
 })
 
-test('catalogue normalization maps verified paint-kit fields but does not guess runtime definition or kit IDs', () => {
+test('catalogue normalization maps base definitions and paint kits without conflating kit domains', () => {
   const awp = toCatalogueDefinition({
     id: 2718699708,
     weapon: 'AWP',
