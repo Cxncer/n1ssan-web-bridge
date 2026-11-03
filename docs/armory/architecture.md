@@ -233,3 +233,31 @@ The Armory catalogue keeps n1ssan catalogue identity separate from CS2 schema id
 Lootline remains the runtime reference: its `ItemSchema::BuildItemList` enumerates live `definitionIndex` values, `BuildPaintKitList` enumerates paint-kit IDs, and `BuildItemsGameLists` separately parses sticker-kit and keychain-definition IDs from `scripts/items/items_game.txt`. The generated provider index is a catalogue-side mapping source, not proof that a particular running CS2 build has accepted every ID. A live schema export/compatibility check is still required before runtime application.
 
 The static catalogue audit covers all 2,005 main entries and 576 expanded knife entries. Runtime sticker and charm entries preserve their provider IDs while carrying the provider's numeric `def_index` in the matching kit-ID field; they are never placed in `gameDefinitionId`.
+
+
+## Live CS2 schema snapshot and validation
+
+The CS2 integration's read-only schema diagnostic writes `n1ssan-cs2-schema.json`
+beside the DLL. It contains:
+
+- `itemDefinitions`: live base definition indices and their engine names.
+- `livePaintKits`: paint-kit IDs enumerated from the live `CEconItemSchema`.
+- `paintKitDefinitions`, `stickerKits`, and `keychainDefinitions`: matching
+  definitions parsed from the installed game's `scripts/items/items_game.txt`.
+- Snapshot metadata indicating whether the live paint-kit map and game file were
+  successfully read.
+
+Copy that file into `src/armory/n1ssan-cs2-schema.json`, or pass its path as the
+first argument:
+
+```bash
+npm run armory:validate-schema
+# or
+node scripts/validate-cs2-schema.mjs path/to/n1ssan-cs2-schema.json
+```
+
+The validator compares all 2,581 static catalogue rows against live base item
+definitions and paint-kit IDs, checks map-key consistency, and reports sticker
+and keychain definition counts. A successful ID-presence check is not yet a
+weapon/paint compatibility proof; that requires checking the generated material
+asset for each specific item/paint-kit pair and is intentionally a separate step.
