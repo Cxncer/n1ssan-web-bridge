@@ -1,0 +1,313 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://n1ssan.local/schemas/armory-inventory-v1.schema.json",
+  "title": "n1ssan Armory Inventory Document",
+  "description": "Canonical data-only inventory contract. Cross-reference and slot compatibility rules are enforced by the application validator.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schemaVersion",
+    "catalogueVersion",
+    "profiles"
+  ],
+  "properties": {
+    "schemaVersion": {
+      "const": 1
+    },
+    "catalogueVersion": {
+      "type": "string",
+      "minLength": 1
+    },
+    "profiles": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/profile"
+      }
+    }
+  },
+  "$defs": {
+    "team": {
+      "type": "string",
+      "enum": [
+        "T",
+        "CT"
+      ]
+    },
+    "itemType": {
+      "type": "string",
+      "enum": [
+        "weapon",
+        "knife",
+        "gloves",
+        "agent",
+        "zeus",
+        "sticker",
+        "charm",
+        "case",
+        "container",
+        "music_kit",
+        "patch",
+        "graffiti",
+        "other"
+      ]
+    },
+    "finish": {
+      "type": [
+        "object",
+        "null"
+      ],
+      "additionalProperties": false,
+      "required": [
+        "paintKitId",
+        "wear",
+        "seed"
+      ],
+      "properties": {
+        "paintKitId": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "wear": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
+        },
+        "seed": {
+          "type": "integer",
+          "minimum": 0
+        }
+      }
+    },
+    "statTrak": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "enabled",
+        "kills"
+      ],
+      "properties": {
+        "enabled": {
+          "type": "boolean"
+        },
+        "kills": {
+          "type": [
+            "integer",
+            "null"
+          ],
+          "minimum": 0
+        }
+      }
+    },
+    "sticker": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "slot",
+        "kitId",
+        "wear",
+        "rotation",
+        "offsetX",
+        "offsetY",
+        "schema"
+      ],
+      "properties": {
+        "slot": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 5
+        },
+        "kitId": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "wear": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
+        },
+        "rotation": {
+          "type": "number"
+        },
+        "offsetX": {
+          "type": "number"
+        },
+        "offsetY": {
+          "type": "number"
+        },
+        "schema": {
+          "type": "integer",
+          "minimum": -1
+        }
+      }
+    },
+    "charm": {
+      "type": [
+        "object",
+        "null"
+      ],
+      "additionalProperties": false,
+      "required": [
+        "kitId",
+        "seed",
+        "x",
+        "y",
+        "z",
+        "stickerKitId",
+        "highlightId"
+      ],
+      "properties": {
+        "kitId": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "seed": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "x": {
+          "type": "number"
+        },
+        "y": {
+          "type": "number"
+        },
+        "z": {
+          "type": "number"
+        },
+        "stickerKitId": {
+          "type": [
+            "integer",
+            "null"
+          ],
+          "minimum": 0
+        },
+        "highlightId": {
+          "type": [
+            "integer",
+            "null"
+          ],
+          "minimum": 0
+        }
+      }
+    },
+    "item": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "instanceId",
+        "definitionId",
+        "type",
+        "name",
+        "finish",
+        "statTrak",
+        "customName",
+        "stickers",
+        "charm",
+        "metadata"
+      ],
+      "properties": {
+        "instanceId": {
+          "type": "string",
+          "minLength": 1
+        },
+        "definitionId": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "type": {
+          "$ref": "#/$defs/itemType"
+        },
+        "name": {
+          "type": "string",
+          "minLength": 1
+        },
+        "finish": {
+          "$ref": "#/$defs/finish"
+        },
+        "statTrak": {
+          "$ref": "#/$defs/statTrak"
+        },
+        "customName": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "stickers": {
+          "type": "array",
+          "maxItems": 6,
+          "items": {
+            "$ref": "#/$defs/sticker"
+          }
+        },
+        "charm": {
+          "$ref": "#/$defs/charm"
+        },
+        "metadata": {
+          "type": "object",
+          "additionalProperties": {
+            "type": [
+              "string",
+              "number",
+              "boolean",
+              "null"
+            ]
+          }
+        }
+      }
+    },
+    "equipment": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "team",
+        "slot",
+        "instanceId"
+      ],
+      "properties": {
+        "team": {
+          "$ref": "#/$defs/team"
+        },
+        "slot": {
+          "type": "string",
+          "minLength": 1
+        },
+        "instanceId": {
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    },
+    "profile": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "profileId",
+        "name",
+        "items",
+        "equipment"
+      ],
+      "properties": {
+        "profileId": {
+          "type": "string",
+          "minLength": 1
+        },
+        "name": {
+          "type": "string",
+          "minLength": 1
+        },
+        "items": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/item"
+          }
+        },
+        "equipment": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/equipment"
+          }
+        }
+      }
+    }
+  }
+}
