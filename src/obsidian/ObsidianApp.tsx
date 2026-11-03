@@ -78,7 +78,7 @@ export default function ObsidianApp() {
   const owned = useMemo(() => items.map(item => ({ item, skin: allCatalogue.find(s => String(s.id) === String(item.definitionId) && (s.kind ?? 'skin') === (item.kind ?? 'skin')) })).filter((x): x is { item: InventoryItem; skin: Skin } => !!x.skin), [items, allCatalogue])
   const visible = useMemo(() => {
     const q = search.trim().toLowerCase()
-    const result = owned.filter(({ item, skin }) => (!q || `${skin.weapon} ${skin.name} ${skin.rarity}`.toLowerCase().includes(q)) && (category === 'All items' || getCategory(skin) === category))
+    const result = owned.filter(({ skin }) => (!q || `${skin.weapon} ${skin.name} ${skin.rarity}`.toLowerCase().includes(q)) && (category === 'All items' || getCategory(skin) === category))
     if (sort === 'Name A–Z') result.sort((a,b) => a.skin.weapon.localeCompare(b.skin.weapon) || a.skin.name.localeCompare(b.skin.name))
     if (sort === 'Float: Lowest') result.sort((a,b) => Number(a.item.float) - Number(b.item.float))
     if (sort === 'Rarity: Highest') result.sort((a,b) => { const categoryRank = (skin: Skin) => getCategory(skin) === 'Knives' ? 3 : getCategory(skin) === 'Gloves' ? 2 : 1; return categoryRank(b.skin) - categoryRank(a.skin) || rarityRank(b.skin.rarity) - rarityRank(a.skin.rarity) || a.skin.name.localeCompare(b.skin.name) })
@@ -199,7 +199,7 @@ export default function ObsidianApp() {
           <div className="ob-item-copy"><div className="ob-item-weapon">{skin.weapon}{(item.kind ?? 'skin') === 'skin' && getCategory(skin) !== 'Gloves' && item.stattrak && <span className="stattrak">ST™</span>}</div>{(item.kind ?? 'skin') === 'skin' && item.customName.trim() && <span className="item-display-name">{item.customName}</span>}<strong>{skin.name}</strong><div className="ob-item-foot">{(item.kind ?? 'skin') === 'skin' && !isAgent(skin) ? <><span>FLOAT <b>{item.float}</b></span><span>SEED <b>{item.seed}</b></span></> : (item.kind !== 'skin' && (item.quantity ?? 1) > 1) ? <span className="stack-count">×{item.quantity}</span> : null}</div></div><span className="item-open">↗</span>
         </div>)}</div> : <div className="ob-empty"><span>⌕</span><h3>Nothing in this view</h3><p>Try another filter or add an item from the catalogue.</p><button className="ob-button shimmer-button" onClick={() => { setCategory('All items'); setSearch('') }}>Clear filters</button></div>}
       </section>
-      <footer className="ob-footer"><span>n1ssan <b>/</b> OBSIDIAN</span><span>{page === 'home' ? 'COMMAND CENTER' : 'INVENTORY WORKSPACE'} <i /> PREVIEW BUILD</span><span>COUNTER-STRIKE 2</span></footer>
+      <footer className="ob-footer"><span>n1ssan <b>/</b> OBSIDIAN</span><span>{'INVENTORY WORKSPACE'} <i /> PREVIEW BUILD</span><span>COUNTER-STRIKE 2</span></footer>
       </>}
     </main>
 
