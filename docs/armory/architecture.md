@@ -97,7 +97,9 @@ Current source namespaces:
 | ByMykel charms | `bymykel-keychains` | `keychain-1` |
 
 The provider ID is retained as `sourceId`; it is never silently re-labelled as a
-CS2 item definition index. Obsidian, the Armory adapter, and legacy migration all
+CS2 item definition index. Re-normalizing an already-canonical ID parses its kind,
+source namespace, and encoded source ID instead of treating the whole canonical
+string as a new provider ID. Obsidian, the Armory adapter, and legacy migration all
 use the same canonical ID helper. Existing raw numeric, generated knife, and
 kind-prefixed sticker/charm references are normalized in Obsidian on read and
 written back canonically on the next successful save.
