@@ -55,6 +55,10 @@ export interface ArmoryItem {
   definitionId: number
   type: ArmoryItemType
   name: string
+  quality: number | null
+  rarity: number | null
+  origin: number | null
+  sourceCaseDefinitionId: number | null
   finish: ArmoryFinish | null
   statTrak: ArmoryStatTrak
   customName: string | null
@@ -131,6 +135,11 @@ function validateItem(value: unknown, path: string, errors: string[]): value is 
     errors.push(`${path}.type: unsupported item type`)
   }
   if (!isNonEmptyString(value.name)) errors.push(`${path}.name: expected a non-empty string`)
+  for (const field of ['quality', 'rarity', 'origin', 'sourceCaseDefinitionId'] as const) {
+    if (value[field] !== null && !isNonNegativeInteger(value[field])) {
+      errors.push(`${path}.${field}: expected a non-negative safe integer or null`)
+    }
+  }
 
   if (value.finish !== null) {
     if (!isObject(value.finish)) {
