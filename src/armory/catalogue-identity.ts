@@ -46,7 +46,11 @@ function positiveInteger(value: unknown): number | null {
  * Creates a stable, kind- and source-namespaced catalogue identity.
  * Existing IDs already in this format are returned unchanged.
  */
-export function catalogueDefinitionId(kind: ArmoryItemKind, sourceIdValue: string | number): string {
+export function catalogueDefinitionId(
+  kind: ArmoryItemKind,
+  sourceIdValue: string | number,
+  sourceOverride?: CatalogueSource,
+): string {
   let sourceId = String(sourceIdValue).trim()
   if (!sourceId) throw new Error('Catalogue source ID cannot be empty')
 
@@ -56,7 +60,7 @@ export function catalogueDefinitionId(kind: ArmoryItemKind, sourceIdValue: strin
   const legacyPrefix = `${kind}:`
   if (sourceId.startsWith(legacyPrefix)) sourceId = sourceId.slice(legacyPrefix.length)
 
-  const source = inferSource(kind, sourceId)
+  const source = sourceOverride ?? inferSource(kind, sourceId)
   return `cs2:${kind}:${source}:${encodeURIComponent(sourceId)}`
 }
 
@@ -72,7 +76,7 @@ export function toCatalogueDefinition(record: CatalogueSourceRecord): CatalogueD
   const rawPaintKit = record.paintKit ?? record.paintIndex
 
   return {
-    id: catalogueDefinitionId(kind, sourceId),
+    id: catalogueDefinitionId(kind, sourceId, source),
     source,
     sourceId,
     kind,
