@@ -237,6 +237,7 @@ export function validateArmoryDocument(value: unknown): ArmoryValidationResult {
   }
 
   const profileIds = new Set<string>()
+  const documentInstanceIds = new Set<string>()
   value.profiles.forEach((profile, profileIndex) => {
     const profilePath = `profiles[${profileIndex}]`
     if (!isObject(profile)) {
@@ -262,8 +263,12 @@ export function validateArmoryDocument(value: unknown): ArmoryValidationResult {
     profile.items.forEach((item, itemIndex) => {
       const itemPath = `${profilePath}.items[${itemIndex}]`
       if (validateItem(item, itemPath, errors) && isNonEmptyString(item.instanceId)) {
-        if (itemsById.has(item.instanceId)) errors.push(`${itemPath}.instanceId: duplicate instance ID`)
-        else itemsById.set(item.instanceId, item)
+        if (documentInstanceIds.has(item.instanceId)) {
+          errors.push(`${itemPath}.instanceId: duplicate instance ID within document`)
+        } else {
+          documentInstanceIds.add(item.instanceId)
+        }
+        if (!itemsById.has(item.instanceId)) itemsById.set(item.instanceId, item)
       }
     })
 
