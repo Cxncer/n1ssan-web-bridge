@@ -139,7 +139,7 @@ export class ArmoryStore {
     const temporaryPath = `${this.filePath}.tmp`
     const backupPath = `${this.filePath}.bak`
 
-    await writeFile(temporaryPath, `${JSON.stringify(document, null, 2)}\\n`, 'utf8')
+    await writeFile(temporaryPath, `${JSON.stringify(document, null, 2)}\n`, 'utf8')
 
     if (backupCurrent) {
       try {
