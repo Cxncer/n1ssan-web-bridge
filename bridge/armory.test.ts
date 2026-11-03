@@ -3,6 +3,7 @@ import { test } from 'node:test'
 import { validateArmoryDocument } from '../src/armory/contracts.ts'
 import { migrateLegacyInventory } from '../src/armory/migrate-legacy.ts'
 import { fromArmoryDocument, toArmoryDocument } from '../src/armory/obsidian-adapter.ts'
+import { catalogueDefinitionId, toCatalogueDefinition } from '../src/armory/catalogue-identity.ts'
 
 const timestamp = '2026-11-03T08:00:00.000Z'
 
@@ -131,13 +132,14 @@ test('migrates Obsidian local profiles into Armory without losing supported item
 
   assert.deepEqual(validateArmoryDocument(migrated), [])
   assert.equal(migrated.activeProfileId, 'profile-clean')
-  assert.equal(migrated.profiles[0].items[0].definitionId, '12345')
+  assert.equal(migrated.profiles[0].items[0].definitionId, 'cs2:skin:n1ssan-skins:12345')
   assert.equal(migrated.profiles[0].items[0].customization?.float, 0.01842)
   assert.equal(migrated.profiles[0].items[0].customization?.seed, 413)
   assert.deepEqual(migrated.profiles[0].items[0].customization?.statTrak, {
     enabled: true,
     kills: 0,
   })
+  assert.equal(migrated.profiles[0].items[1].definitionId, 'cs2:sticker:bymykel-stickers:team-logo')
   assert.equal(migrated.profiles[0].items[1].quantity, 4)
   assert.equal(migrated.profiles[0].items[1].customization, null)
 })
@@ -222,4 +224,68 @@ test('Obsidian adapter leaves non-customizable skin instances without empty cust
   }], 'profile-agents', 0, timestamp)
 
   assert.equal(document.profiles[0].items[0].customization, null)
+})
+
+
+test('catalogue identities are stable, namespaced by item kind and inferred source', () => {
+  assert.equal(catalogueDefinitionId('skin', 2718699708), 'cs2:skin:n1ssan-skins:2718699708')
+  assert.equal(catalogueDefinitionId('skin', 'skin-95831ce7c492'), 'cs2:skin:n1ssan-knives:skin-95831ce7c492')
+  assert.equal(catalogueDefinitionId('sticker', 'sticker-1'), 'cs2:sticker:bymykel-stickers:sticker-1')
+  assert.equal(catalogueDefinitionId('charm', 'keychain-1'), 'cs2:charm:bymykel-keychains:keychain-1')
+  assert.equal(
+    catalogueDefinitionId('sticker', 'sticker:sticker-1'),
+    'cs2:sticker:bymykel-stickers:sticker-1',
+  )
+  assert.equal(
+    catalogueDefinitionId('skin', 'cs2:skin:n1ssan-skins:2718699708'),
+    'cs2:skin:n1ssan-skins:2718699708',
+  )
+})
+
+test('catalogue normalization maps verified paint-kit fields but does not guess runtime definition or kit IDs', () => {
+  const awp = toCatalogueDefinition({
+    id: 2718699708,
+    weapon: 'AWP',
+    name: 'Acheron',
+    type: 'Sniper Rifles',
+    rarity: 'Restricted',
+    paintKit: 788,
+  })
+  assert.equal(awp.id, 'cs2:skin:n1ssan-skins:2718699708')
+  assert.equal(awp.catalogueWeaponName, 'AWP')
+  assert.equal(awp.paintKitId, 788)
+  assert.equal(awp.gameDefinitionId, null)
+  assert.equal(awp.stickerKitId, null)
+  assert.equal(awp.keychainId, null)
+
+  const knife = toCatalogueDefinition({
+    id: 'skin-95831ce7c492',
+    weapon: 'Bayonet',
+    name: 'Doppler · Black Pearl',
+    type: 'Knives',
+    rarity: 'Covert',
+    paintIndex: '417',
+    phase: 'Black Pearl',
+  })
+  assert.equal(knife.id, 'cs2:skin:n1ssan-knives:skin-95831ce7c492')
+  assert.equal(knife.paintKitId, 417)
+  assert.equal(knife.phase, 'Black Pearl')
+
+  const sticker = toCatalogueDefinition({
+    id: 'sticker-1',
+    kind: 'sticker',
+    name: 'Shooter',
+    type: 'Stickers',
+  })
+  assert.equal(sticker.id, 'cs2:sticker:bymykel-stickers:sticker-1')
+  assert.equal(sticker.stickerKitId, null)
+
+  const charm = toCatalogueDefinition({
+    id: 'keychain-1',
+    kind: 'charm',
+    name: "Lil' Ava",
+    type: 'Charms',
+  })
+  assert.equal(charm.id, 'cs2:charm:bymykel-keychains:keychain-1')
+  assert.equal(charm.keychainId, null)
 })
