@@ -27,6 +27,8 @@ Never use a display name as an identifier. Duplicate item copies must have disti
 |---|---|
 | `type` | Broad item category |
 | `name` | Display name |
+| `quality`, `rarity`, `origin` | Optional numeric CS2 item metadata, or null when unknown |
+| `sourceCaseDefinitionId` | Originating case definition, or null |
 | `finish` | Paint kit, wear and seed, or null |
 | `statTrak` | Enabled state and optional kill count |
 | `customName` | Name-tag text or null |
