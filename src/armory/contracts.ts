@@ -105,9 +105,6 @@ const isIsoDate = (value: unknown): value is string =>
 const isItemKind = (value: unknown): value is ArmoryItemKind =>
   value === 'skin' || value === 'sticker' || value === 'charm'
 
-const isNullableNumber = (value: unknown): value is number | null =>
-  value === null || (typeof value === 'number' && Number.isFinite(value))
-
 /**
  * Runtime validation is shared by the Bridge and tests. It accepts unknown
  * input so HTTP payloads and persisted JSON are checked at the boundary.
