@@ -24,6 +24,7 @@ async function startServer(): Promise<void> {
         ...process.env,
         N1SSAN_PORT: String(PORT),
         N1SSAN_DATA_FILE: dataFile,
+        N1SSAN_ARMORY_FILE: path.join(tempDir, 'armory-data.json'),
       },
       stdio: 'ignore',
     },
@@ -168,4 +169,81 @@ test('Bridge validates submissions, backs up previous data, and restores saved d
   const afterRestart = await fetch(`${BASE_URL}/skins`)
   assert.equal(afterRestart.status, 200)
   assert.deepEqual(await afterRestart.json(), updatedState)
+})
+
+
+test('Armory API persists complete profiles and rejects stale or invalid writes', async () => {
+  const readResponse = await fetch(`${BASE_URL}/armory`)
+  assert.equal(readResponse.status, 200)
+  const initial = await readResponse.json()
+
+  assert.equal(initial.data.schemaVersion, 1)
+  assert.equal(initial.data.revision, 0)
+  assert.equal(initial.data.profiles.length, 1)
+
+  const timestamp = new Date().toISOString()
+  const nextDocument = {
+    ...initial.data,
+    profiles: [{
+      ...initial.data.profiles[0],
+      items: [{
+        id: 'armory-test-item',
+        definitionId: 'skin:ak47-redline',
+        kind: 'skin',
+        quantity: 1,
+        customization: {
+          float: 0.18,
+          seed: 413,
+          statTrak: { enabled: true, kills: 12 },
+          customName: null,
+        },
+        createdAt: timestamp,
+        updatedAt: timestamp,
+      }],
+      updatedAt: timestamp,
+    }],
+  }
+
+  const saveResponse = await fetch(`${BASE_URL}/armory`, {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      expectedRevision: initial.data.revision,
+      data: nextDocument,
+    }),
+  })
+
+  assert.equal(saveResponse.status, 200)
+  const saved = await saveResponse.json()
+  assert.equal(saved.data.revision, 1)
+  assert.equal(saved.data.profiles[0].items.length, 1)
+
+  const staleResponse = await fetch(`${BASE_URL}/armory`, {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      expectedRevision: initial.data.revision,
+      data: nextDocument,
+    }),
+  })
+
+  assert.equal(staleResponse.status, 409)
+
+  const invalidDocument = structuredClone(saved.data)
+  invalidDocument.profiles[0].items[0].quantity = 2
+  const invalidResponse = await fetch(`${BASE_URL}/armory`, {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      expectedRevision: saved.data.revision,
+      data: invalidDocument,
+    }),
+  })
+
+  assert.equal(invalidResponse.status, 400)
+
+  const finalResponse = await fetch(`${BASE_URL}/armory`)
+  const finalState = await finalResponse.json()
+  assert.equal(finalState.data.revision, 1)
+  assert.equal(finalState.data.profiles[0].items[0].id, 'armory-test-item')
 })
