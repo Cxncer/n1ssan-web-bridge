@@ -552,7 +552,8 @@ async function start(): Promise<void> {
     console.log(`n1ssan Bridge running at http://${HOST}:${PORT}`)
     console.log(`Health check: http://${HOST}:${PORT}/health`)
     console.log(`Latest received skins: http://${HOST}:${PORT}/skins`)
-    console.log(`Persistent data file: ${DATA_FILE}`)
+    console.log(`Persistent loadout data file: ${DATA_FILE}`)
+    console.log(`Persistent Armory data file: ${ARMORY_FILE}`)
   })
 }
 
