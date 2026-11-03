@@ -2,17 +2,18 @@ import { useEffect, useMemo, useState } from 'react'
 import skinData from '../skins.json'
 import './obsidian.css'
 
-type Skin = { id: number; weapon: string; name: string; type: string; rarity: string; color: string; art: string; description: string; image?: string; minFloat?: number | null; maxFloat?: number | null }
-type StickerAttachment = { id: string; name: string; slot: number; wear: string }
-type CharmAttachment = { id: string; name: string; pattern: string }
-type InventoryItem = { instanceId: string; definitionId: number; float: string; seed: string; stattrak: boolean; customName: string; stickers: StickerAttachment[]; charm: CharmAttachment | null }
+type ItemKind = 'skin' | 'sticker' | 'charm'
+type Skin = { id: number | string; weapon: string; name: string; type: string; rarity: string; color: string; art: string; description: string; image?: string; minFloat?: number | null; maxFloat?: number | null; kind?: ItemKind }
+type InventoryItem = { instanceId: string; definitionId: number | string; kind?: ItemKind; float: string; seed: string; stattrak: boolean; customName: string }
 type InventoryProfile = { id: string; name: string; items: InventoryItem[]; updatedAt: string }
 const catalogue = skinData as Skin[]
 const makeId = () => `item-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`
-const normalizeItem = (item: InventoryItem): InventoryItem => ({ ...item, stickers: Array.isArray(item.stickers) ? item.stickers : [], charm: item.charm ?? null })
+const normalizeItem = (item: InventoryItem): InventoryItem => ({ ...item, kind: item.kind ?? 'skin', float: item.float ?? '', seed: item.seed ?? '', stattrak: item.stattrak ?? false, customName: item.customName ?? '' })
 const profileId = () => `profile-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`
 const getCategory = (skin: Skin) => {
   const type = (skin.type || '').toLowerCase(), weapon = (skin.weapon || '').toLowerCase()
+  if (type.includes('sticker')) return 'Stickers'
+  if (type.includes('charm') || type.includes('keychain')) return 'Charms'
   if (type.includes('glove') || weapon.includes('glove')) return 'Gloves'
   if (type.includes('knife') || weapon.includes('knife')) return 'Knives'
   if (type.includes('agent')) return 'Agents'
@@ -34,7 +35,7 @@ const initialItems = (): InventoryItem[] => {
     catalogue.find(s => getCategory(s) === 'Knives'),
     catalogue.find(s => getCategory(s) === 'Gloves'),
   ].filter((s): s is Skin => !!s)
-  return picks.map((s, i) => ({ instanceId: `demo-${i + 1}`, definitionId: s.id, float: ['0.01842','0.07135','0.12408','0.03211','0.00621','0.08417'][i], seed: ['413','28','721','156','492','318'][i], stattrak: i === 0, customName: '', stickers: [], charm: null }))
+  return picks.map((s, i) => ({ instanceId: `demo-${i + 1}`, definitionId: s.id, float: ['0.01842','0.07135','0.12408','0.03211','0.00621','0.08417'][i], seed: ['413','28','721','156','492','318'][i], stattrak: i === 0, customName: '', kind: 'skin' }))
 }
 const seedItems = initialItems()
 const initialProfiles: InventoryProfile[] = [{ id: 'profile-main', name: 'Main inventory', items: seedItems, updatedAt: 'Just now' }, { id: 'profile-clean', name: 'Clean setup', items: seedItems.slice(0, 4).map((item, i) => ({ ...item, instanceId: `clean-${i}`, stattrak: false })), updatedAt: 'Preview' }]
@@ -60,13 +61,13 @@ export default function ObsidianApp() {
   const [catalogueSearch, setCatalogueSearch] = useState('')
   const [profileName, setProfileName] = useState('')
   const [notice, setNotice] = useState('')
-  const [stickerName, setStickerName] = useState('')
-  const [stickerWear, setStickerWear] = useState('0.00')
-  const [stickerSlot, setStickerSlot] = useState('1')
-  const [charmName, setCharmName] = useState('')
-  const [charmPattern, setCharmPattern] = useState('')
+  const [specialItems, setSpecialItems] = useState<Skin[]>([])
+  const [addCategory, setAddCategory] = useState<ItemKind>('skin')
+  const [specialLoading, setSpecialLoading] = useState(false)
+  const [specialError, setSpecialError] = useState('')
 
-  const owned = useMemo(() => items.map(item => ({ item, skin: catalogue.find(s => s.id === item.definitionId) })).filter((x): x is { item: InventoryItem; skin: Skin } => !!x.skin), [items])
+  const allCatalogue = useMemo(() => [...catalogue, ...specialItems], [specialItems])
+  const owned = useMemo(() => items.map(item => ({ item, skin: allCatalogue.find(s => String(s.id) === String(item.definitionId) && (s.kind ?? 'skin') === (item.kind ?? 'skin')) })).filter((x): x is { item: InventoryItem; skin: Skin } => !!x.skin), [items, allCatalogue])
   const visible = useMemo(() => {
     const q = search.trim().toLowerCase()
     const result = owned.filter(({ item, skin }) => (!q || `${skin.weapon} ${skin.name} ${skin.rarity}`.toLowerCase().includes(q)) && (category === 'All items' || getCategory(skin) === category))
@@ -100,30 +101,9 @@ export default function ObsidianApp() {
     if (id === activeId) switchProfile(next[0].id)
   }
   const addSkin = (skin: Skin) => {
-    const next = [...items, { instanceId: makeId(), definitionId: skin.id, float: isAgent(skin) ? '' : '0.00000', seed: isAgent(skin) ? '' : '1', stattrak: false, customName: '', stickers: [], charm: null }]
-    updateItems(next); setDialog(null); setNotice(`${skin.weapon} · ${skin.name} added`)
-  }
-  const addSticker = () => {
-    if (!selected || !stickerName.trim()) return
-    const slot = Number(stickerSlot)
-    if (selected.item.stickers.some(sticker => sticker.slot === slot)) { setNotice(`Sticker slot ${slot} is already occupied`); return }
-    const next = [...selected.item.stickers, { id: makeId(), name: stickerName.trim(), slot, wear: stickerWear.trim() || '0.00' }].sort((a,b) => a.slot - b.slot)
-    updateItems(items.map(item => item.instanceId === selected.item.instanceId ? { ...item, stickers: next } : item))
-    setStickerName(''); setStickerSlot(String([1,2,3,4,5].find(candidate => !next.some(sticker => sticker.slot === candidate)) ?? 1)); setNotice(`Sticker added to slot ${slot}`)
-  }
-  const removeSticker = (id: string) => {
-    if (!selected) return
-    updateItems(items.map(item => item.instanceId === selected.item.instanceId ? { ...item, stickers: item.stickers.filter(sticker => sticker.id !== id) } : item))
-  }
-  const saveCharm = () => {
-    if (!selected || !charmName.trim()) return
-    updateItems(items.map(item => item.instanceId === selected.item.instanceId ? { ...item, charm: { id: makeId(), name: charmName.trim(), pattern: charmPattern.trim() } } : item))
-    setCharmName(''); setCharmPattern(''); setNotice('Charm attached')
-  }
-  const removeCharm = () => {
-    if (!selected) return
-    updateItems(items.map(item => item.instanceId === selected.item.instanceId ? { ...item, charm: null } : item))
-    setNotice('Charm removed')
+    const kind = skin.kind ?? 'skin'
+    const next = [...items, { instanceId: makeId(), definitionId: skin.id, kind, float: kind === 'skin' && !isAgent(skin) ? '0.00000' : '', seed: kind === 'skin' && !isAgent(skin) ? '1' : '', stattrak: false, customName: '' }]
+    updateItems(next); setDialog(null); setNotice(`${skin.weapon} · ${skin.name} added to inventory`)
   }
   const updateSelected = (patch: Partial<InventoryItem>) => {
     if (!selected) return
@@ -140,14 +120,36 @@ export default function ObsidianApp() {
   }, [notice])
 
   useEffect(() => {
+    let cancelled = false
+    setSpecialLoading(true)
+    Promise.all([
+      fetch('https://raw.githubusercontent.com/ByMykel/CSGO-API/main/public/api/en/stickers.json').then(r => { if (!r.ok) throw new Error('Sticker catalogue unavailable'); return r.json() }),
+      fetch('https://raw.githubusercontent.com/ByMykel/CSGO-API/main/public/api/en/keychains.json').then(r => { if (!r.ok) throw new Error('Charm catalogue unavailable'); return r.json() })
+    ]).then(([stickers, charms]) => {
+      if (cancelled) return
+      const mapItems = (entries: any[], kind: 'sticker' | 'charm'): Skin[] => entries.map(entry => ({
+        id: `${kind}:${entry.id}`, kind, weapon: kind === 'sticker' ? 'Sticker' : 'Charm',
+        name: String(entry.name ?? '').replace(/^(Sticker|Charm)\\s*\\|\\s*/i, ''),
+        type: kind === 'sticker' ? 'Stickers' : 'Charms', rarity: entry.rarity?.name ?? 'Unknown Grade',
+        color: entry.rarity?.color ?? '#8c9b90', art: kind === 'sticker' ? 'ST' : 'CH',
+        description: entry.description ?? '', image: entry.image
+      }))
+      setSpecialItems([...mapItems(stickers, 'sticker'), ...mapItems(charms, 'charm')])
+      setSpecialError('')
+    }).catch(() => { if (!cancelled) setSpecialError('Sticker and charm catalogues could not be reached. Check your connection and retry.') })
+      .finally(() => { if (!cancelled) setSpecialLoading(false) })
+    return () => { cancelled = true }
+  }, [])
+
+  useEffect(() => {
     window.localStorage.setItem(STORAGE_KEY, JSON.stringify(profiles))
     window.localStorage.setItem(`${STORAGE_KEY}:active`, activeId)
   }, [profiles, activeId])
 
   const candidates = useMemo(() => {
     const q = catalogueSearch.trim().toLowerCase()
-    return catalogue.filter(s => (!q || `${s.weapon} ${s.name} ${s.type}`.toLowerCase().includes(q))).slice(0, 80)
-  }, [catalogueSearch])
+    return allCatalogue.filter(s => (s.kind ?? 'skin') === addCategory && (!q || `${s.weapon} ${s.name} ${s.type} ${s.rarity}`.toLowerCase().includes(q))).slice(0, 100)
+  }, [allCatalogue, catalogueSearch, addCategory])
 
   return <div className="obsidian-shell">
     <header className="ob-topbar">
@@ -171,8 +173,8 @@ export default function ObsidianApp() {
 
       <section className="ob-inventory-section">
         <div className="ob-section-head"><div><h2>Inventory <span>Overview</span></h2></div><div className="ob-section-meta"><span className="live-dot" /> {visible.length} ITEMS DISPLAYED</div></div>
-        <div className="ob-toolbar"><label className="ob-search"><span>⌕</span><input value={search} onChange={e => setSearch(e.target.value)} placeholder="Search your inventory..." /><kbd>⌘ K</kbd></label><div className="ob-sort"><span>SORT BY</span><select value={sort} onChange={e => setSort(e.target.value)}><option>Recently Added</option><option>Name A–Z</option><option>Float: Lowest</option><option>Rarity: Highest</option></select></div><button className="ob-button shimmer-button add-item-button" onClick={() => { setCatalogueSearch(''); setDialog('add') }}><span>＋</span> Add item</button></div>
-        <div className="ob-filters">{['All items','Rifles','Pistols','Mid-Tier','Snipers','Knives','Gloves','Agents'].map(c => <button key={c} className={category === c ? 'selected' : ''} onClick={() => setCategory(c)}>{c}<small>{c === 'All items' ? items.length : owned.filter(x => getCategory(x.skin) === c).length}</small></button>)}</div>
+        <div className="ob-toolbar"><label className="ob-search"><span>⌕</span><input value={search} onChange={e => setSearch(e.target.value)} placeholder="Search your inventory..." /><kbd>⌘ K</kbd></label><div className="ob-sort"><span>SORT BY</span><select value={sort} onChange={e => setSort(e.target.value)}><option>Recently Added</option><option>Name A–Z</option><option>Float: Lowest</option><option>Rarity: Highest</option></select></div><button className="ob-button shimmer-button add-item-button" onClick={() => { setCatalogueSearch(''); setAddCategory('skin'); setDialog('add') }}><span>＋</span> Add item</button></div>
+        <div className="ob-filters">{['All items','Rifles','Pistols','Mid-Tier','Snipers','Knives','Gloves','Agents','Stickers','Charms'].map(c => <button key={c} className={category === c ? 'selected' : ''} onClick={() => setCategory(c)}>{c}<small>{c === 'All items' ? items.length : owned.filter(x => getCategory(x.skin) === c).length}</small></button>)}</div>
 
         {visible.length ? <div className={`ob-item-grid ${searching ? 'search-active' : ''}`}>{visible.map(({ item, skin }, index) => <button className={`ob-item-card rarity-card-${rarityClass(skin.rarity)} item-category-${getCategory(skin).toLowerCase()}`} key={item.instanceId} onClick={() => { setSelectedInstance(item.instanceId); setDialog('detail') }}>
           <div className={`ob-item-art rarity-${rarityClass(skin.rarity)}`}><span className="item-glow" />{skin.image ? <img src={skin.image} alt="" loading="lazy" /> : <span className="item-fallback">{skin.art}</span>}<span className="item-rarity">{skin.rarity}</span></div>
@@ -185,8 +187,8 @@ export default function ObsidianApp() {
     {notice && <div className="ob-notification-stack" role="status" aria-live="polite"><div className="ob-notification-icon">✓</div><div className="ob-notification-copy"><strong>Inventory updated</strong><span>{notice}</span></div><button aria-label="Dismiss notification" onClick={() => setNotice('')}>×</button><i className="ob-notification-timer" /></div>}
 
     {dialog && <div className="ob-overlay" onMouseDown={e => { if (e.target === e.currentTarget) setDialog(null) }}>
-      {dialog === 'add' && <section className="ob-dialog ob-add-dialog"><div className="dialog-head"><div><div className="ob-kicker">CATALOGUE</div><h2>Add to <span>inventory.</span></h2></div><button className="dialog-close" onClick={() => setDialog(null)}>×</button></div><label className="ob-search dialog-search"><span>⌕</span><input autoFocus value={catalogueSearch} onChange={e => setCatalogueSearch(e.target.value)} placeholder="Search weapons, finishes..." /></label><div className="ob-catalogue-list">{candidates.map(s => <button key={s.id} onClick={() => addSkin(s)}><div className="catalogue-thumb">{s.image && <img src={s.image} alt="" loading="lazy" />}</div><span><strong>{s.weapon}</strong><small>{s.name} · {s.rarity}</small></span><b>＋</b></button>)}</div><div className="dialog-foot">Showing up to 80 catalogue matches · Add creates a new inventory instance</div></section>}
-      {dialog === 'detail' && selected && <section className="ob-dialog ob-detail-dialog"><div className="dialog-head"><div><div className="ob-kicker">INVENTORY INSTANCE</div><h2>Item <span>details.</span></h2></div><button className="dialog-close" onClick={() => setDialog(null)}>×</button></div><div className="detail-preview"><div className="detail-preview-art">{selected.skin.image && <img src={selected.skin.image} alt="" />}</div><div><small>{selected.skin.weapon}</small><h3>{selected.skin.name}</h3><span>{selected.skin.rarity} · {getCategory(selected.skin)}</span></div></div><div className="ob-fields">{!isAgent(selected.skin) && <><label>FLOAT VALUE<input value={selected.item.float} onChange={e => updateSelected({ float: e.target.value })} inputMode="decimal" /></label><label>PAINT SEED<input value={selected.item.seed} onChange={e => updateSelected({ seed: e.target.value })} inputMode="numeric" /></label></>}<label className="field-wide">CUSTOM NAME<input value={selected.item.customName} onChange={e => updateSelected({ customName: e.target.value })} placeholder="Name this item..." /></label>{!isAgent(selected.skin) && <button type="button" className={`stattrak-toggle ${selected.item.stattrak ? 'enabled' : ''}`} aria-pressed={selected.item.stattrak} onClick={() => updateSelected({ stattrak: !selected.item.stattrak })}><span className="st-toggle-label">ST</span><span className="st-toggle-track"><i /></span></button>}</div>{!isAgent(selected.skin) && !['Knives','Gloves'].includes(getCategory(selected.skin)) && <div className="attachment-editor"><section className="attachment-section"><div className="attachment-heading"><div><strong>Stickers</strong><small>{selected.item.stickers.length}/5 applied · instance-specific</small></div><span>{selected.item.stickers.length.toString().padStart(2,'0')} / 05</span></div><div className="sticker-slots">{[1,2,3,4,5].map(slot => { const sticker = selected.item.stickers.find(entry => entry.slot === slot); return <div className={sticker ? 'sticker-slot filled' : 'sticker-slot'} key={slot}><span className="slot-number">0{slot}</span>{sticker ? <><span className="slot-sticker-copy"><strong>{sticker.name}</strong><small>Wear {sticker.wear}</small></span><button type="button" aria-label={`Remove sticker from slot ${slot}`} onClick={() => removeSticker(sticker.id)}>×</button></> : <span className="slot-empty">Empty sticker slot</span>}</div> })}</div><div className="attachment-form"><input value={stickerName} onChange={e => setStickerName(e.target.value)} placeholder="Sticker name" aria-label="Sticker name" /><select value={stickerSlot} onChange={e => setStickerSlot(e.target.value)} aria-label="Sticker slot">{[1,2,3,4,5].map(slot => <option key={slot} value={slot} disabled={selected.item.stickers.some(sticker => sticker.slot === slot)}>Slot {slot}</option>)}</select><input value={stickerWear} onChange={e => setStickerWear(e.target.value)} placeholder="Wear" aria-label="Sticker wear" /><button type="button" onClick={addSticker} disabled={!stickerName.trim() || selected.item.stickers.length >= 5}>＋ Add</button></div></section><section className="attachment-section charm-section"><div className="attachment-heading"><div><strong>Weapon charm</strong><small>One charm per inventory item</small></div><span>{selected.item.charm ? 'ATTACHED' : 'EMPTY'}</span></div>{selected.item.charm ? <div className="charm-current"><span className="charm-orb">✳</span><span><strong>{selected.item.charm.name}</strong><small>{selected.item.charm.pattern ? `Pattern ${selected.item.charm.pattern}` : 'No pattern specified'}</small></span><button type="button" onClick={removeCharm}>Remove</button></div> : <div className="attachment-form charm-form"><input value={charmName} onChange={e => setCharmName(e.target.value)} placeholder="Charm name" aria-label="Charm name" /><input value={charmPattern} onChange={e => setCharmPattern(e.target.value)} placeholder="Pattern / seed (optional)" aria-label="Charm pattern" /><button type="button" onClick={saveCharm} disabled={!charmName.trim()}>＋ Attach charm</button></div>}</section><p className="attachment-note">Manual preview entries for now. Catalogue artwork and live CS2 attachment data will follow.</p></div>}<div className="dialog-actions"><button className="ob-button shimmer-button remove-item-button" onClick={removeSelected}>Remove item</button><button className="ob-button shimmer-button" onClick={() => setDialog(null)}>Done</button></div></section>}
+      {dialog === 'add' && <section className="ob-dialog ob-add-dialog"><div className="dialog-head"><div><div className="ob-kicker">CATALOGUE</div><h2>Add to <span>inventory.</span></h2><p>Import items into your inventory. Stickers and charms are applied to weapons inside CS2.</p></div><button className="dialog-close" onClick={() => setDialog(null)}>×</button></div><div className="add-category-tabs">{([{id:'skin',label:'Weapon skins'},{id:'sticker',label:'Stickers'},{id:'charm',label:'Charms'}] as const).map(tab => <button key={tab.id} className={addCategory === tab.id ? 'active' : ''} onClick={() => { setAddCategory(tab.id); setCatalogueSearch('') }}>{tab.label}<small>{tab.id === 'skin' ? catalogue.length : specialItems.filter(item => item.kind === tab.id).length}</small></button>)}</div><label className="ob-search dialog-search"><span>⌕</span><input autoFocus value={catalogueSearch} onChange={e => setCatalogueSearch(e.target.value)} placeholder={addCategory === 'skin' ? 'Search weapons, finishes...' : addCategory === 'sticker' ? 'Search stickers, teams, tournaments...' : 'Search charms...'} /></label><div className="ob-catalogue-list">{specialLoading && addCategory !== 'skin' ? <div className="catalogue-state">Loading {addCategory} catalogue…</div> : specialError && addCategory !== 'skin' && !specialItems.some(item => item.kind === addCategory) ? <div className="catalogue-state">{specialError}</div> : candidates.length ? candidates.map(s => <button key={s.id} onClick={() => addSkin(s)}><div className="catalogue-thumb">{s.image && <img src={s.image} alt="" loading="lazy" />}</div><span><strong>{s.weapon}</strong><small>{s.name} · {s.rarity}</small></span><b>＋</b></button>) : <div className="catalogue-state">No matching items found.</div>}</div><div className="dialog-foot">{addCategory === 'skin' ? 'Weapon skins are imported as individual inventory instances.' : 'Imported into inventory only · Apply to weapons directly inside CS2.'}</div></section>}
+      {dialog === 'detail' && selected && <section className="ob-dialog ob-detail-dialog"><div className="dialog-head"><div><div className="ob-kicker">INVENTORY INSTANCE</div><h2>Item <span>details.</span></h2></div><button className="dialog-close" onClick={() => setDialog(null)}>×</button></div><div className="detail-preview"><div className="detail-preview-art">{selected.skin.image && <img src={selected.skin.image} alt="" />}</div><div><small>{selected.skin.weapon}</small><h3>{selected.skin.name}</h3><span>{selected.skin.rarity} · {getCategory(selected.skin)}</span></div></div><div className="ob-fields">{(selected.item.kind ?? 'skin') === 'skin' && !isAgent(selected.skin) && <><label>FLOAT VALUE<input value={selected.item.float} onChange={e => updateSelected({ float: e.target.value })} inputMode="decimal" /></label><label>PAINT SEED<input value={selected.item.seed} onChange={e => updateSelected({ seed: e.target.value })} inputMode="numeric" /></label></>}{(selected.item.kind ?? 'skin') === 'skin' && <label className="field-wide">CUSTOM NAME<input value={selected.item.customName} onChange={e => updateSelected({ customName: e.target.value })} placeholder="Name this item..." /></label>}{(selected.item.kind ?? 'skin') === 'skin' && !isAgent(selected.skin) && <button type="button" className={`stattrak-toggle ${selected.item.stattrak ? 'enabled' : ''}`} aria-pressed={selected.item.stattrak} onClick={() => updateSelected({ stattrak: !selected.item.stattrak })}><span className="st-toggle-label">ST</span><span className="st-toggle-track"><i /></span></button>}</div>{(selected.item.kind ?? 'skin') !== 'skin' && <div className="imported-item-note">Imported to inventory · Apply this item directly inside CS2.</div>}<div className="dialog-actions"><button className="ob-button shimmer-button remove-item-button" onClick={removeSelected}>Remove item</button><button className="ob-button shimmer-button" onClick={() => setDialog(null)}>Done</button></div></section>}
       {dialog === 'profiles' && <section className="ob-dialog ob-profiles-dialog"><div className="dialog-head"><div><div className="ob-kicker">SAVED SNAPSHOTS</div><h2>Inventory <span>profiles.</span></h2><p>Each profile stores a complete inventory snapshot. Switching replaces the active inventory.</p></div><button className="dialog-close" onClick={() => setDialog(null)}>×</button></div><div className="profile-list">{profiles.map(p => <div className={p.id === activeId ? 'profile-row current' : 'profile-row'} key={p.id}><button className="profile-load" onClick={() => switchProfile(p.id)}><span className="profile-radio">{p.id === activeId && <i />}</span><span><strong>{p.name}</strong><small>{p.items.length} items · {p.updatedAt}</small></span></button><button className="profile-delete" title="Delete profile" onClick={() => deleteProfile(p.id)} disabled={profiles.length < 2}>×</button></div>)}</div><div className="new-profile"><label>NEW INVENTORY PROFILE<input value={profileName} onChange={e => setProfileName(e.target.value)} placeholder="e.g. Tournament setup" onKeyDown={e => { if (e.key === 'Enter') saveProfile() }} /></label><button className="ob-button shimmer-button" onClick={saveProfile} disabled={!profileName.trim()}>Save snapshot <span>＋</span></button></div><div className="dialog-foot">Unlimited local preview profiles · Switching restores the saved snapshot, not a merge</div></section>}
       {dialog === 'diagnostics' && <section className="ob-dialog ob-diagnostics-dialog"><div className="dialog-head"><div><div className="ob-kicker">SYSTEM HEALTH</div><h2>Diagnostics<span>.</span></h2><p>Runtime and compatibility checks for the CS2 integration.</p></div><button className="dialog-close" onClick={() => setDialog(null)}>×</button></div><div className="diagnostic-list"><div><span className="diagnostic-state pending" /><span><strong>CS2 process detection</strong><small>Not connected · preview cannot inspect local processes</small></span><b>WAITING</b></div><div><span className="diagnostic-state pending" /><span><strong>Bridge connection</strong><small>Runtime integration has not been connected</small></span><b>PENDING</b></div><div><span className="diagnostic-state pending" /><span><strong>Offsets &amp; signatures</strong><small>Version validation will report outdated definitions here</small></span><b>NOT CHECKED</b></div></div><div className="dialog-foot">Diagnostics UI preview · no process or signature checks are running yet</div></section>}
     </div>}
