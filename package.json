@@ -9,7 +9,7 @@
     "build": "tsc -b && vite build",
     "lint": "eslint .",
     "preview": "vite preview",
-    "test": "node --import tsx --test bridge/server.test.ts"
+    "test": "node --import tsx --test bridge/server.test.ts bridge/armory-contract.test.ts"
   },
   "dependencies": {
     "express": "^5.3.0",
