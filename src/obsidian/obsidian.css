@@ -815,3 +815,64 @@ body,button,input,select{font-family:'Barlow',sans-serif}
     animation: none !important;
   }
 }
+
+
+/* PrimeVue-inspired native range: slim track, colored filled portion, compact thumb. */
+.ob-customize-dialog .float-slider-wrap {
+  padding: 7px 10px 5px !important;
+  border: 1px solid #292929 !important;
+  border-radius: 12px !important;
+  background: #101010 !important;
+}
+.ob-customize-dialog .float-slider-value {
+  margin-bottom: 7px !important;
+  font-size: 12px !important;
+  line-height: 1.2;
+}
+.ob-customize-dialog input.float-slider {
+  appearance: none !important;
+  -webkit-appearance: none !important;
+  display: block;
+  width: 100%;
+  height: 3px !important;
+  min-height: 3px !important;
+  padding: 0 !important;
+  border: 0 !important;
+  border-radius: 999px !important;
+  outline: none;
+  cursor: pointer;
+}
+.ob-customize-dialog input.float-slider::-webkit-slider-runnable-track {
+  height: 3px;
+  border-radius: 999px;
+  background: transparent;
+}
+.ob-customize-dialog input.float-slider::-moz-range-track {
+  height: 3px;
+  border-radius: 999px;
+  background: transparent;
+}
+.ob-customize-dialog input.float-slider::-webkit-slider-thumb {
+  appearance: none;
+  -webkit-appearance: none;
+  width: 10px !important;
+  height: 10px !important;
+  margin-top: -3.5px;
+  border: 2px solid #f2f2f2 !important;
+  border-radius: 50%;
+  background: #171717 !important;
+  box-shadow: 0 0 0 2px #ffffff20 !important;
+}
+.ob-customize-dialog input.float-slider::-moz-range-thumb {
+  width: 10px !important;
+  height: 10px !important;
+  border: 2px solid #f2f2f2 !important;
+  border-radius: 50%;
+  background: #171717 !important;
+  box-shadow: 0 0 0 2px #ffffff20 !important;
+}
+.ob-customize-dialog .slider-marks {
+  margin-top: 5px !important;
+  font-size: 8px !important;
+  line-height: 1;
+}
