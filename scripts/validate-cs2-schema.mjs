@@ -53,7 +53,7 @@ async function main() {
     throw new Error(`Cannot read schema snapshot at ${snapshotPath}: ${error.message}`)
   }
 
-  if (snapshot.schemaVersion !== 1) {
+  if (snapshot.schemaVersion !== 2) {
     throw new Error(`Unsupported schema snapshot version: ${snapshot.schemaVersion ?? 'missing'}`)
   }
 
@@ -101,7 +101,23 @@ async function main() {
   const missingPaintKits = []
   const missingPaintKitFileDefinitions = []
   const paintKitMapKeyMismatches = []
+  const missingCompatibilityData = []
+  const incompatiblePaintKitPairs = []
   const checkedDefinitionIds = new Set()
+  const checkedCompatibilityPairs = new Set()
+  const compatibilityByDefinitionId = new Map()
+
+  for (const [definitionId, item] of liveItems) {
+    if (!Array.isArray(item.compatiblePaintKitIds)) {
+      missingCompatibilityData.push({ definitionId, itemName: item.itemName ?? null })
+      continue
+    }
+
+    compatibilityByDefinitionId.set(
+      definitionId,
+      new Set(item.compatiblePaintKitIds.map((id) => numericId(id, true)).filter((id) => id !== null)),
+    )
+  }
 
   const catalogueRows = [
     ...staticSkins.map((row) => ({ ...row, catalogueSource: 'n1ssan-skins' })),
@@ -165,6 +181,33 @@ async function main() {
         paintKitId,
       })
     }
+
+    if (livePaintKits.has(paintKitId) && paintKitDefinitions.has(paintKitId)) {
+      const pairKey = `${expectedDefinitionId}:${paintKitId}`
+      if (!checkedCompatibilityPairs.has(pairKey)) {
+        checkedCompatibilityPairs.add(pairKey)
+        const compatibleIds = compatibilityByDefinitionId.get(expectedDefinitionId)
+
+        if (!compatibleIds) {
+          if (!missingCompatibilityData.some((entry) => entry.definitionId === expectedDefinitionId)) {
+            missingCompatibilityData.push({
+              definitionId: expectedDefinitionId,
+              itemName: liveItems.get(expectedDefinitionId)?.itemName ?? null,
+            })
+          }
+        } else if (!compatibleIds.has(paintKitId)) {
+          incompatiblePaintKitPairs.push({
+            source: row.catalogueSource,
+            definitionId: expectedDefinitionId,
+            itemName: liveItems.get(expectedDefinitionId)?.itemName ?? null,
+            weapon: row.weapon ?? null,
+            name: row.name,
+            paintKitId,
+            paintKitName: paintKitDefinitions.get(paintKitId)?.name ?? null,
+          })
+        }
+      }
+    }
   }
 
   for (const [id, kit] of livePaintKits) {
@@ -184,6 +227,18 @@ async function main() {
 
   if (snapshot.paintKitMapAvailable !== true) {
     errors.push('The live paint-kit map was not successfully read.')
+  }
+
+  if (snapshot.compatibilityScanAvailable !== true) {
+    errors.push('Per-item generated-material compatibility scan was not successfully completed.')
+  }
+
+  if (missingCompatibilityData.length) {
+    errors.push(`${missingCompatibilityData.length} live item definitions have no compatibility scan data.`)
+  }
+
+  if (incompatiblePaintKitPairs.length) {
+    errors.push(`${incompatiblePaintKitPairs.length} catalogue weapon/paint-kit pairs have no generated material asset.`)
   }
 
   if (stickerKits.size === 0) {
@@ -225,6 +280,10 @@ async function main() {
       paintKitFileDefinitions: paintKitDefinitions.size,
       stickerKits: stickerKits.size,
       keychainDefinitions: keychains.size,
+      compatibilityItemsChecked: snapshot.compatibilityItemsChecked ?? 0,
+      compatibilityPairsChecked: snapshot.compatibilityPairsChecked ?? 0,
+      compatiblePairsFound: snapshot.compatiblePairsFound ?? 0,
+      uniqueCataloguePaintKitPairsChecked: checkedCompatibilityPairs.size,
     },
     results: {
       unresolvedDefinitions: unresolvedDefinitions.length,
@@ -234,7 +293,13 @@ async function main() {
       itemDefinitionMapKeyComparison: 'not applicable; internal map keys are distinct from definitionIndex',
       paintKitMapKeyMismatches: paintKitMapKeyMismatches.length,
       warnings: warnings.length,
-      paintKitCompatibility: 'not evaluated; requires per-item generated-material checks',
+      missingCompatibilityData: missingCompatibilityData.length,
+      incompatiblePaintKitPairs: incompatiblePaintKitPairs.length,
+      paintKitCompatibility: snapshot.compatibilityScanAvailable === true
+        ? (incompatiblePaintKitPairs.length === 0 && missingCompatibilityData.length === 0
+          ? 'passed for all catalogue weapon/paint-kit pairs'
+          : 'failed; inspect incompatible pairs and missing scan data')
+        : 'not evaluated; live generated-material scan unavailable',
     },
     errors,
     details: {
@@ -243,6 +308,8 @@ async function main() {
       missingPaintKits: missingPaintKits.slice(0, 25),
       missingPaintKitFileDefinitions: missingPaintKitFileDefinitions.slice(0, 25),
       paintKitMapKeyMismatches: paintKitMapKeyMismatches.slice(0, 25),
+      missingCompatibilityData: missingCompatibilityData.slice(0, 25),
+      incompatiblePaintKitPairs: incompatiblePaintKitPairs.slice(0, 50),
       warnings: warnings.slice(0, 25),
     },
   }
