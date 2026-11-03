@@ -246,3 +246,33 @@ body,button,input,select{font-family:'Inter',sans-serif}
 .ob-notification-timer{background:#86b992}
 @media(max-width:1000px){.overview-total,.overview-stat{padding:20px 15px}}
 @media(max-width:680px){.overview-total,.overview-stat{padding:15px 12px}.overview-total strong{font-size:34px}.overview-stat strong{font-size:24px}.ob-catalogue-list button{min-height:74px}.catalogue-thumb{width:78px;height:54px}.ob-catalogue-list strong{font-size:13px}.ob-catalogue-list small{font-size:11px}}
+
+
+/* Obsidian — final hierarchy and interaction polish */
+.ob-top-right{display:flex;align-items:center;gap:9px}
+.ob-top-right .cs2-status-dot{flex:none}
+.ob-top-right .cs2-status-text{font:9px 'DM Mono',monospace;white-space:nowrap}
+.ob-heading h1{font-size:clamp(30px,3.2vw,38px);font-weight:600;letter-spacing:-.055em;margin:0}
+.ob-heading .ob-kicker{display:none}
+.ob-section-head h2{font-size:26px}
+.ob-section-head h2 span{color:#f0f3f0}
+.ob-toolbar{position:relative;border-top:0;border-bottom:0;padding-top:14px;padding-bottom:14px}
+.ob-toolbar:before,.ob-toolbar:after{content:'';position:absolute;left:0;right:0;height:1px;pointer-events:none;background:linear-gradient(90deg,#f0f0f0 0%,#f0f0f0 43%,#d94a4a 48%,#d94a4a 58%,#171717 63%,#080909 100%)}
+.ob-toolbar:before{top:0}
+.ob-toolbar:after{bottom:0}
+.stattrak-toggle{width:auto!important;min-width:0!important;padding:0!important;margin:0!important;background:transparent!important;border:0!important;box-shadow:none!important;border-radius:0!important}
+.stattrak-toggle>span:last-child{display:none!important}
+.stattrak-toggle .st-toggle-track{width:38px;height:21px}
+.stattrak-toggle .st-toggle-track i{width:15px;height:15px}
+.stattrak-toggle.enabled .st-toggle-track i{transform:translateX(17px)}
+.dialog-close,.profile-delete{width:auto;height:auto;min-width:0;padding:4px 7px!important;border:0!important;border-radius:0!important;background:transparent!important;box-shadow:none!important;color:#e9eee9!important;text-shadow:0 0 10px #ffffff9c,0 0 18px #ffffff45;font-size:23px;line-height:1}
+.dialog-close:hover,.profile-delete:hover:not(:disabled){color:#fff!important;text-shadow:0 0 12px #fff,0 0 24px #ffffff9c;transform:scale(1.08)}
+.profile-delete:disabled{opacity:.2}
+.dialog-actions .remove-item-button:hover{background:#421d1d!important;border-color:#d45a5a!important;color:#ffbcbc!important;box-shadow:0 0 18px #c83b3b55,0 8px 22px #0009!important}
+.ob-button.add-item-button{background:#0d1510!important;border:1px solid #355a3e!important;box-shadow:0 0 0 1px #9bc6a010,0 6px 18px #0008!important}
+.ob-button.add-item-button:before{background:conic-gradient(from var(--ob-shimmer-angle,0deg),#17291c 0deg,#17291c 230deg,#8fc99b 270deg,#416e4b 292deg,#17291c 330deg)}
+.ob-button.add-item-button:hover{background:#142119!important;border-color:#6eaa7b!important}
+.ob-back-to-top{position:fixed;right:26px;bottom:25px;z-index:15;width:38px;height:38px;display:grid;place-items:center;border:1px solid #39453d;border-radius:50%;background:#101512d9;color:#e7eee8;box-shadow:0 5px 18px #0008;backdrop-filter:blur(12px);transition:transform .2s,border-color .2s,background .2s,opacity .2s}
+.ob-back-to-top span{font:20px 'Inter',sans-serif;line-height:1;transform:translateY(-1px)}
+.ob-back-to-top:hover{transform:translateY(-3px);border-color:#a0c6a8;background:#1b2820}
+@media(max-width:680px){.ob-heading h1{font-size:31px}.ob-back-to-top{right:15px;bottom:15px;width:35px;height:35px}.ob-top-right .cs2-status-text{font-size:8px}}
