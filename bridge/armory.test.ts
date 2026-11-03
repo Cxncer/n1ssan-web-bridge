@@ -1,4 +1,5 @@
 import assert from 'node:assert/strict'
+import { readFileSync } from 'node:fs'
 import { test } from 'node:test'
 import { validateArmoryDocument } from '../src/armory/contracts.ts'
 import { migrateLegacyInventory } from '../src/armory/migrate-legacy.ts'
@@ -327,4 +328,67 @@ test('canonical IDs normalize percent-encoded source IDs without changing identi
 test('malformed canonical-looking IDs are safely treated as source IDs', () => {
   const id = catalogueDefinitionId('skin', 'cs2:skin:unknown:finish')
   assert.equal(id, 'cs2:skin:external:cs2%3Askin%3Aunknown%3Afinish')
+})
+
+
+const staticSkins = JSON.parse(
+  readFileSync(new URL('../src/skins.json', import.meta.url), 'utf8'),
+) as Array<Parameters<typeof toCatalogueDefinition>[0]>
+const expandedKnives = JSON.parse(
+  readFileSync(new URL('../src/obsidian/knife-skins.json', import.meta.url), 'utf8'),
+) as Array<Parameters<typeof toCatalogueDefinition>[0]>
+
+test('static catalogues contain complete, collision-free canonical definition identities', () => {
+  const definitions = [
+    ...staticSkins.map(toCatalogueDefinition),
+    ...expandedKnives.map((record) => toCatalogueDefinition({
+      ...record,
+      source: 'n1ssan-knives',
+    })),
+  ]
+  const ids = new Set<string>()
+
+  assert.equal(staticSkins.length, 2005)
+  assert.equal(expandedKnives.length, 576)
+  assert.equal(definitions.length, 2581)
+
+  for (const definition of definitions) {
+    assert.ok(definition.sourceId.trim().length > 0)
+    assert.ok(definition.id.startsWith(`cs2:${definition.kind}:${definition.source}:`))
+    assert.ok(!ids.has(definition.id), `Duplicate canonical definition ID: ${definition.id}`)
+    ids.add(definition.id)
+  }
+
+  assert.equal(ids.size, 2581)
+})
+
+test('shared paint-kit IDs do not collapse distinct weapon definitions', () => {
+  const bayonetFade = toCatalogueDefinition(
+    expandedKnives.find((item) => item.weapon === 'Bayonet' && item.name === 'Fade')!,
+  )
+  const karambitFade = toCatalogueDefinition(
+    expandedKnives.find((item) => item.weapon === 'Karambit' && item.name === 'Fade')!,
+  )
+
+  assert.equal(bayonetFade.paintKitId, 38)
+  assert.equal(karambitFade.paintKitId, 38)
+  assert.notEqual(bayonetFade.id, karambitFade.id)
+  assert.notEqual(bayonetFade.sourceId, karambitFade.sourceId)
+})
+
+test('rare Doppler variants and Case Hardened seed-based patterns remain represented', () => {
+  const names = expandedKnives.map((item) => item.name.toLowerCase())
+  assert.equal(names.filter((name) => name.includes('ruby')).length, 18)
+  assert.equal(names.filter((name) => name.includes('sapphire')).length, 18)
+  assert.equal(names.filter((name) => name.includes('black pearl')).length, 18)
+  assert.equal(names.filter((name) => name.includes('emerald')).length, 10)
+
+  const karambitCaseHardened = expandedKnives.find(
+    (item) => item.weapon === 'Karambit' && item.name === 'Case Hardened',
+  )
+  assert.ok(karambitCaseHardened)
+  const definition = toCatalogueDefinition(karambitCaseHardened)
+  assert.equal(definition.paintKitId, 44)
+  assert.ok(definition.patternId)
+  assert.equal(names.some((name) => name.includes('blue gem')), false)
 })
