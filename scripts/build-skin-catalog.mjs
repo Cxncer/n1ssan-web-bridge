@@ -5,7 +5,9 @@ const BASE_URL =
 
 const SKINS_URL = `${BASE_URL}/skins.json`;
 const AGENTS_URL = `${BASE_URL}/agents.json`;
+const BASE_WEAPONS_URL = `${BASE_URL}/base_weapons.json`;
 const OUTPUT_PATH = "src/skins.json";
+const SCHEMA_INDEX_PATH = "src/armory/game-definition-index.json";
 
 const themes = [
   "pink",
@@ -50,6 +52,32 @@ function stableNumericId(value) {
   }
 
   return hash >>> 0 || 1;
+}
+
+function positiveIndex(value) {
+  if (value === null || value === undefined || value === "") return null;
+  const number = Number(value);
+  return Number.isSafeInteger(number) && number > 0 ? number : null;
+}
+
+function buildUniqueDefinitionMap(entries) {
+  const grouped = new Map();
+
+  for (const entry of entries) {
+    const key = normalize(entry.name);
+    const id = positiveIndex(entry.def_index);
+    if (!key || id === null) continue;
+    const values = grouped.get(key) ?? new Set();
+    values.add(id);
+    grouped.set(key, values);
+  }
+
+  // Ambiguous display names are deliberately omitted instead of guessed.
+  return Object.fromEntries(
+    [...grouped.entries()]
+      .filter(([, ids]) => ids.size === 1)
+      .map(([key, ids]) => [key, [...ids][0]]),
+  );
 }
 
 function getFloatLimit(value) {
@@ -238,11 +266,15 @@ async function main() {
   console.log(`Source: ${BASE_URL}`);
   console.log("");
 
-  // Download both datasets before touching the existing catalogue.
-  const [sourceSkins, sourceAgents] = await Promise.all([
+  // Download every source needed for catalogue identity before touching outputs.
+  const [sourceSkins, sourceAgents, baseWeapons] = await Promise.all([
     fetchJson(SKINS_URL, "Weapon skins"),
     fetchJson(AGENTS_URL, "Agents"),
+    fetchJson(BASE_WEAPONS_URL, "Base weapon definitions"),
   ]);
+
+  const weaponDefinitions = buildUniqueDefinitionMap(baseWeapons);
+  const agentDefinitions = buildUniqueDefinitionMap(sourceAgents);
 
   const candidates = [];
 
@@ -277,9 +309,15 @@ async function main() {
     }
 
     const finish = getFinishName(item).trim();
+    const gameDefinitionId = weaponDefinitions[normalize(weapon)];
+
+    if (!gameDefinitionId) {
+      throw new Error(`No unambiguous CS2 definition index for weapon "${weapon}".`);
+    }
 
     candidates.push({
       sourceId: String(item.id ?? fullName),
+      gameDefinitionId,
       uniqueKey: `${type}|${weapon}|${finish}`.toLowerCase(),
       weapon,
       name: finish || fullName,
@@ -319,8 +357,15 @@ async function main() {
       continue;
     }
 
+    const gameDefinitionId = positiveIndex(agent.def_index);
+
+    if (!gameDefinitionId) {
+      throw new Error(`Agent "${name}" has no valid CS2 definition index.`);
+    }
+
     candidates.push({
       sourceId: String(agent.id ?? `${type}:${name}`),
+      gameDefinitionId,
       uniqueKey: `${type}|${name}`.toLowerCase(),
       weapon: name,
       name,
@@ -410,6 +455,7 @@ async function main() {
       minFloat: item.minFloat,
       maxFloat: item.maxFloat,
       paintKit: item.paintKit,
+      gameDefinitionId: item.gameDefinitionId,
     });
   }
 
@@ -431,10 +477,25 @@ async function main() {
     (weapon) => !weaponCounts.has(normalize(weapon)),
   );
 
-  // Write only after both datasets were downloaded and processed.
-  await mkdir("src", { recursive: true });
+  // Every emitted item must carry a base CS2 definition index.
+  const unresolvedDefinitions = catalog.filter((item) => !positiveIndex(item.gameDefinitionId));
+  if (unresolvedDefinitions.length > 0) {
+    throw new Error(`Refusing to write catalogue: ${unresolvedDefinitions.length} items lack CS2 definition indices.`);
+  }
+
+  // Write only after all source datasets and identity mappings validate.
+  await mkdir("src/armory", { recursive: true });
+
+  const schemaIndex = {
+    source: "ByMykel/CSGO-API",
+    sourceRef: "main",
+    generatedAt: new Date().toISOString(),
+    weapons: weaponDefinitions,
+    agents: agentDefinitions,
+  };
 
   await writeFile(OUTPUT_PATH, JSON.stringify(catalog, null, 2), "utf8");
+  await writeFile(SCHEMA_INDEX_PATH, JSON.stringify(schemaIndex, null, 2), "utf8");
 
   const counts = new Map();
 
