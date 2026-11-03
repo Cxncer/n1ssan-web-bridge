@@ -59,7 +59,7 @@ export class ArmoryStore {
       if ((primaryError as NodeJS.ErrnoException).code === 'ENOENT') {
         try {
           this.document = await this.readDocument(`${this.filePath}.bak`)
-          await this.persist(this.document)
+          await this.persist(this.document, false)
           return
         } catch (backupError) {
           if ((backupError as NodeJS.ErrnoException).code !== 'ENOENT') {
@@ -85,7 +85,7 @@ export class ArmoryStore {
       // Keep the invalid primary file intact; persist the validated backup.
       const damagedPath = `${this.filePath}.corrupt-${Date.now()}`
       await copyFile(this.filePath, damagedPath)
-      await this.persist(this.document)
+      await this.persist(this.document, false)
     }
   }
 
@@ -135,16 +135,18 @@ export class ArmoryStore {
     return parsed as ArmoryDocument
   }
 
-  private async persist(document: ArmoryDocument): Promise<void> {
+  private async persist(document: ArmoryDocument, backupCurrent = true): Promise<void> {
     const temporaryPath = `${this.filePath}.tmp`
     const backupPath = `${this.filePath}.bak`
 
     await writeFile(temporaryPath, `${JSON.stringify(document, null, 2)}\\n`, 'utf8')
 
-    try {
-      await copyFile(this.filePath, backupPath)
-    } catch (error) {
-      if ((error as NodeJS.ErrnoException).code !== 'ENOENT') throw error
+    if (backupCurrent) {
+      try {
+        await copyFile(this.filePath, backupPath)
+      } catch (error) {
+        if ((error as NodeJS.ErrnoException).code !== 'ENOENT') throw error
+      }
     }
 
     await rename(temporaryPath, this.filePath)
