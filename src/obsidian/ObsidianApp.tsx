@@ -136,10 +136,24 @@ export default function ObsidianApp() {
 
   const updateItems = (next: InventoryItem[]) => {
     const updatedAt = new Date().toISOString()
+    const timestampedItems = next.map(item => {
+      const previous = items.find(existing => existing.instanceId === item.instanceId)
+      const comparable = (value: InventoryItem) => JSON.stringify({
+        ...value,
+        createdAt: undefined,
+        updatedAt: undefined,
+      })
+      const changed = !previous || comparable(previous) !== comparable(item)
+      return {
+        ...item,
+        createdAt: item.createdAt ?? previous?.createdAt ?? updatedAt,
+        updatedAt: changed ? updatedAt : item.updatedAt ?? previous?.updatedAt ?? updatedAt,
+      }
+    })
     const nextProfiles = profiles.map(profile => profile.id === activeId
-      ? { ...profile, items: next, updatedAt }
+      ? { ...profile, items: timestampedItems, updatedAt }
       : profile)
-    setItems(next)
+    setItems(timestampedItems)
     setProfiles(nextProfiles)
     persistSnapshot(nextProfiles, activeId)
   }
