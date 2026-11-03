@@ -27,6 +27,38 @@ export type CatalogueSourceRecord = {
   source?: CatalogueSource
 }
 
+
+const catalogueSources = new Set<CatalogueSource>([
+  'n1ssan-skins',
+  'n1ssan-knives',
+  'bymykel-stickers',
+  'bymykel-keychains',
+  'external',
+])
+
+function parseCanonicalDefinitionId(
+  kind: ArmoryItemKind,
+  value: string,
+): { source: CatalogueSource; sourceId: string } | null {
+  const prefix = `cs2:${kind}:`
+  if (!value.startsWith(prefix)) return null
+
+  const remainder = value.slice(prefix.length)
+  const separator = remainder.indexOf(':')
+  if (separator <= 0 || separator === remainder.length - 1) return null
+
+  const source = remainder.slice(0, separator) as CatalogueSource
+  if (!catalogueSources.has(source)) return null
+
+  try {
+    const sourceId = decodeURIComponent(remainder.slice(separator + 1))
+    if (!sourceId.trim()) return null
+    return { source, sourceId }
+  } catch {
+    return null
+  }
+}
+
 function inferSource(kind: ArmoryItemKind, sourceId: string): CatalogueSource {
   if (kind === 'sticker') return 'bymykel-stickers'
   if (kind === 'charm') return 'bymykel-keychains'
@@ -54,8 +86,10 @@ export function catalogueDefinitionId(
   let sourceId = String(sourceIdValue).trim()
   if (!sourceId) throw new Error('Catalogue source ID cannot be empty')
 
-  const canonicalPrefix = `cs2:${kind}:`
-  if (sourceId.startsWith(canonicalPrefix)) return sourceId
+  const canonical = parseCanonicalDefinitionId(kind, sourceId)
+  if (canonical) {
+    return `cs2:${kind}:${canonical.source}:${encodeURIComponent(canonical.sourceId)}`
+  }
 
   const legacyPrefix = `${kind}:`
   if (sourceId.startsWith(legacyPrefix)) sourceId = sourceId.slice(legacyPrefix.length)
@@ -71,8 +105,10 @@ export function catalogueDefinitionId(
  */
 export function toCatalogueDefinition(record: CatalogueSourceRecord): CatalogueDefinition {
   const kind = record.kind ?? 'skin'
-  const sourceId = String(record.id).trim()
-  const source = record.source ?? inferSource(kind, sourceId)
+  const rawId = String(record.id).trim()
+  const canonical = parseCanonicalDefinitionId(kind, rawId)
+  const sourceId = canonical?.sourceId ?? rawId
+  const source = canonical?.source ?? record.source ?? inferSource(kind, sourceId)
   const rawPaintKit = record.paintKit ?? record.paintIndex
 
   return {
