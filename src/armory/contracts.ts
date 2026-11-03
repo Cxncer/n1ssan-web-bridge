@@ -29,10 +29,23 @@ export type CatalogueDefinition = {
   category: string
   rarity: string | null
   image: string | null
-  weaponDefinitionId: number | null
+  color: string | null
+  art: string | null
+  description: string | null
+  /** CS2 item definition index (weapon, knife, glove, agent, etc.). */
+  gameDefinitionId: number | null
+  /** Lootline ItemSchema paint-kit ID; only applicable to weapon finishes. */
   paintKitId: number | null
+  /** Lootline ItemSchema sticker-kit ID; independent sticker catalogue entry. */
+  stickerKitId: number | null
+  /** Lootline ItemSchema keychain ID; independent charm catalogue entry. */
+  keychainId: number | null
   minFloat: number | null
   maxFloat: number | null
+  /** External catalogue metadata used to distinguish Doppler phases / patterns. */
+  phase: string | null
+  patternId: string | null
+  paintIndex: string | null
 }
 
 /** An inventory instance describes an owned item, not its catalogue definition. */
