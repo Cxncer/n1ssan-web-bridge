@@ -205,6 +205,10 @@
         "definitionId",
         "type",
         "name",
+        "quality",
+        "rarity",
+        "origin",
+        "sourceCaseDefinitionId",
         "finish",
         "statTrak",
         "customName",
@@ -261,6 +265,38 @@
               "null"
             ]
           }
+        },
+        "quality": {
+          "type": [
+            "integer",
+            "null"
+          ],
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        "rarity": {
+          "type": [
+            "integer",
+            "null"
+          ],
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        "origin": {
+          "type": [
+            "integer",
+            "null"
+          ],
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        "sourceCaseDefinitionId": {
+          "type": [
+            "integer",
+            "null"
+          ],
+          "minimum": 0,
+          "maximum": 9007199254740991
         }
       }
     },
