@@ -4,7 +4,7 @@ import { test } from 'node:test'
 import { validateArmoryDocument } from '../src/armory/contracts.ts'
 import { migrateLegacyInventory } from '../src/armory/migrate-legacy.ts'
 import { fromArmoryDocument, toArmoryDocument } from '../src/armory/obsidian-adapter.ts'
-import { catalogueDefinitionId, toCatalogueDefinition } from '../src/armory/catalogue-identity.ts'
+import { catalogueDefinitionId, resolveGameDefinitionId, toCatalogueDefinition } from '../src/armory/catalogue-identity.ts'
 
 const timestamp = '2026-11-03T08:00:00.000Z'
 
@@ -262,7 +262,7 @@ test('catalogue normalization maps verified paint-kit fields but does not guess 
   assert.equal(awp.id, 'cs2:skin:n1ssan-skins:2718699708')
   assert.equal(awp.catalogueWeaponName, 'AWP')
   assert.equal(awp.paintKitId, 788)
-  assert.equal(awp.gameDefinitionId, null)
+  assert.equal(awp.gameDefinitionId, 9)
   assert.equal(awp.stickerKitId, null)
   assert.equal(awp.keychainId, null)
 
@@ -298,6 +298,41 @@ test('catalogue normalization maps verified paint-kit fields but does not guess 
   assert.equal(charm.keychainId, null)
 })
 
+
+test('schema indices resolve weapon, knife, glove and agent definitions without name ambiguity', () => {
+  assert.equal(resolveGameDefinitionId('AK-47', 'Rifles'), 7)
+  assert.equal(resolveGameDefinitionId('AWP', 'Sniper Rifles'), 9)
+  assert.equal(resolveGameDefinitionId('Bayonet', 'Knives'), 500)
+  assert.equal(resolveGameDefinitionId('Karambit', 'Knives'), 507)
+  assert.equal(resolveGameDefinitionId('Sport Gloves', 'Gloves'), 5030)
+  assert.equal(resolveGameDefinitionId("'Blueberries' Buckshot | NSWC SEAL", 'CT Agents'), 4619)
+  assert.equal(resolveGameDefinitionId('Knife', 'Knives'), null)
+  assert.equal(resolveGameDefinitionId('Unknown Weapon', 'Rifles'), null)
+})
+
+test('provider def_index values map to sticker-kit and keychain domains, not base item IDs', () => {
+  const sticker = toCatalogueDefinition({
+    id: 'sticker-123',
+    kind: 'sticker',
+    name: 'Test Sticker',
+    type: 'Stickers',
+    def_index: '4',
+  })
+  const charm = toCatalogueDefinition({
+    id: 'keychain-1',
+    kind: 'charm',
+    name: "Lil' Ava",
+    type: 'Charms',
+    def_index: '1',
+  })
+
+  assert.equal(sticker.gameDefinitionId, null)
+  assert.equal(sticker.stickerKitId, 4)
+  assert.equal(sticker.keychainId, null)
+  assert.equal(charm.gameDefinitionId, null)
+  assert.equal(charm.stickerKitId, null)
+  assert.equal(charm.keychainId, 1)
+})
 
 test('canonical catalogue IDs retain their original source metadata when normalized again', () => {
   const normalized = toCatalogueDefinition({
@@ -355,6 +390,7 @@ test('static catalogues contain complete, collision-free canonical definition id
   for (const definition of definitions) {
     assert.ok(definition.sourceId.trim().length > 0)
     assert.ok(definition.id.startsWith(`cs2:${definition.kind}:${definition.source}:`))
+    assert.ok(definition.gameDefinitionId !== null, `missing game definition index: ${definition.catalogueWeaponName}`)
     assert.ok(!ids.has(definition.id), `Duplicate canonical definition ID: ${definition.id}`)
     ids.add(definition.id)
   }
