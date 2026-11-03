@@ -56,8 +56,8 @@ are not Armory's persistence schema and must not be copied into the web domain.
 
 ## Domain boundaries
 
-1. **Catalogue definition** — what an item is. Stable definition ID, kind,
-   display metadata, category, rarity, image, and applicable CS2 definition/paint IDs.
+1. **Catalogue definition** — what an item is. A canonical, source-aware definition ID,
+   source metadata, display data, and separately verified CS2 definition / kit IDs.
 2. **Inventory instance** — what the user owns. Unique n1ssan instance ID,
    catalogue definition reference, quantity, timestamps, and supported customization.
 3. **Inventory profile** — a named, complete snapshot of inventory instances.
@@ -77,6 +77,49 @@ are not Armory's persistence schema and must not be copied into the web domain.
   but may have null customization.
 - Catalogue IDs are strings in the domain so numeric CS2 IDs and namespaced
   external IDs can coexist without lossy coercion.
+
+
+## Catalogue identity and runtime resolution
+
+Every inventory `definitionId` now uses this canonical format:
+
+```text
+cs2:<kind>:<source>:<encoded-source-id>
+```
+
+Current source namespaces:
+
+| Catalogue | Canonical source | Source ID example |
+|---|---|---|
+| Main `skins.json` | `n1ssan-skins` | `2718699708` |
+| Expanded knife catalogue | `n1ssan-knives` | `skin-95831ce7c492` |
+| ByMykel stickers | `bymykel-stickers` | `sticker-1` |
+| ByMykel charms | `bymykel-keychains` | `keychain-1` |
+
+The provider ID is retained as `sourceId`; it is never silently re-labelled as a
+CS2 item definition index. Obsidian, the Armory adapter, and legacy migration all
+use the same canonical ID helper. Existing raw numeric, generated knife, and
+kind-prefixed sticker/charm references are normalized on read and on write.
+
+### Verified mappings
+
+- Main `skins.json` exposes a numeric `paintKit`; it maps to `paintKitId`.
+- Expanded `knife-skins.json` exposes `paintIndex`; its numeric value maps to
+  `paintKitId`, while phase and pattern metadata remain separate.
+- The catalogue's human-readable weapon label is retained as
+  `catalogueWeaponName` for later schema resolution.
+- Current static catalogue data does **not** provide a verified
+  `gameDefinitionId`. It remains `null` rather than being guessed from a weapon
+  name or provider item ID.
+- ByMykel IDs such as `sticker-1` and `keychain-1` are provider identifiers.
+  They are not treated as `stickerKitId` or `keychainId` without an exact
+  cross-reference to CS2's schema.
+
+Lootline's `ItemSchema::BuildItemList` enumerates the live game's item
+definitions and their `definitionIndex`; `BuildItemsGameLists` separately reads
+the game's `sticker_kits` and `keychain_definitions`. This confirms that these
+are distinct identity domains and that the final game IDs should be resolved
+against a current CS2 schema snapshot, not inferred from display names.
 
 ## Profile semantics
 
@@ -106,7 +149,9 @@ not assumed until deployment and multi-user requirements are defined.
 ## Implemented on operation-02-armory
 
 - `src/armory/contracts.ts`: versioned domain types, API envelopes, and shared
-  runtime validation.
+  runtime validation, including source-aware catalogue definitions.
+- `src/armory/catalogue-identity.ts`: canonical identity generation and
+  normalization of existing catalogue records into Armory definitions.
 - `src/armory/migrate-legacy.ts`: pure migration from Obsidian's current local
   profile shape, preserving supported values and normalizing string numbers.
 - `bridge/armory-store.ts`: JSON-file persistence, atomic replacement, backup
@@ -133,6 +178,9 @@ write is rejected and the UI asks for a refresh instead of silently overwriting 
 second session. If the Bridge is unavailable or saving fails, Obsidian shows a
 blocking connection error rather than pretending the change was persisted.
 
-The existing `/skins` loadout endpoint remains unchanged. The next step is local
-runtime verification of migration, profile operations, and restart persistence,
-followed by a focused pass on failure recovery and concurrent sessions.
+The existing `/skins` loadout endpoint remains unchanged. Canonical catalogue
+identity is now applied when items are added, looked up, migrated, read from Armory,
+and written back. Current runtime IDs that are not present in static catalogue
+sources remain explicitly unresolved. The next step is to expose a versioned CS2
+schema snapshot from the game integration and resolve definition / sticker / charm
+kit IDs against it, including compatibility checks for weapon paint kits.
