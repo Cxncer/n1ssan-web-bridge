@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=DM+Sans:wght@400;500;600;700&family=Manrope:wght@400;500;600;700;800&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;450;500;550;600;650;700;750;800&family=DM+Mono:wght@400;500&display=swap');
 :root{font-family:'DM Sans',sans-serif;color:#e8e9e8;background:#101213;font-synthesis:none}
 *{box-sizing:border-box}
 body{margin:0;background:#101213;color:#e8e9e8}
@@ -198,7 +198,6 @@ body,.obsidian-shell{color:#f2f4f2}
 
 
 /* Obsidian refinement — restrained shimmer controls, clearer inventory metrics */
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;450;500;550;600;650;700;750;800&family=DM+Mono:wght@400;500&display=swap');
 :root{font-family:'Inter',sans-serif}
 body,button,input,select{font-family:'Inter',sans-serif}
 .ob-brand,.ob-kicker,.metric-label,.metric-index,.overview-stat small,.ob-section-meta,.ob-sort>span,.item-number,.item-rarity,.ob-item-weapon,.ob-item-foot,.ob-footer,.dialog-foot,.ob-fields label,.new-profile label,.diagnostic-list b{font-family:'DM Mono',monospace}
