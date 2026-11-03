@@ -888,3 +888,55 @@ body,button,input,select{font-family:'Barlow',sans-serif}
   letter-spacing: 0.01em;
   text-transform: none;
 }
+
+
+/* Armory connection and startup states */
+.ob-boot-screen {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 15px;
+  padding: 32px;
+  background: radial-gradient(ellipse at 50% 35%, #202824 0, #101213 58%);
+  color: #eef0ed;
+  text-align: center;
+}
+.ob-boot-screen .ob-mark {
+  width: 48px;
+  height: 48px;
+  margin-bottom: 12px;
+  border-radius: 13px;
+  font: 700 24px Barlow, sans-serif;
+}
+.ob-boot-screen > strong {
+  font: 500 12px 'DM Mono', monospace;
+  letter-spacing: 2px;
+}
+.ob-boot-screen > small {
+  max-width: 520px;
+  color: #89948d;
+  font-size: 12px;
+  line-height: 1.7;
+}
+.ob-boot-error > small {
+  color: #d29a91;
+}
+.ob-boot-error .ob-button {
+  margin-top: 12px;
+}
+.armory-status-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: #8aa493;
+  box-shadow: 0 0 11px #8aa49366;
+}
+.armory-status-text {
+  color: #a7b9ad;
+  letter-spacing: 1px;
+}
+@media(max-width:680px) {
+  .armory-status-text { display: none; }
+}
