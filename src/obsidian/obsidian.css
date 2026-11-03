@@ -618,3 +618,200 @@ body,button,input,select{font-family:'Barlow',sans-serif}
     animation: none !important;
   }
 }
+
+
+/* Item Detail now shares the Configure Item dialog system and surface. */
+.ob-overlay:has(.ob-detail-dialog) {
+  background: rgba(0,0,0,.78);
+  backdrop-filter: blur(12px);
+  padding: 24px;
+}
+.ob-detail-dialog {
+  width: min(620px,100%);
+  max-height: min(84vh,760px);
+  overflow-y: auto;
+  border: 1px solid #343434 !important;
+  border-radius: 24px !important;
+  background: #080808 !important;
+  color: #f5f5f5 !important;
+  box-shadow: 0 30px 110px #000e !important;
+}
+.ob-detail-dialog .dialog-head {
+  padding: 23px 25px 18px;
+  border-bottom: 1px solid #242424;
+  background: #080808;
+}
+.ob-detail-dialog .dialog-head h2,
+.ob-detail-dialog .dialog-head h2 span {
+  font: 600 25px 'Barlow',sans-serif;
+  letter-spacing: -.7px;
+  color: #f5f5f5;
+}
+.ob-detail-dialog .dialog-head p {
+  font: 400 12px 'Barlow',sans-serif;
+  color: #929292;
+}
+.ob-detail-dialog .ob-kicker {
+  font: 500 9px 'DM Mono',monospace;
+  color: #858585;
+  letter-spacing: 1.2px;
+}
+.ob-detail-dialog .detail-preview {
+  margin: 0 0 4px;
+  padding: 18px 25px;
+  border-bottom: 1px solid #242424;
+  background: #0b0b0b;
+}
+.ob-detail-dialog .detail-preview-art {
+  background: #141414;
+  border: 1px solid #262626;
+  border-radius: 18px;
+}
+.ob-detail-dialog .detail-preview small,
+.ob-detail-dialog .detail-preview span {
+  font: 10px 'Barlow',sans-serif;
+  color: #969696;
+}
+.ob-detail-dialog .detail-preview h3 {
+  font: 600 16px 'Barlow',sans-serif;
+  color: #f2f2f2;
+}
+.ob-detail-dialog .ob-fields {
+  padding: 14px 25px 18px;
+  gap: 12px;
+}
+.ob-detail-dialog .ob-fields label {
+  font: 500 10px 'Barlow',sans-serif !important;
+  color: #aaa !important;
+  letter-spacing: .7px;
+}
+.ob-detail-dialog .ob-fields input:not([type=range]),
+.ob-detail-dialog .ob-fields select {
+  height: 36px;
+  padding: 0 16px;
+  border: 1px solid #333;
+  border-radius: 999px !important;
+  background: #111;
+  color: #f2f2f2;
+  font: 12px 'Barlow',sans-serif;
+  box-shadow: none;
+}
+.ob-detail-dialog .ob-fields input:focus,
+.ob-detail-dialog .ob-fields select:focus {
+  outline: none;
+  border-color: #888;
+}
+.ob-detail-dialog .dialog-actions {
+  padding: 15px 25px 20px;
+  border-top: 1px solid #242424;
+  background: #080808;
+}
+.ob-detail-dialog .dialog-actions .ob-button {
+  border-radius: 999px !important;
+}
+.ob-detail-dialog .stattrak-toggle {
+  grid-column: 1 / -1;
+}
+
+/* Larger artwork preview, shared by Configure Item and Item Detail. */
+.ob-customize-dialog .detail-preview-art,
+.ob-detail-dialog .detail-preview-art {
+  flex: 0 0 190px;
+  width: 190px;
+  height: 124px;
+  overflow: hidden;
+}
+.ob-customize-dialog .detail-preview-art img,
+.ob-detail-dialog .detail-preview-art img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+.ob-customize-dialog .detail-preview,
+.ob-detail-dialog .detail-preview {
+  min-height: 158px;
+}
+@media (max-width: 560px) {
+  .ob-customize-dialog .detail-preview-art,
+  .ob-detail-dialog .detail-preview-art {
+    flex-basis: 142px;
+    width: 142px;
+    height: 104px;
+  }
+}
+
+/* Compact float control; the track communicates the five wear bands. */
+.ob-customize-dialog .float-slider-wrap {
+  padding: 9px 11px 7px;
+}
+.ob-customize-dialog .float-slider-value {
+  margin-bottom: 6px;
+  font-size: 13px;
+}
+.ob-customize-dialog .float-slider {
+  width: 100%;
+  height: 4px;
+  background: linear-gradient(90deg,
+    #55a7ff 0%,
+    #54c98a 15%,
+    #b7cf55 38%,
+    #e8ad45 45%,
+    #e45b55 100%
+  ) !important;
+}
+.ob-customize-dialog .float-slider::-webkit-slider-thumb {
+  width: 11px;
+  height: 11px;
+  border-width: 2px;
+  border-color: #f2f2f2;
+  background: #202020;
+  box-shadow: 0 0 0 2px #ffffff24;
+}
+.ob-customize-dialog .float-slider::-moz-range-thumb {
+  width: 11px;
+  height: 11px;
+  border-width: 2px;
+  border-color: #f2f2f2;
+  background: #202020;
+  box-shadow: 0 0 0 2px #ffffff24;
+}
+.ob-customize-dialog .slider-marks {
+  margin-top: 4px;
+  font-size: 8px;
+}
+
+/* Add Item: slow green energy beam travelling around the pill border. */
+.ob-button.add-item-button {
+  border-radius: 999px !important;
+  border-color: transparent !important;
+  background: #080d09 !important;
+  box-shadow: 0 0 12px #35d66b18, 0 5px 18px #0009 !important;
+}
+.ob-button.add-item-button::before {
+  background: conic-gradient(
+    from var(--ob-shimmer-angle),
+    transparent 0deg,
+    transparent 235deg,
+    #174d2b 260deg,
+    #39e879 282deg,
+    #b4ffc9 294deg,
+    #39e879 306deg,
+    #174d2b 325deg,
+    transparent 350deg
+  ) !important;
+  animation-duration: 8s !important;
+}
+.ob-button.add-item-button::after {
+  background: linear-gradient(110deg, transparent 25%, #45ed8020 48%, transparent 68%) !important;
+  animation-duration: 6s !important;
+}
+.ob-button.add-item-button:hover {
+  background: #0d1a11 !important;
+  box-shadow: 0 0 17px #35d66b35, 0 8px 24px #0009 !important;
+}
+@media (prefers-reduced-motion: reduce) {
+  .ob-button.add-item-button::before,
+  .ob-button.add-item-button::after {
+    animation: none !important;
+  }
+}
