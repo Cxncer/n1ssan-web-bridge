@@ -45,7 +45,7 @@ const loadProfiles = (): InventoryProfile[] => {
 
 export default function ObsidianApp() {
   const [profiles, setProfiles] = useState(loadProfiles)
-  const [activeId, setActiveId] = useState(profiles[0]?.id ?? initialProfiles[0].id)
+  const [activeId, setActiveId] = useState(() => window.localStorage.getItem(`${STORAGE_KEY}:active`) ?? profiles[0]?.id ?? initialProfiles[0].id)
   const [items, setItems] = useState(() => profiles[0]?.items.map(item => ({ ...item })) ?? seedItems)
   const [category, setCategory] = useState('All items')
   const [search, setSearch] = useState('')
@@ -101,7 +101,8 @@ export default function ObsidianApp() {
   }
   useEffect(() => {
     window.localStorage.setItem(STORAGE_KEY, JSON.stringify(profiles))
-  }, [profiles])
+    window.localStorage.setItem(`${STORAGE_KEY}:active`, activeId)
+  }, [profiles, activeId])
 
   const candidates = useMemo(() => {
     const q = catalogueSearch.trim().toLowerCase()
