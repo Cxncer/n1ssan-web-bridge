@@ -172,7 +172,7 @@ export default function ObsidianApp() {
     const next = {
       id: profileId(),
       name,
-      items: items.map(item => ({ ...item, instanceId: makeId() })),
+      items: items.map(item => ({ ...item, instanceId: makeId(), createdAt: now, updatedAt: now })),
       createdAt: now,
       updatedAt: now,
     }
