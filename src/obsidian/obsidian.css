@@ -335,15 +335,17 @@ body,button,input,select{font-family:'Barlow',sans-serif}
 :root{font-family:'Barlow',sans-serif}body,button,input,select,textarea{font-family:'Barlow',sans-serif}
 .ob-brand,.ob-kicker,.metric-label,.metric-index,.overview-stat small,.ob-section-meta,.ob-sort>span,.item-rarity,.ob-item-weapon,.ob-item-foot,.ob-footer,.dialog-foot,.ob-fields label,.new-profile label,.diagnostic-list b,.cs2-status-text{font-family:'DM Mono',monospace}
 .ob-heading h1,.ob-section-head h2,.dialog-head h2,.detail-preview h3,.ob-empty h3,.ob-notification-copy strong,.home-hero h1,.home-panel h2{font-family:'Barlow',sans-serif}
-.ob-item-card{position:relative;isolation:isolate;overflow:hidden;border:1px solid #283a4b!important;background:#111820!important;border-radius:10px!important;transition:transform .22s,border-color .22s,box-shadow .22s}
-.ob-item-card:before{content:'';position:absolute;inset:-1px;border-radius:inherit;padding:1px;background:conic-gradient(from var(--beam-angle,0deg),transparent 0deg,transparent 245deg,#456fe8 276deg,#38a9df 294deg,#8368f5 315deg,transparent 350deg);-webkit-mask:linear-gradient(#000 0 0) content-box,linear-gradient(#000 0 0);-webkit-mask-composite:xor;mask-composite:exclude;opacity:.7;animation:obsidian-ocean-beam 5s linear infinite;pointer-events:none;z-index:2}
-.ob-item-card:after{content:'';position:absolute;inset:0;border-radius:inherit;background:radial-gradient(ellipse at 0% 0%,#3977c51a,transparent 55%);pointer-events:none;z-index:0}
-.ob-item-card>*{position:relative;z-index:1}.ob-item-card:hover{transform:translateY(-4px);border-color:#5d91bd!important;box-shadow:0 12px 34px #0009,0 0 22px #367ac52b}
-@keyframes obsidian-ocean-beam{to{--beam-angle:360deg}}@property --beam-angle{syntax:'<angle>';initial-value:0deg;inherits:false}
-.item-remove-x{position:absolute!important;z-index:5!important;top:9px;left:9px;width:25px;height:25px;display:grid;place-items:center;border:1px solid #6d8295;border-radius:50%;background:#090e14e8;color:#d9e7f3;font:18px/1 'Barlow',sans-serif;opacity:0;transform:translateY(-4px);transition:opacity .18s,transform .18s,border-color .18s,background .18s}
-.ob-item-card:hover .item-remove-x,.ob-item-card:focus-within .item-remove-x,.ob-item-card:focus-visible .item-remove-x{opacity:1;transform:translateY(0)}.item-remove-x:hover{background:#632b32;border-color:#e38b92;color:#fff}
-.stack-count{display:inline-flex;align-items:center;padding:3px 8px;border:1px solid #466c8b;border-radius:999px;background:#162d3e;color:#b9ddf6;font:600 11px 'Barlow',sans-serif}
-.ob-item-card .item-open{color:#83b5d8}.ob-item-card:focus-visible{outline:2px solid #7dbbe6;outline-offset:3px}
+.ob-overview{position:relative;isolation:isolate;overflow:hidden;border:1px solid #344b5d!important;background:linear-gradient(110deg,#151d24,#111a22)!important}
+.ob-overview:before{content:'';position:absolute;inset:-1px;border-radius:inherit;padding:1px;background:conic-gradient(from var(--beam-angle,0deg),transparent 0deg,transparent 245deg,#456fe8 276deg,#38a9df 294deg,#8368f5 315deg,transparent 350deg);-webkit-mask:linear-gradient(#000 0 0) content-box,linear-gradient(#000 0 0);-webkit-mask-composite:xor;mask-composite:exclude;opacity:.8;animation:obsidian-ocean-beam 5s linear infinite;pointer-events:none;z-index:3}
+.ob-overview:after{content:'';position:absolute;inset:0;border-radius:inherit;background:radial-gradient(ellipse at 0% 0%,#3977c51a,transparent 55%);pointer-events:none;z-index:0}
+.ob-overview>*{position:relative;z-index:1}
+.ob-item-card{position:relative;text-align:left;overflow:hidden;padding:0;border:1px solid #2b322e!important;border-radius:7px!important;background:#181d1b!important;color:#e5e9e5;transition:border-color .2s,transform .2s,box-shadow .2s}
+.ob-item-card:before,.ob-item-card:after{content:none!important}
+.ob-item-card:hover{border-color:#63776a!important;transform:translateY(-2px);box-shadow:0 8px 24px #0007}
+.item-remove-x{border-color:#59645c;background:#090e0be8;color:#dce5dd}
+.stack-count{border-color:#466c58;background:#17261c;color:#c5e5ca}
+.ob-item-card .item-open{color:#91a596}
+.ob-item-card:focus-visible{outline:2px solid #9bb5a0;outline-offset:3px}
 @media(prefers-reduced-motion:reduce){.ob-item-card:before{animation:none;opacity:.4}.ob-item-card{transition:none}}@media(max-width:680px){.item-remove-x{opacity:1;transform:none;width:23px;height:23px;top:6px;left:6px}}
 .home-mode{max-width:1320px}.home-hero{position:relative;display:grid;grid-template-columns:1.1fr .9fr;min-height:430px;margin:34px 0 22px;border:1px solid #2a3844;border-radius:12px;overflow:hidden;background:radial-gradient(ellipse at 80% 45%,#1d3a50 0,transparent 48%),linear-gradient(115deg,#141a1e,#10171e 65%,#121c26)}
 .home-hero-copy{position:relative;z-index:2;padding:58px clamp(28px,5vw,70px);align-self:center}.home-hero-copy .ob-kicker{color:#8bb7d4}
@@ -375,3 +377,19 @@ body,button,input,select{font-family:'Barlow',sans-serif}
 
 /* Ensure the selected Barlow family is used throughout all legacy text rules. */
 .ob-brand,.ob-heading h1,.overview-total strong,.overview-stat strong,.ob-section-head h2,.dialog-head h2,.detail-preview h3,.ob-empty h3,.ob-notification-copy strong{font-family:'Barlow',sans-serif}
+
+/* Obsidian refinement — compact float controls and expanded overview metrics */
+.float-slider-wrap{margin-top:7px;padding:9px 10px 7px;border:1px solid #2c3b46;border-radius:6px;background:#10171d}
+.float-slider-value{display:flex;align-items:center;justify-content:space-between;margin-bottom:7px;color:#c4e4f9;font:500 14px 'Barlow',sans-serif;font-variant-numeric:tabular-nums}
+.float-slider-value b,.float-wear{color:#91b9d5;font:600 9px 'DM Mono',monospace;letter-spacing:.7px}
+.float-slider{height:3px}
+.float-slider::-webkit-slider-thumb{width:12px;height:12px;border-width:2px;box-shadow:0 0 0 2px #5798b622}
+.float-slider::-moz-range-thumb{width:9px;height:9px;border-width:2px;box-shadow:0 0 0 2px #5798b622}
+.slider-marks{margin-top:6px;font-size:8px}
+.custom-float-input{height:32px!important;margin-top:7px!important;padding:0 9px!important;font-size:11px!important}
+.ob-overview{grid-template-columns:1.35fr repeat(7,minmax(0,1fr)) 1.35fr}
+.overview-stat{padding:20px 13px}
+.overview-stat .metric-index{display:none!important}
+.overview-stat small{font-size:8px;letter-spacing:.7px}
+@media(max-width:1100px){.ob-overview{grid-template-columns:repeat(4,minmax(0,1fr))}.overview-total,.overview-status{grid-column:span 2}}
+@media(max-width:680px){.ob-overview{grid-template-columns:repeat(2,minmax(0,1fr))}.overview-total,.overview-status{grid-column:span 2}}
