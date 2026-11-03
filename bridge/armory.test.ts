@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict'
-import test from 'node:test'
+import { test } from 'node:test'
 import { validateArmoryDocument } from '../src/armory/contracts.ts'
 
 const timestamp = '2026-11-03T08:00:00.000Z'
@@ -78,12 +78,14 @@ test('rejects invalid skin attributes and stacked skin quantities', () => {
 
 test('rejects customization on independent sticker and charm inventory entries', () => {
   const document = validDocument()
-  document.profiles[0].items[1].customization = {
-    float: null,
-    seed: null,
-    statTrak: null,
-    customName: null,
-  }
+  Object.assign(document.profiles[0].items[1], {
+    customization: {
+      float: null,
+      seed: null,
+      statTrak: null,
+      customName: null,
+    },
+  })
 
   assert.ok(validateArmoryDocument(document).some(error =>
     error.includes('only skins may have skin customization'),
