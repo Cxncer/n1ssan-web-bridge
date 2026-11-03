@@ -186,7 +186,7 @@ export default function ObsidianApp() {
       <section className="ob-overview">
         <div className="overview-total"><span className="metric-label">ITEMS IN INVENTORY</span><strong>{String(totalUnits).padStart(2,'0')}</strong><small>Across your collection</small></div>
         {counts.map(c => <div className="overview-stat" key={c.label}><strong className={`quantity quantity-${c.label.toLowerCase()}`}>{String(c.count).padStart(2,'0')}</strong><small>{c.label.toUpperCase()}</small></div>)}
-        <div className="overview-status"><span className="status-ring">✓</span><div><strong>All in order</strong><small>Preview data · stored locally</small></div></div>
+        
       </section>
 
       <section className="ob-inventory-section">
