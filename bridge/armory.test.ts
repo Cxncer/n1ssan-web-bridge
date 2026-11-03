@@ -182,7 +182,7 @@ test('Obsidian adapter clamps invalid optional values to null and keeps non-skin
       float: '1.5',
       seed: '1001',
       stattrak: false,
-      customName: '',
+      customName: 'Keep me',
     }, {
       instanceId: 'charm-stack',
       definitionId: 'charm:test',
@@ -198,6 +198,28 @@ test('Obsidian adapter clamps invalid optional values to null and keeps non-skin
   assert.deepEqual(validateArmoryDocument(document), [])
   assert.equal(document.profiles[0].items[0].customization?.float, null)
   assert.equal(document.profiles[0].items[0].customization?.seed, null)
+  assert.equal(document.profiles[0].items[0].customization?.customName, 'Keep me')
   assert.equal(document.profiles[0].items[1].quantity, 5)
   assert.equal(document.profiles[0].items[1].customization, null)
+})
+
+
+test('Obsidian adapter leaves non-customizable skin instances without empty customization', () => {
+  const document = toArmoryDocument([{
+    id: 'profile-agents',
+    name: 'Agents',
+    updatedAt: timestamp,
+    items: [{
+      instanceId: 'agent-instance',
+      definitionId: 'agent:test',
+      kind: 'skin',
+      quantity: 1,
+      float: '',
+      seed: '',
+      stattrak: false,
+      customName: '',
+    }],
+  }], 'profile-agents', 0, timestamp)
+
+  assert.equal(document.profiles[0].items[0].customization, null)
 })
