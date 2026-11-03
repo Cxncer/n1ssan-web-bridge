@@ -97,22 +97,29 @@ export function toArmoryDocument(
       const statTrakKills = Number.isSafeInteger(item.stattrakKills) && (item.stattrakKills ?? 0) >= 0
         ? item.stattrakKills ?? 0
         : 0
+      const customization = kind !== 'skin'
+        ? null
+        : {
+            float: parseFloatValue(item.float),
+            seed: parseSeedValue(item.seed),
+            statTrak: item.stattrak || statTrakKills > 0
+              ? { enabled: item.stattrak, kills: statTrakKills }
+              : null,
+            customName: item.customName.trim() || null,
+          }
+      const hasCustomization = customization !== null && (
+        customization.float !== null ||
+        customization.seed !== null ||
+        customization.statTrak !== null ||
+        customization.customName !== null
+      )
 
       return {
         id: item.instanceId,
         definitionId: String(item.definitionId),
         kind,
         quantity: kind === 'skin' ? 1 : Math.max(1, Math.floor(Number(item.quantity) || 1)),
-        customization: kind !== 'skin'
-          ? null
-          : {
-              float: parseFloatValue(item.float),
-              seed: parseSeedValue(item.seed),
-              statTrak: item.stattrak || statTrakKills > 0
-                ? { enabled: item.stattrak, kills: statTrakKills }
-                : null,
-              customName: item.customName.trim() || null,
-            },
+        customization: hasCustomization ? customization : null,
         createdAt: validTimestamp(item.createdAt ?? profile.createdAt, now),
         updatedAt: validTimestamp(item.updatedAt ?? profile.updatedAt, now),
       }
