@@ -17,7 +17,7 @@ const getCategory = (skin: Skin) => {
   if (type.includes('sticker')) return 'Stickers'
   if (type.includes('charm') || type.includes('keychain')) return 'Charms'
   if (type.includes('glove') || weapon.includes('glove')) return 'Gloves'
-  if (type.includes('knife') || weapon.includes('knife')) return 'Knives'
+  if (type.includes('knife') || type.includes('kniv') || type.includes('melee') || weapon.includes('knife') || weapon.includes('karambit') || weapon.includes('bayonet') || weapon.includes('dagger')) return 'Knives'
   if (type.includes('agent')) return 'Agents'
   if (type.includes('sniper') || ['awp', 'ssg 08', 'g3sg1', 'scar-20'].includes(weapon)) return 'Snipers'
   if (type.includes('pistol') || ['glock-18','usp-s','p2000','p250','tec-9','five-seven','cz75-auto','desert eagle','r8 revolver','dual berettas'].includes(weapon)) return 'Pistols'
