@@ -2,6 +2,7 @@ import assert from 'node:assert/strict'
 import { test } from 'node:test'
 import { validateArmoryDocument } from '../src/armory/contracts.ts'
 import { migrateLegacyInventory } from '../src/armory/migrate-legacy.ts'
+import { fromArmoryDocument, toArmoryDocument } from '../src/armory/obsidian-adapter.ts'
 
 const timestamp = '2026-11-03T08:00:00.000Z'
 
@@ -148,4 +149,55 @@ test('creates a safe empty profile when legacy storage is missing or unusable', 
   assert.equal(migrated.activeProfileId, 'profile-main')
   assert.equal(migrated.profiles.length, 1)
   assert.equal(migrated.profiles[0].items.length, 0)
+})
+
+
+test('Obsidian adapter round-trips profile snapshots and skin customization', () => {
+  const source = validDocument()
+  const view = fromArmoryDocument(source)
+
+  assert.equal(view.activeId, 'profile-main')
+  assert.equal(view.items[0].float, '0.18')
+  assert.equal(view.items[0].seed, '413')
+  assert.equal(view.items[0].stattrak, true)
+  assert.equal(view.items[0].stattrakKills, 120)
+  assert.equal(view.items[1].quantity, 3)
+
+  const restored = toArmoryDocument(view.profiles, view.activeId, source.revision)
+  assert.deepEqual(validateArmoryDocument(restored), [])
+  assert.equal(restored.profiles[0].items[0].customization?.statTrak?.kills, 120)
+  assert.equal(restored.profiles[0].items[1].customization, null)
+})
+
+test('Obsidian adapter clamps invalid optional values to null and keeps non-skin stacks', () => {
+  const document = toArmoryDocument([{
+    id: 'profile-adapter',
+    name: 'Adapter test',
+    updatedAt: timestamp,
+    items: [{
+      instanceId: 'invalid-skin',
+      definitionId: 'skin:test',
+      kind: 'skin',
+      quantity: 1,
+      float: '1.5',
+      seed: '1001',
+      stattrak: false,
+      customName: '',
+    }, {
+      instanceId: 'charm-stack',
+      definitionId: 'charm:test',
+      kind: 'charm',
+      quantity: 5,
+      float: '',
+      seed: '',
+      stattrak: false,
+      customName: '',
+    }],
+  }], 'profile-adapter', 0, timestamp)
+
+  assert.deepEqual(validateArmoryDocument(document), [])
+  assert.equal(document.profiles[0].items[0].customization?.float, null)
+  assert.equal(document.profiles[0].items[0].customization?.seed, null)
+  assert.equal(document.profiles[0].items[1].quantity, 5)
+  assert.equal(document.profiles[0].items[1].customization, null)
 })
