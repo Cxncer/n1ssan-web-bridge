@@ -6,18 +6,19 @@ import {
   type ObsidianInventoryProfile,
 } from '../armory/obsidian-adapter'
 import { migrateLegacyInventory } from '../armory/migrate-legacy'
+import { catalogueDefinitionId, toCatalogueDefinition } from '../armory/catalogue-identity'
 import skinData from '../skins.json'
 import knifeData from './knife-skins.json'
 import './obsidian.css'
 
 type ItemKind = 'skin' | 'sticker' | 'charm'
-type Skin = { id: number | string; weapon: string; name: string; type: string; rarity: string; color: string; art: string; description: string; image?: string; minFloat?: number | null; maxFloat?: number | null; kind?: ItemKind; phase?: string; patternId?: string; paintIndex?: string; legacyOnly?: boolean }
+type Skin = { id: number | string; weapon: string; name: string; type: string; rarity: string; color: string; art: string; description: string; image?: string; minFloat?: number | null; maxFloat?: number | null; kind?: ItemKind; phase?: string; patternId?: string; paintIndex?: string; paintKit?: number | string | null; gameDefinitionId?: number | null; stickerKitId?: number | null; keychainId?: number | null; legacyOnly?: boolean }
 type InventoryItem = ObsidianInventoryItem
 type InventoryProfile = ObsidianInventoryProfile
 const catalogue = skinData as Skin[]
 const makeId = () => `item-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`
-const normalizeItem = (item: InventoryItem): InventoryItem => ({ ...item, kind: item.kind ?? 'skin', quantity: Math.max(1, Number(item.quantity) || 1), float: item.float ?? '', seed: item.seed ?? '', stattrak: item.stattrak ?? false, stattrakKills: item.stattrakKills ?? 0, customName: item.customName ?? '' })
-const normalizeItems = (items: InventoryItem[]) => { const normalized = items.map(normalizeItem), merged: InventoryItem[] = []; for (const item of normalized) { if (item.kind === 'skin') { merged.push(item); continue } const existing = merged.find(x => x.kind === item.kind && String(x.definitionId) === String(item.definitionId)); if (existing) existing.quantity = (existing.quantity ?? 1) + (item.quantity ?? 1); else merged.push(item) } return merged }
+const normalizeItem = (item: InventoryItem): InventoryItem => ({ ...item, kind: item.kind ?? 'skin', definitionId: catalogueDefinitionId(item.kind ?? 'skin', item.definitionId), quantity: Math.max(1, Number(item.quantity) || 1), float: item.float ?? '', seed: item.seed ?? '', stattrak: item.stattrak ?? false, stattrakKills: item.stattrakKills ?? 0, customName: item.customName ?? '' })
+const normalizeItems = (items: InventoryItem[]) => { const normalized = items.map(normalizeItem), merged: InventoryItem[] = []; for (const item of normalized) { if (item.kind === 'skin') { merged.push(item); continue } const existing = merged.find(x => x.kind === item.kind && x.definitionId === item.definitionId); if (existing) existing.quantity = (existing.quantity ?? 1) + (item.quantity ?? 1); else merged.push(item) } return merged }
 const profileId = () => `profile-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`
 const getCategory = (skin: Skin) => {
   const type = (skin.type || '').toLowerCase(), weapon = (skin.weapon || '').toLowerCase()
@@ -72,7 +73,8 @@ export default function ObsidianApp() {
   const [specialError, setSpecialError] = useState('')
 
   const allCatalogue = useMemo(() => [...skinCatalogue, ...legacyKnifeCatalogue, ...specialItems], [specialItems])
-  const owned = useMemo(() => items.map(item => ({ item, skin: allCatalogue.find(s => String(s.id) === String(item.definitionId) && (s.kind ?? 'skin') === (item.kind ?? 'skin')) })).filter((x): x is { item: InventoryItem; skin: Skin } => !!x.skin), [items, allCatalogue])
+  const catalogueById = useMemo(() => new Map(allCatalogue.map(skin => [toCatalogueDefinition(skin).id, skin])), [allCatalogue])
+  const owned = useMemo(() => items.map(item => ({ item, skin: catalogueById.get(catalogueDefinitionId(item.kind ?? 'skin', item.definitionId)) })).filter((entry): entry is { item: InventoryItem; skin: Skin } => !!entry.skin), [items, catalogueById])
   const visible = useMemo(() => {
     const q = search.trim().toLowerCase()
     const result = owned.filter(({ skin }) => (!q || `${skin.weapon} ${skin.name} ${skin.rarity}`.toLowerCase().includes(q)) && (category === 'All items' || getCategory(skin) === category))
@@ -197,8 +199,9 @@ export default function ObsidianApp() {
   }
   const addSkin = (skin: Skin, quantity = 1, custom?: { float: string; seed: string; stattrak: boolean; customName: string }) => {
     const kind = skin.kind ?? 'skin'
-    if (kind !== 'skin') { const existing = items.find(item => item.kind === kind && String(item.definitionId) === String(skin.id)); const next = existing ? items.map(item => item.instanceId === existing.instanceId ? { ...item, quantity: (item.quantity ?? 1) + quantity } : item) : [...items, { instanceId: makeId(), definitionId: skin.id, kind, quantity, float: '', seed: '', stattrak: false, customName: '' }]; updateItems(next) }
-    else updateItems([...items, { instanceId: makeId(), definitionId: skin.id, kind, quantity: 1, float: custom?.float ?? '', seed: custom?.seed ?? '', stattrak: custom?.stattrak ?? false, customName: custom?.customName ?? '' }])
+    const definitionId = toCatalogueDefinition(skin).id
+    if (kind !== 'skin') { const existing = items.find(item => item.kind === kind && item.definitionId === definitionId); const next = existing ? items.map(item => item.instanceId === existing.instanceId ? { ...item, quantity: (item.quantity ?? 1) + quantity } : item) : [...items, { instanceId: makeId(), definitionId, kind, quantity, float: '', seed: '', stattrak: false, customName: '' }]; updateItems(next) }
+    else updateItems([...items, { instanceId: makeId(), definitionId, kind, quantity: 1, float: custom?.float ?? '', seed: custom?.seed ?? '', stattrak: custom?.stattrak ?? false, customName: custom?.customName ?? '' }])
     setDialog(null); setPendingSkin(null); setNotice(`${skin.weapon} · ${skin.name}${kind === 'skin' ? '' : ` ×${quantity}`} added to inventory`)
   }
   const chooseCatalogueItem = (skin: Skin) => { const kind = skin.kind ?? 'skin'; if (kind !== 'skin') { setPendingSkin(skin); setPendingQuantity(1); setDialog('quantity'); return } if (isAgent(skin)) { addSkin(skin); return } setPendingSkin(skin); setPendingFloat(Number(skin.minFloat ?? 0).toFixed(5)); setPendingSeed('1'); setPendingStatTrak(false); setPendingName(''); setDialog('customize') }
