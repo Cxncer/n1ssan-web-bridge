@@ -80,3 +80,34 @@ test('validator rejects invalid wear, duplicate sticker slots, and incompatible 
   assert.ok(result.errors.some((error) => error.includes('duplicate sticker slot')))
   assert.ok(result.errors.some((error) => error.includes('requires item type knife')))
 })
+
+test('instance IDs are unique across the entire document', () => {
+  const sharedItem = {
+    instanceId: 'shared-item',
+    definitionId: 4,
+    type: 'weapon',
+    name: 'Glock-18',
+    quality: 4,
+    rarity: 6,
+    origin: 0,
+    sourceCaseDefinitionId: null,
+    finish: { paintKitId: 38, wear: 0.1, seed: 1 },
+    statTrak: { enabled: false, kills: null },
+    customName: null,
+    stickers: [],
+    charm: null,
+    metadata: {},
+  }
+  const document = {
+    schemaVersion: 1,
+    catalogueVersion: 'test',
+    profiles: [
+      { profileId: 'p1', name: 'One', items: [sharedItem], equipment: [] },
+      { profileId: 'p2', name: 'Two', items: [{ ...sharedItem }], equipment: [] },
+    ],
+  }
+
+  const result = validateArmoryDocument(document)
+  assert.equal(result.valid, false)
+  assert.ok(result.errors.some((error) => error.includes('duplicate instance ID within document')))
+})
