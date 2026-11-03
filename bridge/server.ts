@@ -2,6 +2,11 @@ import express from 'express'
 import type { Request, Response, NextFunction } from 'express'
 import { copyFile, readFile, writeFile, rename } from 'node:fs/promises'
 import path from 'node:path'
+import {
+  ArmoryRevisionConflictError,
+  ArmoryStore,
+  ArmoryValidationError,
+} from './armory-store.ts'
 
 const app = express()
 
@@ -11,6 +16,10 @@ const MAX_ITEMS = 100
 const DATA_FILE = process.env.N1SSAN_DATA_FILE
   ? path.resolve(process.env.N1SSAN_DATA_FILE)
   : path.join(process.cwd(), 'n1ssan-data.json')
+const ARMORY_FILE = process.env.N1SSAN_ARMORY_FILE
+  ? path.resolve(process.env.N1SSAN_ARMORY_FILE)
+  : path.join(process.cwd(), 'armory-data.json')
+const armoryStore = new ArmoryStore(ARMORY_FILE)
 
 const allowedOrigins = new Set([
   'http://localhost:5173',
@@ -303,7 +312,7 @@ app.use((req: Request, res: Response, next: NextFunction) => {
   if (origin && allowedOrigins.has(origin)) {
     res.setHeader('Access-Control-Allow-Origin', origin)
     res.setHeader('Vary', 'Origin')
-    res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS')
+    res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, OPTIONS')
     res.setHeader('Access-Control-Allow-Headers', 'Content-Type')
   }
 
@@ -315,7 +324,66 @@ app.use((req: Request, res: Response, next: NextFunction) => {
   next()
 })
 
-app.use(express.json({ limit: '500kb' }))
+app.use(express.json({ limit: '2mb' }))
+
+
+app.get('/armory', (_req: Request, res: Response) => {
+  res.json({ data: armoryStore.read() })
+})
+
+app.put('/armory', async (req: Request, res: Response) => {
+  if (!isObject(req.body)) {
+    res.status(400).json({
+      error: {
+        code: 'VALIDATION_FAILED',
+        message: 'Invalid Armory request body',
+        details: ['Expected a JSON object'],
+      },
+    })
+    return
+  }
+
+  const { expectedRevision, data } = req.body
+
+  try {
+    const saved = await armoryStore.replace(
+      typeof expectedRevision === 'number' ? expectedRevision : Number.NaN,
+      data,
+    )
+
+    res.status(200).json({ data: saved })
+  } catch (error) {
+    if (error instanceof ArmoryRevisionConflictError) {
+      res.status(409).json({
+        error: {
+          code: 'REVISION_CONFLICT',
+          message: error.message,
+          details: ['Reload the latest Armory document before retrying'],
+        },
+      })
+      return
+    }
+
+    if (error instanceof ArmoryValidationError) {
+      res.status(400).json({
+        error: {
+          code: 'VALIDATION_FAILED',
+          message: error.message,
+          details: error.details,
+        },
+      })
+      return
+    }
+
+    console.error('Failed to persist Armory document:', error)
+    res.status(500).json({
+      error: {
+        code: 'STORAGE_FAILURE',
+        message: 'Armory could not save the document',
+      },
+    })
+  }
+})
 
 
 app.get('/health', (_req: Request, res: Response) => {
@@ -328,6 +396,8 @@ app.get('/health', (_req: Request, res: Response) => {
     loadoutId: latestLoadout?.id ?? null,
     itemCount: selectedSkins.length,
     storage: 'json-file',
+    armoryRevision: armoryStore.read().revision,
+    inventoryProfiles: armoryStore.read().profiles.length,
   })
 })
 
@@ -476,6 +546,7 @@ app.use(
 async function start(): Promise<void> {
   // If recovery fails, don't launch with empty state.
   await restoreState()
+  await armoryStore.initialize()
 
   app.listen(PORT, HOST, () => {
     console.log(`n1ssan Bridge running at http://${HOST}:${PORT}`)
