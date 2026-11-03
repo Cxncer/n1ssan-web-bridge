@@ -73,7 +73,7 @@ export default function ObsidianApp() {
   const [specialError, setSpecialError] = useState('')
 
   const allCatalogue = useMemo(() => [...skinCatalogue, ...legacyKnifeCatalogue, ...specialItems], [specialItems])
-  const catalogueById = useMemo(() => new Map(allCatalogue.map(skin => [toCatalogueDefinition(skin).id, skin])), [allCatalogue])
+  const catalogueById = useMemo(() => new Map(allCatalogue.map(skin => [toCatalogueDefinition(skin).id, skin] as const)), [allCatalogue])
   const owned = useMemo(() => items.map(item => ({ item, skin: catalogueById.get(catalogueDefinitionId(item.kind ?? 'skin', item.definitionId)) })).filter((entry): entry is { item: InventoryItem; skin: Skin } => !!entry.skin), [items, catalogueById])
   const visible = useMemo(() => {
     const q = search.trim().toLowerCase()
