@@ -14,6 +14,8 @@ export type ObsidianInventoryItem = {
   stattrak: boolean
   stattrakKills?: number
   customName: string
+  createdAt?: string
+  updatedAt?: string
 }
 
 export type ObsidianInventoryProfile = {
@@ -66,6 +68,8 @@ export function fromArmoryDocument(document: ArmoryDocument): {
       stattrak: item.customization?.statTrak?.enabled ?? false,
       stattrakKills: item.customization?.statTrak?.kills ?? 0,
       customName: item.customization?.customName ?? '',
+      createdAt: item.createdAt,
+      updatedAt: item.updatedAt,
     })),
   }))
   const active = profiles.find(profile => profile.id === document.activeProfileId) ?? profiles[0]
@@ -109,8 +113,8 @@ export function toArmoryDocument(
                 : null,
               customName: item.customName.trim() || null,
             },
-        createdAt: validTimestamp(profile.createdAt, now),
-        updatedAt: validTimestamp(profile.updatedAt, now),
+        createdAt: validTimestamp(item.createdAt ?? profile.createdAt, now),
+        updatedAt: validTimestamp(item.updatedAt ?? profile.updatedAt, now),
       }
     }),
   }))
