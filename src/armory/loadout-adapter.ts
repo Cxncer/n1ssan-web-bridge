@@ -87,3 +87,37 @@ export function replaceProfileEquipmentAssignments(
     ],
   }
 }
+
+export type ResolvedLoadoutSelections = {
+  loadouts: Record<EquipmentTeam, Record<string, number | null>>
+  equipment: Record<EquipmentTeam, Record<Exclude<EquipmentSlot, 'weapon'>, number | null>>
+}
+
+/** Resolves saved Armory assignments back to catalogue IDs for the existing UI. */
+export function resolveProfileEquipmentSelections(
+  document: ArmoryEquipmentDocument,
+  profileId: string,
+  catalogue: LoadoutCatalogueItem[],
+  armory: ArmoryDocument,
+): ResolvedLoadoutSelections {
+  const inventory = armory.profiles.find(entry => entry.id === armory.activeProfileId)
+  if (!inventory) throw new Error('The active Armory inventory profile could not be found.')
+  const catalogueIds = new Map(catalogue.map(item => [definitionIdFor(item), item.id]))
+  const loadouts: ResolvedLoadoutSelections['loadouts'] = { T: {}, CT: {} }
+  const equipment: ResolvedLoadoutSelections['equipment'] = {
+    T: { agent: null, knife: null, gloves: null, zeus: null },
+    CT: { agent: null, knife: null, gloves: null, zeus: null },
+  }
+
+  for (const assignment of document.assignments.filter(item => item.loadoutProfileId === profileId)) {
+    const instance = inventory.items.find(item => item.id === assignment.itemInstanceId)
+    if (!instance) throw new Error('A saved assignment points to an item that is no longer in the active Armory inventory.')
+    const catalogueId = catalogueIds.get(instance.definitionId)
+    if (catalogueId === undefined) {
+      throw new Error('A saved Armory item is not present in the current skin catalogue: ' + instance.definitionId)
+    }
+    if (assignment.slot === 'weapon') loadouts[assignment.team][assignment.target] = catalogueId
+    else equipment[assignment.team][assignment.slot] = catalogueId
+  }
+  return { loadouts, equipment }
+}
