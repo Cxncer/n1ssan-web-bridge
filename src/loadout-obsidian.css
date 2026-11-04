@@ -1181,3 +1181,268 @@
 .lb-picker-image { height: 120px; }
 .lb-float-slider, .lb-seed-slider { accent-color: #f0f0f0; }
 
+/* Loadout inventory cards — same component language as Obsidian Armory. */
+.lb-workspace-shell {
+  width: 100%;
+  max-width: none;
+  margin: 0;
+  padding: 24px clamp(18px, 2.6vw, 44px) 48px;
+}
+.lb-section {
+  width: 100%;
+  max-width: none;
+  min-width: 0;
+}
+.lb-board {
+  width: 100%;
+  grid-template-columns: minmax(190px, .92fr) repeat(4, minmax(0, 1fr));
+  align-items: stretch;
+  gap: clamp(12px, 1.35vw, 20px);
+}
+.lb-board > section { min-width: 0; }
+.lb-column-cards, .lb-equipment-cards {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  grid-auto-rows: 1fr;
+  align-items: stretch;
+  gap: 12px;
+}
+.lb-weapon-card-wrap.lb-inventory-card {
+  --rarity: #b0c3d9;
+  --rarity-rgb: 176,195,217;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  min-height: 282px;
+  height: 100%;
+  gap: 0;
+  overflow: hidden;
+  isolation: isolate;
+  border: 1px solid color-mix(in srgb, var(--rarity) 28%, #252525);
+  border-radius: 12px;
+  color: #e5e5e5;
+  background: linear-gradient(155deg, color-mix(in srgb, var(--rarity) 8%, #1b1b1b), #111 68%);
+  box-shadow: 0 9px 28px #0007;
+  transition: border-color .2s, transform .2s, box-shadow .2s;
+}
+.lb-inventory-card::before {
+  content: '';
+  position: absolute;
+  z-index: 4;
+  inset: 0 0 auto;
+  height: 3px;
+  pointer-events: none;
+  background: linear-gradient(90deg, transparent, var(--rarity), transparent);
+  opacity: .92;
+}
+.lb-inventory-card:hover {
+  z-index: 2;
+  border-color: color-mix(in srgb, var(--rarity) 75%, #fff);
+  transform: translateY(-2px);
+  box-shadow: 0 14px 32px #0009, 0 0 0 1px var(--rarity), 0 0 22px rgba(var(--rarity-rgb), .12);
+}
+.lb-inventory-card:focus-within {
+  border-color: color-mix(in srgb, var(--rarity) 75%, #fff);
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--rarity) 65%, #fff), 0 10px 28px #0009;
+}
+.lb-inventory-card.rarity-card-consumer-grade,
+.lb-inventory-card.rarity-card-base-grade { --rarity: #b0c3d9; --rarity-rgb: 176,195,217; }
+.lb-inventory-card.rarity-card-industrial-grade,
+.lb-inventory-card.rarity-card-high-grade { --rarity: #5e98d9; --rarity-rgb: 94,152,217; }
+.lb-inventory-card.rarity-card-mil-spec-grade,
+.lb-inventory-card.rarity-card-remarkable { --rarity: #4b69ff; --rarity-rgb: 75,105,255; }
+.lb-inventory-card.rarity-card-restricted,
+.lb-inventory-card.rarity-card-exotic { --rarity: #8847ff; --rarity-rgb: 136,71,255; }
+.lb-inventory-card.rarity-card-classified,
+.lb-inventory-card.rarity-card-extraordinary { --rarity: #d32ce6; --rarity-rgb: 211,44,230; }
+.lb-inventory-card.rarity-card-covert,
+.lb-inventory-card.rarity-card-master { --rarity: #eb4b4b; --rarity-rgb: 235,75,75; }
+.lb-inventory-card.rarity-card-contraband { --rarity: #e4ae39; --rarity-rgb: 228,174,57; }
+.lb-inventory-card-main {
+  position: relative;
+  display: flex;
+  flex: 1 1 auto;
+  flex-direction: column;
+  width: 100%;
+  min-width: 0;
+  min-height: 0;
+  padding: 0;
+  overflow: hidden;
+  border: 0 !important;
+  border-radius: 0;
+  color: #e5e9e5;
+  background: transparent !important;
+  text-align: left;
+  box-shadow: none !important;
+  transform: none !important;
+}
+.lb-inventory-card-main:hover,
+.lb-inventory-card-main:focus-visible {
+  border: 0 !important;
+  background: transparent !important;
+  box-shadow: none !important;
+  transform: none !important;
+  outline: none;
+}
+.lb-loadout-item-art {
+  position: relative;
+  display: grid;
+  flex: 0 0 142px;
+  place-items: center;
+  width: 100%;
+  height: 142px;
+  min-height: 142px;
+  padding: 10px;
+  overflow: hidden;
+  border: 0;
+  border-bottom: 1px solid color-mix(in srgb, var(--rarity) 23%, #303030);
+  border-radius: 0;
+  background:
+    radial-gradient(ellipse at 50% 58%, rgba(var(--rarity-rgb), .22), transparent 66%),
+    linear-gradient(145deg, #262626, #141414 75%);
+}
+.lb-loadout-item-art::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: linear-gradient(135deg, transparent 40%, #ffffff08 50%, transparent 60%);
+}
+.lb-loadout-item-art img {
+  position: relative;
+  z-index: 1;
+  display: block;
+  width: 88%;
+  height: 82%;
+  max-width: 100%;
+  object-fit: contain;
+  filter: drop-shadow(0 14px 17px #000b);
+  transition: transform .3s ease;
+}
+.lb-inventory-card:hover .lb-loadout-item-art img { transform: scale(1.06); }
+.lb-loadout-item-art .item-rarity {
+  position: absolute;
+  z-index: 2;
+  right: 10px;
+  bottom: 8px;
+  color: var(--rarity);
+  font: 8px 'DM Mono', monospace;
+  text-shadow: 0 1px 8px #000;
+  opacity: .9;
+}
+.lb-loadout-item-copy {
+  display: grid;
+  grid-template-rows: auto minmax(38px, auto) auto;
+  align-content: start;
+  align-items: start;
+  flex: 1 1 auto;
+  min-width: 0;
+  min-height: 94px;
+  gap: 5px;
+  padding: 12px 13px 13px;
+  overflow: hidden;
+  border: 0;
+  background: transparent;
+}
+.lb-loadout-item-copy .ob-item-weapon {
+  display: block;
+  min-width: 0;
+  overflow: hidden;
+  color: #c0c9c1;
+  font: 9px 'DM Mono', monospace;
+  letter-spacing: .55px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.lb-loadout-item-copy > strong {
+  display: -webkit-box;
+  min-width: 0;
+  min-height: 38px;
+  overflow: hidden;
+  color: #fff;
+  font: 600 14px/1.35 Barlow, sans-serif;
+  overflow-wrap: anywhere;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+}
+.lb-loadout-item-copy > small {
+  color: #a0aaa2;
+  font: 9px 'DM Mono', monospace;
+}
+.lb-loadout-item-foot {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex: 0 0 43px;
+  width: 100%;
+  min-width: 0;
+  min-height: 43px;
+  gap: 5px;
+  padding: 9px 11px;
+  border: 0;
+  border-top: 1px solid color-mix(in srgb, var(--rarity) 23%, #303030);
+  border-radius: 0;
+  color: #a0aaa2;
+  background: #111;
+  font: 8px 'DM Mono', monospace;
+  letter-spacing: .35px;
+  text-align: left;
+}
+button.lb-loadout-item-foot { cursor: pointer; transition: background .18s, color .18s; }
+button.lb-loadout-item-foot:hover { color: #fff; background: #242424; }
+.lb-loadout-item-foot > span { white-space: nowrap; }
+.lb-loadout-item-foot b { margin-left: 3px; color: #e4e9e4; font-weight: 500; }
+.lb-loadout-item-foot .float-wear {
+  padding: 3px 5px;
+  border: 1px solid color-mix(in srgb, var(--rarity) 45%, #444);
+  border-radius: 3px;
+  color: var(--rarity);
+  font: 600 8px 'DM Mono', monospace;
+}
+.lb-loadout-item-foot-empty { color: #777; }
+.lb-inventory-card .item-remove-x {
+  position: absolute;
+  z-index: 6;
+  top: 9px;
+  left: 9px;
+  display: grid;
+  place-items: center;
+  width: 25px;
+  height: 25px;
+  padding: 0;
+  border: 1px solid #666;
+  border-radius: 50%;
+  color: #eee;
+  background: #090e0be8;
+  font: 18px/1 Barlow, sans-serif;
+  opacity: 0;
+  transform: translateY(-4px);
+  transition: opacity .18s, transform .18s, border-color .18s, background .18s;
+}
+.lb-inventory-card:hover .item-remove-x,
+.lb-inventory-card:focus-within .item-remove-x { opacity: 1; transform: translateY(0); }
+.lb-inventory-card .item-remove-x:hover {
+  border-color: #aaa;
+  color: #fff;
+  background: #292929;
+}
+.lb-inventory-card.is-empty .lb-loadout-item-foot { color: #777; }
+@media (max-width: 1250px) {
+  .lb-workspace-shell { padding-inline: 18px; }
+  .lb-board { grid-template-columns: repeat(5, minmax(190px, 1fr)); overflow-x: auto; padding-bottom: 12px; }
+}
+@media (max-width: 680px) {
+  .lb-workspace-shell { padding: 18px 12px 32px; }
+  .lb-board { gap: 12px; }
+  .lb-column-cards, .lb-equipment-cards { gap: 8px; }
+  .lb-weapon-card-wrap.lb-inventory-card { min-height: 252px; }
+  .lb-loadout-item-art { flex-basis: 118px; height: 118px; min-height: 118px; }
+  .lb-loadout-item-copy { min-height: 86px; padding: 10px 9px; }
+  .lb-loadout-item-copy > strong { font-size: 12px; }
+  .lb-loadout-item-foot { gap: 4px; padding: 8px 7px; font-size: 7px; }
+  .lb-inventory-card .item-remove-x { opacity: 1; transform: none; width: 23px; height: 23px; top: 6px; left: 6px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .lb-inventory-card, .lb-inventory-card * { transition: none !important; }
+}
+
