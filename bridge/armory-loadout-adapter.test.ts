@@ -2,7 +2,7 @@ import assert from 'node:assert/strict'
 import { test } from 'node:test'
 import type { ArmoryDocument } from '../src/armory/contracts.ts'
 import { createEmptyEquipmentDocument, validateArmoryEquipmentDocument } from '../src/armory/equipment.ts'
-import { buildProfileEquipmentAssignments, replaceProfileEquipmentAssignments } from '../src/armory/loadout-adapter.ts'
+import { buildProfileEquipmentAssignments, replaceProfileEquipmentAssignments, resolveProfileEquipmentSelections } from '../src/armory/loadout-adapter.ts'
 
 const timestamp = '2026-11-04T06:00:00.000Z'
 const armory: ArmoryDocument = {
@@ -56,4 +56,16 @@ test('replaces only the requested Loadout Builder profile assignments', () => {
   ]
   const replacement = replaceProfileEquipmentAssignments(document, 'profile-a', [])
   assert.deepEqual(replacement.assignments, [document.assignments[1]])
+})
+
+test('loads profile-scoped canonical assignments back into catalogue selections', () => {
+  const document = createEmptyEquipmentDocument(armory)
+  document.assignments = [
+    { loadoutProfileId: 'loadout-main', team: 'T', slot: 'weapon', target: 'AK-47', itemInstanceId: 'ak-owned-1' },
+    { loadoutProfileId: 'loadout-main', team: 'CT', slot: 'knife', target: 'knife', itemInstanceId: 'knife-owned' },
+  ]
+  const restored = resolveProfileEquipmentSelections(document, 'loadout-main', catalogue, armory)
+  assert.equal(restored.loadouts.T['AK-47'], 10)
+  assert.equal(restored.equipment.CT.knife, 7)
+  assert.equal(restored.equipment.T.knife, null)
 })
