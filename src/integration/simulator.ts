@@ -1,4 +1,3 @@
-import type { LocalIntegrationSnapshot } from './local-snapshot.ts'
 import type { InventoryItemInstance } from '../armory/contracts.ts'
 import type { EquippedItemAssignment } from '../armory/equipment.ts'
 
