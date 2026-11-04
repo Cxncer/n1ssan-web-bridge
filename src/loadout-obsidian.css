@@ -1104,3 +1104,47 @@
 .lb-section select:focus-visible { outline-color: #f2f2f2; }
 .lb-team-button.active.team-ct { border-color: #bcbcbc; }
 
+/* Higher-specificity overrides for the legacy Loadout team accents. */
+.lb-section { --lb-team-t: #eee; --lb-team-ct: #eee; }
+.lb-section::before, .lb-section[data-team="CT"]::before {
+  background: radial-gradient(ellipse at 50% 12%, #ffffff0c, transparent 58%);
+  opacity: .7;
+}
+.lb-section .lb-progress-team-t strong, .lb-section .lb-progress-team-t small,
+.lb-section .lb-progress-team-ct strong, .lb-section .lb-progress-team-ct small {
+  color: #eee !important;
+}
+.lb-section .lb-team-button.team-t strong,
+.lb-section .lb-team-button.team-ct strong,
+.lb-section .lb-team-button.team-t .lb-team-symbol,
+.lb-section .lb-team-button.team-ct .lb-team-symbol {
+  color: #eee !important;
+}
+.lb-section .lb-team-button.team-t .lb-team-symbol,
+.lb-section .lb-team-button.team-ct .lb-team-symbol {
+  border-color: #666 !important;
+  background: #292929 !important;
+}
+.lb-section .lb-team-button.active.team-t,
+.lb-section .lb-team-button.active.team-ct {
+  border-color: #bbb !important;
+  color: #fff !important;
+  background: linear-gradient(145deg, #3a3a3a, #1b1b1b) !important;
+}
+.lb-section .lb-team-button.active.team-t .lb-team-symbol,
+.lb-section .lb-team-button.active.team-ct .lb-team-symbol {
+  border-color: #aaa !important;
+  color: #fff !important;
+  background: #444 !important;
+}
+.lb-section .lb-team-save-actions .lb-bridge-button,
+.lb-section .lb-team-save-actions .lb-bridge-button:hover {
+  border: 1px solid #777 !important;
+  color: #fff !important;
+  background: linear-gradient(145deg, #555, #242424) !important;
+  box-shadow: 0 5px 18px #0006 !important;
+}
+.lb-section button:focus-visible, .lb-section input:focus-visible,
+.lb-section select:focus-visible { outline-color: #fff !important; }
+.lb-section ::selection { color: #111; background: #ddd; }
+
