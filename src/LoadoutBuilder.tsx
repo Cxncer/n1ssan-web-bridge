@@ -465,7 +465,16 @@ export default function LoadoutBuilder({ skins }: LoadoutBuilderProps) {
   const activeLimits = limits(activeSkin)
   const activeEquipmentTitle = activeEquipment ? EQUIPMENT_INFO[activeEquipment].title : ''
 
-  return <section className="lb-section" data-team={team}>
+  return <div className="lb-workspace-shell">
+    <header className="lb-topbar">
+      <a className="lb-brand" href="/obsidian.html" aria-label="n1ssan Armory"><span className="lb-brand-mark">n.</span><span>n1ssan</span><i /><small>OBSIDIAN</small></a>
+      <nav className="lb-nav" aria-label="Workspace navigation">
+        <a href="/obsidian.html">Armory</a>
+        <a className="active" href="/?page=loadout" aria-current="page">Loadout</a>
+      </nav>
+      <div className="lb-top-status"><span className="lb-status-indicator" /><span>{bridgeStatus.toUpperCase()}</span></div>
+    </header>
+    <section className="lb-section" data-team={team}>
     <div className="lb-breadcrumb"><span>WORKSPACE</span><b>/</b><strong>LOADOUT</strong></div>
     <div className="lb-heading">
       <div><p className="lb-eyebrow">YOUR EQUIPMENT CONFIGURATION</p><h2>Your Loadout<span className="lb-title-accent">.</span></h2><p className="lb-subtitle">Configure every weapon and equipment slot for both sides.</p></div>
@@ -478,6 +487,14 @@ export default function LoadoutBuilder({ skins }: LoadoutBuilderProps) {
         <small className="lb-progress-label">SKINS EQUIPPED</small>
       </div>
     </div>
+
+    <section className="lb-overview" aria-label="Loadout overview">
+      <div className="lb-overview-total"><span className="lb-metric-label">ACTIVE PROFILE</span><strong>{activeProfile.name}</strong><small>{profiles.length} saved profile{profiles.length === 1 ? '' : 's'}</small></div>
+      <div className="lb-overview-stat"><strong>{String(equippedCountT).padStart(2, '0')}</strong><small>T SKINS</small></div>
+      <div className="lb-overview-stat"><strong>{String(equippedCountCT).padStart(2, '0')}</strong><small>CT SKINS</small></div>
+      <div className="lb-overview-stat"><strong>{String(Object.values(equipment[team]).filter(id => id !== null).length).padStart(2, '0')}</strong><small>{team} EQUIPMENT</small></div>
+      <div className="lb-overview-status"><span className="lb-overview-ring">✓</span><span><strong>LOADOUT READY</strong><small>Changes save automatically</small></span></div>
+    </section>
 
     <div className="lb-loadout-controls-row">
     <div className="lb-profiles">
@@ -596,5 +613,6 @@ export default function LoadoutBuilder({ skins }: LoadoutBuilderProps) {
       {dialog.mode === 'create' || dialog.mode === 'duplicate' || dialog.mode === 'rename' ? <><label className="lb-dialog-label" htmlFor="lb-profile-name">PROFILE NAME</label><input id="lb-profile-name" className="lb-dialog-input" autoFocus maxLength={48} value={dialog.value} placeholder="Enter a profile name" onChange={e => setDialog({ ...dialog, value: e.target.value })} /><p className="lb-dialog-help">{dialog.mode === 'create' ? 'Start with an empty T and CT loadout.' : dialog.mode === 'duplicate' ? 'Copy the current T and CT loadouts, equipment, floats, and seeds.' : 'Your saved items will stay exactly as they are.'}</p></> : <p className="lb-dialog-message">{dialog.mode === 'delete' ? <>Delete <strong>{activeProfile.name}</strong>? Its saved T and CT loadouts will be deleted. This cannot be undone.</> : <>Clear the <strong>{team === 'T' ? 'Terrorist' : 'Counter-Terrorist'}</strong> loadout for <strong>{activeProfile.name}</strong>? This removes equipped weapon skins and equipment for this team only.</>}</p>}
       <div className="lb-dialog-actions"><button type="button" className="lb-dialog-cancel" onClick={() => setDialog(null)}>Cancel</button><button type="submit" className={`lb-dialog-confirm ${dialog.mode === 'delete' || dialog.mode === 'clear' ? 'danger' : ''}`} disabled={['create', 'duplicate', 'rename'].includes(dialog.mode) && !dialog.value.trim()}>{dialog.mode === 'create' ? 'Create profile' : dialog.mode === 'duplicate' ? 'Duplicate profile' : dialog.mode === 'rename' ? 'Save name' : dialog.mode === 'delete' ? 'Delete profile' : 'Clear loadout'}</button></div>
     </form></div>}
-  </section>
+    </section>
+  </div>
 }
