@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
 import './LoadoutBuilder.css'
+import './loadout-armory-theme.css'
 import { findImageColorMatches } from './skinColorDetection'
 import { readArmoryDocument } from './armory/bridge-client'
 import { readArmoryEquipment, writeArmoryEquipment } from './armory/equipment-client'
