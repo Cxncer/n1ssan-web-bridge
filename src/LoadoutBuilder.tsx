@@ -236,6 +236,7 @@ export default function LoadoutBuilder({ skins }: LoadoutBuilderProps) {
   // Called by the mutation helpers below. Not an effect, so it never fires
   // on every keystroke.
   function syncActiveProfile(next: { loadouts: SavedLoadouts; skinSettings: SavedSkinSettings; equipment: SavedEquipment }) {
+    setBridgeStatus('Local changes not synced')
     setProfiles(prev => prev.map(p => p.id === activeProfileId ? {
       ...p, loadouts: clone(next.loadouts), skinSettings: clone(next.skinSettings), equipment: clone(next.equipment),
     } : p))
