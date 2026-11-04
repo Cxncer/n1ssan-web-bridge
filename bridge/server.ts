@@ -8,6 +8,8 @@ import {
   ArmoryValidationError,
 } from './armory-store.ts'
 import { createLocalIntegrationSnapshot } from '../src/integration/local-snapshot.ts'
+import { ArmoryEquipmentStore, EquipmentRevisionConflictError, EquipmentValidationError } from './armory-equipment-store.ts'
+import { validateArmoryEquipmentDocument } from '../src/armory/equipment.ts'
 
 const app = express()
 
@@ -21,6 +23,10 @@ const ARMORY_FILE = process.env.N1SSAN_ARMORY_FILE
   ? path.resolve(process.env.N1SSAN_ARMORY_FILE)
   : path.join(process.cwd(), 'armory-data.json')
 const armoryStore = new ArmoryStore(ARMORY_FILE)
+const EQUIPMENT_FILE = process.env.N1SSAN_EQUIPMENT_FILE
+  ? path.resolve(process.env.N1SSAN_EQUIPMENT_FILE)
+  : path.join(process.cwd(), 'armory-equipment.json')
+const equipmentStore = new ArmoryEquipmentStore(EQUIPMENT_FILE)
 
 const allowedOrigins = new Set([
   'http://localhost:5173',
@@ -332,6 +338,42 @@ app.get('/armory', (_req: Request, res: Response) => {
   res.json({ data: armoryStore.read() })
 })
 
+app.get('/armory/equipment', (_req: Request, res: Response) => {
+  const armory = armoryStore.read()
+  const data = equipmentStore.read()
+  const validationErrors = validateArmoryEquipmentDocument(data, armory)
+  res.setHeader('Cache-Control', 'no-store')
+  res.json({ data, validationErrors })
+})
+
+app.put('/armory/equipment', async (req: Request, res: Response) => {
+  if (!isObject(req.body)) {
+    res.status(400).json({ error: { code: 'VALIDATION_FAILED', message: 'Invalid equipment request', details: ['Expected a JSON object'] } })
+    return
+  }
+  const { expectedInventoryRevision, data } = req.body
+  try {
+    const saved = await equipmentStore.replace(
+      typeof expectedInventoryRevision === 'number' ? expectedInventoryRevision : Number.NaN,
+      data,
+      armoryStore.read(),
+    )
+    res.status(200).json({ data: saved })
+  } catch (error) {
+    if (error instanceof EquipmentRevisionConflictError) {
+      res.status(409).json({ error: { code: 'REVISION_CONFLICT', message: error.message, details: ['Reload Armory and equipment before retrying'] } })
+      return
+    }
+    if (error instanceof EquipmentValidationError) {
+      res.status(400).json({ error: { code: 'VALIDATION_FAILED', message: error.message, details: error.details } })
+      return
+    }
+    console.error('Failed to persist Armory equipment:', error)
+    res.status(500).json({ error: { code: 'STORAGE_FAILURE', message: 'Armory equipment could not be saved' } })
+  }
+})
+
+
 app.put('/armory', async (req: Request, res: Response) => {
   if (!isObject(req.body)) {
     res.status(400).json({
@@ -392,6 +434,7 @@ app.get('/integration/snapshot', (_req: Request, res: Response) => {
     armoryStore.read(),
     selectedSkins,
     latestLoadout,
+    equipmentStore.read(),
   )
 
   res.setHeader('Cache-Control', 'no-store')
@@ -560,6 +603,7 @@ async function start(): Promise<void> {
   // If recovery fails, don't launch with empty state.
   await restoreState()
   await armoryStore.initialize()
+  await equipmentStore.initialize(armoryStore.read())
 
   app.listen(PORT, HOST, () => {
     console.log(`n1ssan Bridge running at http://${HOST}:${PORT}`)
