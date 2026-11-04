@@ -9,8 +9,15 @@
     "build": "tsc -b && vite build",
     "lint": "eslint .",
     "preview": "vite preview",
+<<<<<<< HEAD
     "test": "node --import tsx --test bridge/server.test.ts bridge/armory.test.ts",
     "armory:validate-schema": "node scripts/validate-cs2-schema.mjs"
+=======
+    "test": "node --import tsx --test bridge/server.test.ts bridge/armory-contract.test.ts"
+>>>>>>> cd6d8dfb5fc4bc1d459955fa42e01640cdd66147
+
+"test": "node --import tsx --test bridge/server.test.ts bridge/armory-contract.test.ts"
+
   },
   "dependencies": {
     "express": "^5.3.0",
