@@ -1,3 +1,4 @@
+@import url('https://fonts.googleapis.com/css2?family=Barlow:wght@400;500;600;650;700;800&family=Barlow+Condensed:wght@500;600;700&family=DM+Mono:wght@400;500&family=DM+Sans:wght@400;500;600;700&display=swap');
 /* Armory-aligned Loadout Builder theme */
 .lb-section{
   --lb-accent:#a7b8ab;--lb-bg:#101213;--lb-panel:#191e1c;--lb-panel-hover:#252d28;
