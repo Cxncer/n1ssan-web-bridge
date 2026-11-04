@@ -48,6 +48,7 @@ export default function ObsidianApp() {
   const [items, setItems] = useState<InventoryItem[]>([])
   const [booting, setBooting] = useState(true)
   const [armoryError, setArmoryError] = useState('')
+  const [armorySaveError, setArmorySaveError] = useState<{ message: string; conflict: boolean } | null>(null)
   const [armoryStatus, setArmoryStatus] = useState<'connecting' | 'connected'>('connecting')
   const revisionRef = useRef(0)
   const saveQueueRef = useRef<Promise<void>>(Promise.resolve())
@@ -117,9 +118,13 @@ export default function ObsidianApp() {
         const document = toArmoryDocument(snapshot, nextActiveId, revisionRef.current)
         const saved = await writeArmoryDocument(document, revisionRef.current)
         revisionRef.current = saved.revision
+        setArmorySaveError(null)
       }).catch(error => {
         writeBlockedRef.current = true
-        setArmoryError(error instanceof Error ? error.message : 'Armory could not save your changes.')
+        setArmorySaveError({
+          message: error instanceof Error ? error.message : 'Armory could not save your changes.',
+          conflict: error instanceof ArmoryBridgeError && error.status === 409,
+        })
       })
     }, 250)
   }
@@ -305,8 +310,15 @@ export default function ObsidianApp() {
     <header className="ob-topbar">
       <a className="ob-brand" href="#home" onClick={e => { e.preventDefault(); setPage('home') }} aria-label="n1ssan Obsidian"><span className="ob-mark">n.</span><span>n1ssan</span><i /> <small>OBSIDIAN</small></a>
       <nav className="ob-nav"><button className={page === 'home' ? 'active' : ''} onClick={() => setPage('home')}>Home</button><button className={page === 'inventory' ? 'active' : ''} onClick={() => setPage('inventory')}>Inventory</button><button onClick={() => setDialog('diagnostics')}>Diagnostics <span className="nav-count">01</span></button></nav>
-      <div className="ob-top-right"><span className="armory-status-dot" /><span className="armory-status-text">{armoryStatus === 'connected' ? 'ARMORY CONNECTED' : 'ARMORY CONNECTING'}</span><span className="cs2-status-dot" /><span className="cs2-status-text">CS2 NOT DETECTED</span></div>
+      <div className="ob-top-right"><span className="armory-status-dot" /><span className="armory-status-text">{armorySaveError ? 'ARMORY SAVE BLOCKED' : armoryStatus === 'connected' ? 'ARMORY CONNECTED' : 'ARMORY CONNECTING'}</span><span className="cs2-status-dot" /><span className="cs2-status-text">CS2 NOT DETECTED</span></div>
     </header>
+
+    {armorySaveError && <div className="ob-armory-save-error" role="alert">
+      <div><strong>{armorySaveError.conflict ? 'ARMORY REVISION CONFLICT' : 'ARMORY SAVE INTERRUPTED'}</strong><span>{armorySaveError.message}</span></div>
+      {armorySaveError.conflict
+        ? <button onClick={() => window.location.reload()}>Reload latest inventory</button>
+        : <button onClick={() => { writeBlockedRef.current = false; setArmorySaveError(null); persistSnapshot(profiles, activeId) }}>Retry save</button>}
+    </div>}
 
     <main className={`ob-main ${page === 'home' ? 'home-mode' : ''}`} id={page}>
       {page === 'home' ? <>
