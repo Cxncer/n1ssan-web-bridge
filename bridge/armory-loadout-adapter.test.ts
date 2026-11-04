@@ -17,13 +17,14 @@ const armory: ArmoryDocument = {
     items: [
       { id: 'ak-owned-1', definitionId: 'cs2:skin:n1ssan-skins:10', kind: 'skin', quantity: 1, customization: null, createdAt: timestamp, updatedAt: timestamp },
       { id: 'ak-owned-2', definitionId: 'cs2:skin:n1ssan-skins:10', kind: 'skin', quantity: 1, customization: null, createdAt: timestamp, updatedAt: timestamp },
-      { id: 'knife-owned', definitionId: 'cs2:skin:n1ssan-knives:skin-7', kind: 'skin', quantity: 1, customization: null, createdAt: timestamp, updatedAt: timestamp },
+      { id: 'knife-owned', definitionId: 'cs2:skin:n1ssan-knives:7', kind: 'skin', quantity: 1, customization: null, createdAt: timestamp, updatedAt: timestamp },
     ],
   }],
 }
 const catalogue = [
   { id: 10, weapon: 'AK-47', type: 'Rifle' },
   { id: 7, weapon: 'Knife', type: 'Knife' },
+  { id: 999, weapon: 'M4A1-S', type: 'Rifle' },
 ]
 
 test('maps catalogue IDs to actual owned instance IDs and keeps T/CT assignments distinct', () => {
