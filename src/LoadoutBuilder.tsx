@@ -134,7 +134,7 @@ function equipmentCategory(s: Skin): EquipmentSlot | null {
   if (t.includes('agent')) return 'agent'
   if (t.includes('glove') || w.includes('glove')) return 'gloves'
   if (w.includes('zeus') || w.includes('x27') || t.includes('zeus')) return 'zeus'
-  if (t.includes('knife') || w.includes('knife')) return 'knife'
+  if (t.includes('knife') || t.includes('kniv') || w.includes('knife')) return 'knife'
   return null
 }
 function agentForTeam(s: Skin, team: Team) {
