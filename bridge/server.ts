@@ -25,7 +25,7 @@ const ARMORY_FILE = process.env.N1SSAN_ARMORY_FILE
 const armoryStore = new ArmoryStore(ARMORY_FILE)
 const EQUIPMENT_FILE = process.env.N1SSAN_EQUIPMENT_FILE
   ? path.resolve(process.env.N1SSAN_EQUIPMENT_FILE)
-  : path.join(process.cwd(), 'armory-equipment.json')
+  : path.join(path.dirname(ARMORY_FILE), 'armory-equipment.json')
 const equipmentStore = new ArmoryEquipmentStore(EQUIPMENT_FILE)
 
 const allowedOrigins = new Set([
