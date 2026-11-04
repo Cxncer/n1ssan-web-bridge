@@ -50,7 +50,7 @@ test('local integration snapshot keeps Armory inventory and legacy selection sep
   const snapshot = createLocalIntegrationSnapshot(armory, selected, loadout, timestamp)
 
   assert.equal(snapshot.contract, 'n1ssan.local-integration')
-  assert.equal(snapshot.schemaVersion, 2)
+  assert.equal(snapshot.schemaVersion, 3)
   assert.equal(snapshot.generatedAt, timestamp)
   assert.deepEqual(snapshot.inventory, {
     source: 'armory-api',
@@ -59,6 +59,7 @@ test('local integration snapshot keeps Armory inventory and legacy selection sep
     activeProfileId: 'profile-main',
     activeProfileItemCount: 1,
     profileCount: 1,
+    items: armory.profiles[0].items,
   })
   assert.equal(snapshot.selection.source, 'legacy-skins-api')
   assert.equal(snapshot.selection.state, 'available')
@@ -66,6 +67,8 @@ test('local integration snapshot keeps Armory inventory and legacy selection sep
   assert.deepEqual(snapshot.selection.items, selected)
 
   // Snapshot consumers cannot mutate the Bridge's source objects.
+  snapshot.inventory.items[0].id = 'changed-by-consumer'
+  assert.equal(armory.profiles[0].items[0].id, 'armory-instance-1')
   snapshot.selection.items[0].name = 'Changed by consumer'
   assert.equal(selected[0].name, 'Redline')
 })
@@ -77,4 +80,5 @@ test('local integration snapshot reports an empty legacy selection without inven
   assert.equal(snapshot.selection.loadout, null)
   assert.deepEqual(snapshot.selection.items, [])
   assert.equal(snapshot.inventory.activeProfileItemCount, 1)
+  assert.equal(snapshot.inventory.items[0].definitionId, 'cs2:skin:n1ssan-skins:123')
 })
