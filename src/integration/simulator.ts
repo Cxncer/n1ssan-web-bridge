@@ -63,6 +63,7 @@ export function simulateLocalIntegration(value: unknown): IntegrationSimulationR
       return
     }
     const item = candidate.item
+    if (typeof candidate.loadoutProfileId !== 'string' || !candidate.loadoutProfileId.trim()) errors.push(`${prefix}.loadoutProfileId: missing Loadout Builder profile`)
     if (candidate.team !== 'T' && candidate.team !== 'CT') errors.push(`${prefix}.team: invalid team`)
     if (!['weapon', 'agent', 'knife', 'gloves', 'zeus'].includes(String(candidate.slot))) errors.push(`${prefix}.slot: invalid slot`)
     if (typeof candidate.target !== 'string' || !candidate.target.trim()) errors.push(`${prefix}.target: missing target`)
@@ -78,6 +79,7 @@ export function simulateLocalIntegration(value: unknown): IntegrationSimulationR
       typeof item.definitionId === 'string' && item.definitionId.trim()
     ) {
       assignments.push({
+        loadoutProfileId: candidate.loadoutProfileId as string,
         team: candidate.team,
         slot: candidate.slot as EquippedItemAssignment['slot'],
         target: candidate.target,
