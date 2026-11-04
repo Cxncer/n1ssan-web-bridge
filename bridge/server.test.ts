@@ -132,14 +132,15 @@ test('Bridge validates submissions, backs up previous data, and restores saved d
     data: {
       contract: string
       schemaVersion: number
-      inventory: { source: string; activeProfileItemCount: number }
+      inventory: { source: string; activeProfileItemCount: number; items: unknown[] }
       selection: { source: string; state: string; items: Array<Record<string, unknown>> }
     }
   }
   assert.equal(integration.data.contract, 'n1ssan.local-integration')
-  assert.equal(integration.data.schemaVersion, 2)
+  assert.equal(integration.data.schemaVersion, 3)
   assert.equal(integration.data.inventory.source, 'armory-api')
   assert.equal(integration.data.inventory.activeProfileItemCount, 0)
+  assert.deepEqual(integration.data.inventory.items, [])
   assert.equal(integration.data.selection.source, 'legacy-skins-api')
   assert.equal(integration.data.selection.state, 'available')
   assert.equal(integration.data.selection.items[0].weapon, 'AK-47')
@@ -281,7 +282,10 @@ test('Armory API persists complete profiles and rejects stale or invalid writes'
   assert.equal(equipmentSaved.data.assignments[0].itemInstanceId, 'armory-test-item')
 
   const integrationSnapshot = await fetch(`${BASE_URL}/integration/snapshot`)
-  const integrationData = await integrationSnapshot.json() as { data: { equipment: { state: string; assignments: Array<{ itemInstanceId: string }> } } }
+  const integrationData = await integrationSnapshot.json() as { data: { inventory: { activeProfileItemCount: number; items: Array<{ id: string; definitionId: string; customization: { float: number } }> }; equipment: { state: string; assignments: Array<{ itemInstanceId: string }> } } }
+  assert.equal(integrationData.data.inventory.activeProfileItemCount, 1)
+  assert.equal(integrationData.data.inventory.items[0].id, 'armory-test-item')
+  assert.equal(integrationData.data.inventory.items[0].customization.float, 0.18)
   assert.equal(integrationData.data.equipment.state, 'available')
   assert.equal(integrationData.data.equipment.assignments[0].itemInstanceId, 'armory-test-item')
 
@@ -356,9 +360,10 @@ test('Armory API persists complete profiles and rejects stale or invalid writes'
   assert.ok(staleEquipmentBody.validationErrors.some(error => error.includes('inventory changed')))
 
   const staleSnapshotResponse = await fetch(`${BASE_URL}/integration/snapshot`)
-  const staleSnapshot = await staleSnapshotResponse.json() as { data: { equipment: { state: string; assignments: unknown[] } } }
+  const staleSnapshot = await staleSnapshotResponse.json() as { data: { equipment: { state: string; assignments: unknown[] }; inventory: { items: unknown[] } } }
   assert.equal(staleSnapshot.data.equipment.state, 'stale')
   assert.deepEqual(staleSnapshot.data.equipment.assignments, [])
+  assert.equal(staleSnapshot.data.inventory.items.length, 1)
 
   const staleSimulationResponse = await fetch(`${BASE_URL}/integration/simulator`)
   const staleSimulation = await staleSimulationResponse.json() as { data: { status: string; assignments: unknown[] } }
