@@ -38,6 +38,8 @@ Each assignment must reference an individual `skin` instance in the active profi
 
 ## Local Bridge API
 
+The integration snapshot contract is version 2 and adds canonical equipment state; older version-1 consumers should ignore this endpoint until upgraded.
+
 - `GET /armory/equipment` — returns the stored document and `validationErrors` against the current Armory revision.
 - `PUT /armory/equipment` — body: `{ "expectedInventoryRevision": number, "data": ArmoryEquipmentDocument }`.
 - `GET /integration/snapshot` — includes canonical `equipment` state alongside Armory inventory and the legacy `/skins` selection.
