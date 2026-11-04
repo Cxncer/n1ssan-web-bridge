@@ -3,7 +3,7 @@ import './LoadoutBuilder.css'
 import { findImageColorMatches } from './skinColorDetection'
 import { readArmoryDocument } from './armory/bridge-client'
 import { readArmoryEquipment, writeArmoryEquipment } from './armory/equipment-client'
-import { buildProfileEquipmentAssignments, replaceProfileEquipmentAssignments } from './armory/loadout-adapter'
+import { buildProfileEquipmentAssignments, replaceProfileEquipmentAssignments, resolveProfileEquipmentSelections } from './armory/loadout-adapter'
 
 type Skin = {
   id: number; weapon: string; name: string; type: string; rarity: string
@@ -403,6 +403,30 @@ export default function LoadoutBuilder({ skins }: LoadoutBuilderProps) {
   }
   function matches() { return true }
 
+  async function loadFromArmory() {
+    if (bridgeSaving) return
+    setBridgeSaving(true)
+    setBridgeStatus('Loading from Armory…')
+    try {
+      const armory = await readArmoryDocument()
+      const current = await readArmoryEquipment(armory)
+      if (current.validationErrors.length) {
+        throw new Error('Armory equipment needs attention before loading: ' + current.validationErrors.join('; '))
+      }
+      const restored = resolveProfileEquipmentSelections(current.data, activeProfile.id, skins, armory)
+      setLoadouts(restored.loadouts)
+      setEquipment(restored.equipment)
+      syncActiveProfile({ loadouts: restored.loadouts, skinSettings, equipment: restored.equipment })
+      setBridgeStatus('Loaded from Armory')
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Unknown Bridge error'
+      console.error('n1ssan Armory load failed:', error)
+      setBridgeStatus('Load failed · ' + message)
+      alert(message)
+    } finally {
+      setBridgeSaving(false)
+    }
+  }
   async function sendToBridge() {
     if (bridgeSaving) return
     setBridgeSaving(true)
@@ -492,7 +516,7 @@ export default function LoadoutBuilder({ skins }: LoadoutBuilderProps) {
           <span><strong>{t === 'T' ? 'TERRORIST' : 'COUNTER-TERRORIST'}</strong><small>{t === 'T' ? 'Attacker loadout' : 'Defender loadout'}</small></span>
         </button>)}
       </div>
-      <div className="lb-team-save-actions"><span className="lb-profile-status" title={bridgeStatus}><span className="lb-profile-status-dot" />{bridgeStatus}</span><button className="lb-clear-button" type="button" onClick={() => openDialog('clear')}>Clear loadout</button><button className="lb-clear-button lb-bridge-button" type="button" onClick={sendToBridge} disabled={bridgeSaving}>{bridgeSaving ? 'Syncing…' : 'Sync to Armory'}</button></div>
+      <div className="lb-team-save-actions"><span className="lb-profile-status" title={bridgeStatus}><span className="lb-profile-status-dot" />{bridgeStatus}</span><button className="lb-clear-button" type="button" onClick={() => openDialog('clear')}>Clear loadout</button><button className="lb-clear-button lb-bridge-button" type="button" onClick={loadFromArmory} disabled={bridgeSaving}>Load from Armory</button><button className="lb-clear-button lb-bridge-button" type="button" onClick={sendToBridge} disabled={bridgeSaving}>{bridgeSaving ? 'Syncing…' : 'Sync to Armory'}</button></div>
     </div>
     </div>
 
