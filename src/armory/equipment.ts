@@ -6,6 +6,8 @@ export type EquipmentSlot = 'weapon' | 'agent' | 'knife' | 'gloves' | 'zeus'
 
 /** A loadout assignment points to an owned Armory instance, never a catalogue ID. */
 export type EquippedItemAssignment = {
+  /** Loadout Builder profile; allows several saved loadouts per Armory inventory. */
+  loadoutProfileId: string
   team: EquipmentTeam
   slot: EquipmentSlot
   /** Weapon name for weapon slots; the slot name for agent/knife/gloves/zeus. */
@@ -62,6 +64,7 @@ export function validateArmoryEquipmentDocument(
       errors.push(`${prefix}: expected an object`)
       return
     }
+    if (typeof candidate.loadoutProfileId !== 'string' || !candidate.loadoutProfileId.trim()) errors.push(`${prefix}.loadoutProfileId: expected a non-empty Loadout Builder profile ID`)
     if (!isTeam(candidate.team)) errors.push(`${prefix}.team: expected T or CT`)
     if (!isSlot(candidate.slot)) errors.push(`${prefix}.slot: unsupported equipment slot`)
     if (typeof candidate.target !== 'string' || !candidate.target.trim()) {
@@ -75,10 +78,10 @@ export function validateArmoryEquipmentDocument(
     }
 
     if (isTeam(candidate.team) && isSlot(candidate.slot) && typeof candidate.target === 'string' && candidate.target.trim()) {
-      const key = [candidate.team, candidate.slot, candidate.target.trim().toLowerCase()].join('|')
+      const key = [candidate.loadoutProfileId, candidate.team, candidate.slot, candidate.target.trim().toLowerCase()].join('|')
       if (assignmentKeys.has(key)) errors.push(`${prefix}: duplicate team/slot/target assignment`)
       assignmentKeys.add(key)
-      const instanceKey = `${candidate.team}|${candidate.itemInstanceId}`
+      const instanceKey = `${candidate.loadoutProfileId}|${candidate.team}|${candidate.itemInstanceId}`
       if (equippedInstances.has(instanceKey)) errors.push(`${prefix}.itemInstanceId: item is assigned more than once for this team`)
       equippedInstances.add(instanceKey)
     }
