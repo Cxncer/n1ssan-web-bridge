@@ -7,6 +7,7 @@ import {
   ArmoryStore,
   ArmoryValidationError,
 } from './armory-store.ts'
+import { createLocalIntegrationSnapshot } from '../src/integration/local-snapshot.ts'
 
 const app = express()
 
@@ -383,6 +384,18 @@ app.put('/armory', async (req: Request, res: Response) => {
       },
     })
   }
+})
+
+
+app.get('/integration/snapshot', (_req: Request, res: Response) => {
+  const data = createLocalIntegrationSnapshot(
+    armoryStore.read(),
+    selectedSkins,
+    latestLoadout,
+  )
+
+  res.setHeader('Cache-Control', 'no-store')
+  res.json({ data })
 })
 
 
