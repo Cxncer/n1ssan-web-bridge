@@ -42,7 +42,8 @@ The integration snapshot contract is version 2 and adds canonical equipment stat
 
 - `GET /armory/equipment` — returns the stored document and `validationErrors` against the current Armory revision.
 - `PUT /armory/equipment` — body: `{ "expectedInventoryRevision": number, "data": ArmoryEquipmentDocument }`.
-- `GET /integration/snapshot` — includes canonical `equipment` state alongside Armory inventory and the legacy `/skins` selection.
+- `GET /integration/snapshot` — includes canonical `equipment` state and each resolved owned item (including customization) alongside Armory inventory and the legacy `/skins` selection. The snapshot contract is version 2.
+- `GET /integration/simulator` — runs a read-only contract simulation and reports `ready`, `empty`, `stale`, or `unsupported`; it never attaches to CS2.
 
 A stale equipment document is reported as `state: "stale"` in the integration snapshot. Its assignments are withheld from the snapshot until a valid document is saved. The legacy `/skins` API remains available for compatibility; no automatic conversion is performed because its identifiers are not canonical Armory instance IDs.
 
