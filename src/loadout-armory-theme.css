@@ -1,0 +1,89 @@
+/* Armory-aligned Loadout Builder theme */
+.lb-section{
+  --lb-accent:#a7b8ab;--lb-bg:#101213;--lb-panel:#191e1c;--lb-panel-hover:#252d28;
+  --lb-border:#303834;--lb-muted:#8c9890;--lb-text:#eef1ee;
+  width:100%;min-width:0;max-width:1320px;margin:0 auto;padding:30px clamp(24px,6vw,100px) 42px;
+  color:var(--lb-text);font-family:inherit
+}
+.lb-section *,.lb-section *:before,.lb-section *:after{box-sizing:border-box}
+.lb-section button,.lb-section input,.lb-section select{font:inherit}
+.lb-section button{cursor:pointer;-webkit-tap-highlight-color:transparent}
+.lb-heading{align-items:end;margin:12px 0 30px}
+.lb-eyebrow{color:#91a699;font:10px 'DM Mono',monospace;letter-spacing:1.7px;margin:0 0 10px}
+.lb-heading h2{font:500 clamp(38px,5vw,58px)/1.05 Barlow,sans-serif;letter-spacing:-2.8px;color:#eef0ed;margin:0}
+.lb-subtitle{font:13px 'DM Sans',sans-serif;color:#aab4ac;margin:12px 0 0;line-height:1.6}
+.lb-progress{background:linear-gradient(110deg,#202722,#171c19);border:1px solid #303834;border-radius:12px;padding:14px 18px;box-shadow:0 8px 24px #0005}
+.lb-progress-team strong{color:#eef2ee;font:500 27px Barlow,sans-serif}
+.lb-progress-team small,.lb-progress-label{color:#a2afa5;font:9px 'DM Mono',monospace;letter-spacing:1.1px}
+.lb-profiles{background:linear-gradient(110deg,#191e1c,#171b1a);border:1px solid #2a302d;border-radius:12px;padding:15px}
+.lb-profile-select-wrap>label{color:#91a096;font:9px 'DM Mono',monospace;letter-spacing:1.2px}
+.lb-profile-trigger{background:linear-gradient(145deg,#272e29,#141916);border:1px solid #38423b;border-radius:999px;min-height:48px}
+.lb-profile-trigger:hover,.lb-profile-trigger.is-open{border-color:#91a699;background:#252e28}
+.lb-profile-avatar{background:linear-gradient(145deg,#a7b8ab,#59675e);color:#111713;border-radius:50%}
+.lb-profile-menu{background:#171d1a;border:1px solid #39433d;border-radius:12px;box-shadow:0 25px 80px #000b}
+.lb-profile-option{border-radius:8px}
+.lb-profile-option:hover{background:#252d28}.lb-profile-option.active{background:#222d26;border-color:#718579}
+.lb-profile-option.active .lb-profile-option-icon{background:#a7b8ab;color:#111713}
+.lb-profile-current,.lb-profile-menu-footer button{color:#b2c2b6}
+.lb-profile-actions button,.lb-clear-button{background:linear-gradient(145deg,#303832,#191f1b);border:1px solid #3b453e;border-radius:999px;color:#dce3dd;padding:10px 15px;transition:.18s}
+.lb-profile-actions button:hover:not(:disabled),.lb-clear-button:hover{border-color:#87998c;background:linear-gradient(145deg,#3a463d,#202923)}
+.lb-profile-actions .lb-profile-delete:hover:not(:disabled){border-color:#a66d67;background:#332321}
+.lb-profile-status{color:#a4b0a7;font:9px 'DM Mono',monospace}
+.lb-profile-status-dot{background:#a7b8ab;box-shadow:0 0 9px #a7b8ab88}
+.lb-team-button{background:linear-gradient(145deg,#202622,#151a17);border:1px solid #303a33;border-radius:10px;padding:13px}
+.lb-team-button:hover{background:#252e28;border-color:#66766a}
+.lb-team-button.active{background:linear-gradient(145deg,#303b33,#1a211c);border-color:#91a699;box-shadow:inset 0 0 0 1px #91a69922}
+.lb-team-button.active.team-ct{background:linear-gradient(145deg,#2b333b,#192027);border-color:#8298ad}
+.lb-team-symbol{border-radius:7px;background:#303a33;border-color:#536257}
+.lb-team-button.active .lb-team-symbol{background:#a7b8ab;color:#111713;border-color:#a7b8ab}
+.lb-team-button.active.team-ct .lb-team-symbol{background:#8298ad;color:#111713;border-color:#8298ad}
+.lb-board{gap:16px}
+.lb-column-heading{border-bottom:1px solid #343d37}
+.lb-column-mark{color:#a7b8ab}
+.lb-column-heading h3{font:700 10px 'DM Mono',monospace;letter-spacing:1.3px;color:#e3e9e3}
+.lb-column-heading p{color:#829087;font:8px 'DM Mono',monospace;letter-spacing:.8px}
+.lb-weapon-card{background:linear-gradient(155deg,#222a25,#151a17 72%);border:1px solid #303a33;border-radius:11px;box-shadow:0 8px 24px #0004}
+.lb-weapon-card:hover{background:linear-gradient(155deg,#2b352e,#19201b 72%);border-color:#829487;transform:translateY(-2px)}
+.lb-weapon-card.is-equipped{background:linear-gradient(155deg,#29382d,#172019 72%);border-color:#617e69}
+.lb-weapon-card.is-equipped:hover{border-color:#a7b8ab}
+.lb-card-top>span:first-child{font:700 9px 'DM Mono',monospace;letter-spacing:.3px;color:#dce4dd}
+.lb-slot-icon{border-radius:50%;background:#303a33;color:#c0cec3}
+.lb-weapon-card.is-equipped .lb-slot-icon{background:#a7b8ab;color:#111713}
+.lb-weapon-image{height:120px;background:radial-gradient(ellipse at center,#384239 0%,#202722 48%,#171c19 82%)}
+.lb-weapon-image img{filter:drop-shadow(0 12px 16px #000a)}
+.lb-card-bottom{border-top:1px solid #303832;min-height:64px}
+.lb-card-bottom strong,.lb-equipment-card-bottom strong{font:600 12px Barlow,sans-serif;color:#f0f3f0}
+.lb-card-bottom small,.lb-equipment-card-bottom small{font:9px 'DM Mono',monospace;color:#a0ada3}
+.lb-inspect-button{background:linear-gradient(145deg,#29372d,#171f19);border:1px solid #405746;border-radius:8px}
+.lb-inspect-button:hover{background:#2d4032;border-color:#91a699}
+.lb-inspect-button span,.lb-inspect-button strong{color:#b8c9bc}
+.lb-inspect-button small{color:#a5b2a8}
+.lb-card-remove{background:linear-gradient(145deg,#382725,#211918);border:1px solid #60413d;border-radius:8px;color:#d9aaa3}
+.lb-card-remove:hover{background:#472d29;border-color:#a66d67}
+.lb-empty{background:linear-gradient(145deg,#202722,#171c19);border:1px dashed #526057;border-radius:12px;color:#c1cbc3}
+.lb-empty h3{color:#eef2ee;font:500 20px Barlow,sans-serif}
+.lb-save-note{color:#89968d;font:10px 'DM Mono',monospace}
+.lb-modal-backdrop{background:#080b0aaf;backdrop-filter:blur(9px)}
+.lb-modal{background:linear-gradient(145deg,#1d241f,#121714);border:1px solid #465148;border-radius:14px;box-shadow:0 25px 100px #000c}
+.lb-modal-header{border-bottom:1px solid #354039}
+.lb-modal-header h3{font:500 25px Barlow,sans-serif;color:#f0f3f0}
+.lb-modal-subtitle{color:#a4afa7;font:11px 'DM Sans',sans-serif}
+.lb-close-button{background:linear-gradient(145deg,#465148,#202822);border:0;border-radius:50%;color:#f2f5f2}
+.lb-picker-card{background:linear-gradient(155deg,#252e28,#171c19);border:1px solid #374139;border-radius:10px}
+.lb-picker-card:hover{background:#2a352d;border-color:#87998c}
+.lb-picker-card.selected{background:linear-gradient(145deg,#303d33,#1c261f);border-color:#a7b8ab;box-shadow:0 0 0 1px #a7b8ab33}
+.lb-picker-image{background:radial-gradient(ellipse at center,#3b473e,#1b211d 78%);border-radius:7px}
+.lb-picker-card strong{font:600 13px Barlow,sans-serif}
+.lb-picker-card small{color:#aab5ac}
+.lb-search,.lb-number-input,.lb-dialog-input{background:#111713;border:1px solid #3a453d;border-radius:999px;color:#eef2ee}
+.lb-search:focus,.lb-number-input:focus,.lb-dialog-input:focus{border-color:#a7b8ab}
+.lb-search::placeholder{color:#7f8c82}
+.lb-sort-control select,.lb-color-chip,.lb-color-swatch,.lb-custom-color{background:#222a25;border:1px solid #3a453d;border-radius:999px;color:#dce4dd}
+.lb-color-chip.active,.lb-color-swatch.active,.lb-custom-color.active{background:#39473d;border-color:#a7b8ab;color:#fff}
+.lb-unequip-button{background:#382725;border:1px solid #704943;border-radius:999px;color:#e0b8b2}
+.lb-settings-summary{background:#222a25;border:1px solid #3a453d;border-radius:10px}
+.lb-save-settings-button,.lb-dialog-confirm{background:linear-gradient(145deg,#b8c8bc,#7e9183);border:0;border-radius:999px;color:#101713}
+.lb-dialog-cancel{background:#252d28;border:1px solid #465148;border-radius:999px;color:#e0e7e1}
+.lb-section button:focus-visible,.lb-section input:focus-visible,.lb-section select:focus-visible{outline:2px solid #a7b8ab;outline-offset:3px}
+@media(max-width:1000px){.lb-section{padding:24px clamp(18px,4vw,40px) 36px}.lb-board{grid-template-columns:repeat(5,minmax(175px,1fr));overflow-x:auto;padding-bottom:10px}.lb-board>section{min-width:175px}}
+@media(max-width:650px){.lb-section{padding:22px 18px 30px}.lb-heading h2{font-size:34px}.lb-team-button{border-radius:9px}.lb-weapon-image,.lb-equipment-art{height:96px;min-height:96px}}
