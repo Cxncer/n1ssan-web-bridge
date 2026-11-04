@@ -466,8 +466,9 @@ export default function LoadoutBuilder({ skins }: LoadoutBuilderProps) {
   const activeEquipmentTitle = activeEquipment ? EQUIPMENT_INFO[activeEquipment].title : ''
 
   return <section className="lb-section" data-team={team}>
+    <div className="lb-breadcrumb"><span>WORKSPACE</span><b>/</b><strong>LOADOUT</strong></div>
     <div className="lb-heading">
-      <div><p className="lb-eyebrow">YOUR PERSONAL ARMORY</p><h2>Loadout Builder</h2><p className="lb-subtitle">Build your dream inventory, one skin at a time.</p></div>
+      <div><p className="lb-eyebrow">YOUR EQUIPMENT CONFIGURATION</p><h2>Your Loadout<span className="lb-title-accent">.</span></h2><p className="lb-subtitle">Configure every weapon and equipment slot for both sides.</p></div>
       <div className="lb-progress" aria-label={`Skins equipped: Terrorists ${equippedCountT}, Counter-Terrorists ${equippedCountCT}`}>
         <div className="lb-progress-counts">
           <div className="lb-progress-team lb-progress-team-t"><strong>{equippedCountT}</strong><small>T</small></div>
