@@ -2,9 +2,6 @@ import { useEffect, useMemo, useState } from 'react'
 import './LoadoutBuilder.css'
 import './loadout-obsidian.css'
 import { findImageColorMatches } from './skinColorDetection'
-import { readArmoryDocument } from './armory/bridge-client'
-import { readArmoryEquipment, writeArmoryEquipment } from './armory/equipment-client'
-import { buildProfileEquipmentAssignments, replaceProfileEquipmentAssignments, resolveProfileEquipmentSelections } from './armory/loadout-adapter'
 
 export type Skin = {
   id: number; weapon: string; name: string; type: string; rarity: string
@@ -64,6 +61,23 @@ const EQUIPMENT_INFO: Record<EquipmentSlot, { title: string; subtitle: string; i
   zeus: { title: 'Zeus x27', subtitle: 'Electroshock weapon', icon: 'ϟ' },
 }
 function imageOf(s: Skin) { return s.image || s.art || '' }
+function rarityClass(rarity: string) {
+  const value = (rarity || '').toLowerCase()
+  if (value.includes('contraband')) return 'contraband'
+  if (value.includes('extraordinary')) return 'extraordinary'
+  if (value.includes('exotic')) return 'exotic'
+  if (value.includes('covert')) return 'covert'
+  if (value.includes('classified')) return 'classified'
+  if (value.includes('restricted')) return 'restricted'
+  if (value.includes('remarkable')) return 'remarkable'
+  if (value.includes('mil-spec') || value.includes('mil spec')) return 'mil-spec-grade'
+  if (value.includes('industrial')) return 'industrial-grade'
+  if (value.includes('high grade')) return 'high-grade'
+  if (value.includes('consumer')) return 'consumer-grade'
+  if (value.includes('base grade')) return 'base-grade'
+  return 'base-grade'
+}
+function wearCode(f: number) { return f <= .07 ? 'FN' : f <= .15 ? 'MW' : f <= .38 ? 'FT' : f <= .45 ? 'WW' : 'BS' }
 function rarityColor(rarity: string) {
   const value = (rarity || '').toLowerCase()
   if (value.includes('contraband')) return '#df8b43'
@@ -171,8 +185,6 @@ export default function LoadoutBuilder({ skins }: LoadoutBuilderProps) {
   const [seedDraft, setSeedDraft] = useState('0')
   const [profileMenuOpen, setProfileMenuOpen] = useState(false)
   const [dialog, setDialog] = useState<DialogState>(null)
-  const [bridgeStatus, setBridgeStatus] = useState('Not synced')
-  const [bridgeSaving, setBridgeSaving] = useState(false)
 
   // --- Color scan: weapon picker ---
   useEffect(() => {
@@ -406,58 +418,6 @@ export default function LoadoutBuilder({ skins }: LoadoutBuilderProps) {
   }
   function matches() { return true }
 
-  async function loadFromArmory() {
-    if (bridgeSaving) return
-    setBridgeSaving(true)
-    setBridgeStatus('Loading from Armory…')
-    try {
-      const armory = await readArmoryDocument()
-      const current = await readArmoryEquipment(armory)
-      if (current.validationErrors.length) {
-        throw new Error('Armory equipment needs attention before loading: ' + current.validationErrors.join('; '))
-      }
-      const restored = resolveProfileEquipmentSelections(current.data, activeProfile.id, skins, armory)
-      setLoadouts(restored.loadouts)
-      setEquipment(restored.equipment)
-      syncActiveProfile({ loadouts: restored.loadouts, skinSettings, equipment: restored.equipment })
-      setBridgeStatus('Loaded from Armory')
-    } catch (error) {
-      const message = error instanceof Error ? error.message : 'Unknown Bridge error'
-      console.error('n1ssan Armory load failed:', error)
-      setBridgeStatus('Load failed · ' + message)
-      alert(message)
-    } finally {
-      setBridgeSaving(false)
-    }
-  }
-  async function sendToBridge() {
-    if (bridgeSaving) return
-    setBridgeSaving(true)
-    setBridgeStatus('Connecting to Armory…')
-    try {
-      const armory = await readArmoryDocument()
-      const current = await readArmoryEquipment(armory)
-      if (current.validationErrors.length) {
-        throw new Error('Armory equipment needs attention before syncing: ' + current.validationErrors.join('; '))
-      }
-      const profileAssignments = buildProfileEquipmentAssignments({
-        loadoutProfileId: activeProfile.id,
-        loadouts,
-        equipment,
-      }, skins, armory)
-      const next = replaceProfileEquipmentAssignments(current.data, activeProfile.id, profileAssignments)
-      const saved = await writeArmoryEquipment(next, armory)
-      const savedCount = saved.assignments.filter(item => item.loadoutProfileId === activeProfile.id).length
-      setBridgeStatus('Synced · ' + savedCount + ' assignments')
-    } catch (error) {
-      const message = error instanceof Error ? error.message : 'Unknown Bridge error'
-      console.error('n1ssan Armory sync failed:', error)
-      setBridgeStatus('Sync failed · ' + message)
-      alert(message)
-    } finally {
-      setBridgeSaving(false)
-    }
-  }
 
   const activeSkin = activeWeapon ? selectedSkin(activeWeapon) : undefined
   const activeSettingsKey = activeWeapon && activeSkin ? settingsKey(activeWeapon, activeSkin.id) : ''
@@ -520,7 +480,7 @@ export default function LoadoutBuilder({ skins }: LoadoutBuilderProps) {
           <span><strong>{t === 'T' ? 'TERRORIST' : 'COUNTER-TERRORIST'}</strong><small>{t === 'T' ? 'Attacker loadout' : 'Defender loadout'}</small></span>
         </button>)}
       </div>
-      <div className="lb-team-save-actions"><span className="lb-profile-status" title={bridgeStatus}><span className="lb-profile-status-dot" />{bridgeStatus}</span><button className="lb-clear-button" type="button" onClick={() => openDialog('clear')}>Clear loadout</button><button className="lb-clear-button lb-bridge-button" type="button" onClick={loadFromArmory} disabled={bridgeSaving}>Load from Armory</button><button className="lb-clear-button lb-bridge-button" type="button" onClick={sendToBridge} disabled={bridgeSaving}>{bridgeSaving ? 'Syncing…' : 'Sync to Armory'}</button></div>
+      <div className="lb-team-save-actions"><button className="lb-clear-button" type="button" onClick={() => openDialog('clear')}>Clear loadout</button></div>
     </div>
     </div>
 
@@ -548,13 +508,13 @@ export default function LoadoutBuilder({ skins }: LoadoutBuilderProps) {
           <div className="lb-column-cards">{visible.map(weapon => {
             const s = selectedSkin(weapon), img = s ? imageOf(s) : placeholder(weapon)
             const st = s ? skinSettings[team][settingsKey(weapon, s.id)] ?? defaults(s) : null
-            return <div key={weapon} className={`lb-weapon-card-wrap ${s ? 'is-equipped' : ''}`}>
-              <button type="button" className={`lb-weapon-card ${s ? 'is-equipped' : ''}`} onClick={() => openPicker(weapon)} aria-label={`Choose a skin for ${weapon}`}>
-                <div className="lb-card-top"><span>{weapon}</span><span className="lb-slot-icon">{s ? '✓' : '+'}</span></div>
-                <div className="lb-weapon-image">{img ? <img src={img} alt={s ? s.name : `${weapon} placeholder`} className={s ? 'lb-equipped-image' : 'lb-placeholder-image'} /> : <span className="lb-placeholder-label">NO IMAGE YET</span>}<span className="lb-card-hover-action">{s ? 'CHANGE SKIN' : 'CHOOSE SKIN'}</span></div>
-                <div className="lb-card-bottom">{s ? <><strong>{s.name}</strong><small>{s.rarity}</small></> : <><strong>No skin equipped</strong><small>{img ? 'Default preview' : 'Image unavailable'}</small></>}</div>
+            return <div key={weapon} className={`lb-weapon-card-wrap lb-inventory-card rarity-card-${s ? rarityClass(s.rarity) : 'base-grade'} ${s ? 'is-equipped' : 'is-empty'}`}>
+              <button type="button" className="lb-weapon-card lb-inventory-card-main" onClick={() => openPicker(weapon)} aria-label={`Choose a skin for ${weapon}`}>
+                <div className="ob-item-art lb-loadout-item-art">{img ? <img src={img} alt={s ? s.name : `${weapon} placeholder`} className={s ? 'lb-equipped-image' : 'lb-placeholder-image'} loading="lazy" /> : <span className="lb-placeholder-label">NO IMAGE YET</span>}<span className="item-rarity">{s?.rarity ?? 'EMPTY SLOT'}</span><span className="lb-card-hover-action">{s ? 'CHANGE SKIN' : 'CHOOSE SKIN'}</span></div>
+                <div className="ob-item-copy lb-loadout-item-copy"><span className="ob-item-weapon">{weapon}</span><strong>{s ? s.name : 'No skin equipped'}</strong>{!s && <small>{img ? 'Default preview' : 'Image unavailable'}</small>}</div>
               </button>
-              {s && st && <div className="lb-card-meta-row"><button type="button" className="lb-inspect-button" onClick={() => openSettings(weapon)}><span>FLOAT / SEED · EDIT</span><strong>{st.float.toFixed(6)}</strong><small>{wear(st.float)} · Seed {st.seed}</small></button><button type="button" className="lb-card-remove" title={`Remove ${weapon} skin`} aria-label={`Remove ${weapon} skin`} onClick={() => equipSkin(weapon, null)}><span aria-hidden="true">×</span></button></div>}
+              {s && st ? <button type="button" className="ob-item-foot lb-loadout-item-foot" onClick={() => openSettings(weapon)} aria-label={`Edit float and seed for ${weapon}`} title="Edit float and pattern seed"><span>FLOAT <b>{st.float.toFixed(6)}</b></span><span>SEED <b>{st.seed}</b></span><span className="float-wear">{wearCode(st.float)}</span></button> : <div className="ob-item-foot lb-loadout-item-foot lb-loadout-item-foot-empty"><span>NO FINISH EQUIPPED</span></div>}
+              {s && <button type="button" className="item-remove-x" title={`Remove ${weapon} skin`} aria-label={`Remove ${weapon} skin`} onClick={e => { e.stopPropagation(); equipSkin(weapon, null) }}>×</button>}
             </div>
           })}</div>
         </section>
