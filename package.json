@@ -9,7 +9,7 @@
     "build": "tsc -b && vite build",
     "lint": "eslint .",
     "preview": "vite preview",
-    "test": "node --import tsx --test bridge/server.test.ts bridge/armory-contract.test.ts bridge/armory.test.ts bridge/armory-store.test.ts bridge/armory-bridge-client.test.ts bridge/integration-contract.test.ts bridge/armory-equipment.test.ts bridge/armory-equipment-client.test.ts bridge/integration-simulator.test.ts"
+    "test": "node --import tsx --test bridge/server.test.ts bridge/armory-contract.test.ts bridge/armory.test.ts bridge/armory-store.test.ts bridge/armory-bridge-client.test.ts bridge/integration-contract.test.ts bridge/armory-equipment.test.ts bridge/armory-equipment-client.test.ts bridge/armory-loadout-adapter.test.ts bridge/integration-simulator.test.ts"
   },
   "dependencies": {
     "express": "^5.3.0",
