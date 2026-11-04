@@ -1,3 +1,4 @@
+@import url('https://fonts.googleapis.com/css2?family=Barlow:wght@400;500;600;650;700;800&family=Barlow+Condensed:wght@500;600;700&family=DM+Mono:wght@400;500&family=DM+Sans:wght@400;500;600;700&display=swap');
 /* ============================================================
    OBSIDIAN / ARMORY VISUAL SYSTEM — LOADOUT
    Presentation-only layer. No selectors target behavior/state.
@@ -924,3 +925,182 @@
     scroll-behavior: auto !important;
   }
 }
+
+/* Monochrome Obsidian finish: keep the existing Loadout controls, restyle only. */
+.lb-workspace-shell {
+  --ob-bg: #090909;
+  --ob-panel: #151515;
+  --ob-panel-raised: #202020;
+  --ob-panel-hover: #292929;
+  --ob-border: #303030;
+  --ob-border-strong: #484848;
+  --ob-text: #f5f5f5;
+  --ob-muted: #a0a0a0;
+  --ob-dim: #777;
+  --ob-accent: #e8e8e8;
+  --ob-accent-bright: #fff;
+  --ob-danger: #d0d0d0;
+  color: #f5f5f5;
+  background: radial-gradient(ellipse at 50% -30%, #242424 0, transparent 48%), #090909;
+}
+.lb-section { color: #f5f5f5; background: radial-gradient(ellipse at 50% -30%, #242424 0, transparent 48%); }
+.lb-heading h2, .lb-card-bottom strong, .lb-equipment-card-bottom strong,
+.lb-picker-card strong, .lb-modal-header h3 { color: #f5f5f5; }
+.lb-eyebrow, .lb-title-accent, .lb-column-mark { color: #d8d8d8; }
+.lb-subtitle, .lb-column-heading p, .lb-progress-team small, .lb-progress-label,
+.lb-profile-select-wrap > label, .lb-profile-menu-heading, .lb-profile-current,
+.lb-profile-status, .lb-sort-control, .lb-color-filter-label { color: #a0a0a0; }
+.lb-progress, .lb-profiles, .lb-team-save-row {
+  border-color: #303030;
+  background: linear-gradient(110deg, #191919, #121212);
+}
+.lb-profile-trigger, .lb-search, .lb-number-input, .lb-dialog-input,
+.lb-sort-control select, .lb-color-chip, .lb-color-swatch, .lb-custom-color {
+  border-color: #383838;
+  color: #ededed;
+  background: #171717;
+}
+.lb-profile-trigger:hover, .lb-profile-trigger.is-open,
+.lb-search:focus, .lb-number-input:focus, .lb-dialog-input:focus {
+  border-color: #bdbdbd;
+  background: #202020;
+}
+.lb-profile-avatar, .lb-profile-option-icon {
+  border-color: #555;
+  color: #fff;
+  background: #303030;
+}
+.lb-profile-option:hover, .lb-profile-option.active,
+.lb-profile-menu-footer button:hover { border-color: #555; color: #fff; background: #292929; }
+.lb-profile-option.active .lb-profile-option-icon { color: #111; background: #eee; }
+.lb-profile-current, .lb-profile-menu-footer button { color: #ddd; }
+.lb-profile-actions button, .lb-clear-button {
+  border-color: #444;
+  color: #eee;
+  background: linear-gradient(145deg, #303030, #171717);
+}
+.lb-profile-actions button:hover:not(:disabled), .lb-clear-button:hover:not(:disabled) {
+  border-color: #aaa;
+  color: #fff;
+  background: #303030;
+}
+.lb-profile-actions .lb-profile-delete:hover:not(:disabled),
+.lb-card-remove:hover { border-color: #aaa; color: #fff; background: #383838; }
+.lb-profile-status-dot { background: #ddd; box-shadow: 0 0 9px #ffffff55; }
+.lb-team-button {
+  border-color: #393939;
+  color: #c9c9c9;
+  background: linear-gradient(145deg, #252525, #151515);
+}
+.lb-team-button:hover, .lb-team-button.active, .lb-team-button.active.team-ct {
+  border-color: #bcbcbc;
+  color: #fff;
+  background: linear-gradient(145deg, #3a3a3a, #1b1b1b);
+  box-shadow: inset 0 0 0 1px #ffffff12;
+}
+.lb-team-symbol, .lb-team-button.active .lb-team-symbol,
+.lb-team-button.active.team-ct .lb-team-symbol {
+  border-color: #777;
+  background: #333;
+}
+.lb-category-list button { color: #aaa; }
+.lb-category-list button:hover, .lb-category-list button.active {
+  border-color: #555;
+  color: #fff;
+  background: #292929;
+}
+.lb-color-chip:hover, .lb-color-swatch:hover, .lb-custom-color:hover,
+.lb-color-chip.active, .lb-color-swatch.active, .lb-custom-color.active {
+  border-color: #aaa;
+  color: #fff;
+  background: #292929;
+}
+.lb-column-heading { border-color: #383838; }
+.lb-column-heading h3 { color: #eee; }
+.lb-weapon-card, .lb-picker-card {
+  border-color: #343434;
+  color: #eee;
+  background: linear-gradient(155deg, #222, #141414 72%);
+  box-shadow: 0 8px 24px #0007;
+}
+.lb-weapon-card:hover, .lb-picker-card:hover {
+  border-color: #858585;
+  background: linear-gradient(155deg, #303030, #191919 72%);
+}
+.lb-weapon-card.is-equipped, .lb-picker-card.selected {
+  border-color: #aaa;
+  background: linear-gradient(155deg, #303030, #171717 72%);
+  box-shadow: inset 0 0 0 1px #ffffff16, 0 8px 24px #0007;
+}
+.lb-weapon-card.is-equipped:hover { border-color: #fff; }
+.lb-card-top > span:first-child { color: #eee; }
+.lb-slot-icon, .lb-weapon-card.is-equipped .lb-slot-icon,
+.lb-weapon-card.is-equipped.team-ct .lb-slot-icon {
+  color: #111;
+  background: #e8e8e8;
+}
+.lb-weapon-image, .lb-picker-image, .lb-equipment-art {
+  background: radial-gradient(ellipse at 50% 54%, #383838 0, #222 42%, #151515 78%);
+}
+.lb-placeholder-label { color: #aaa; }
+.lb-card-hover-action {
+  border-color: #777;
+  color: #fff;
+  background: #111e;
+}
+.lb-card-bottom, .lb-card-meta-row { border-color: #383838; }
+.lb-card-bottom small, .lb-equipment-card-bottom small,
+.lb-picker-card small { color: #aaa; }
+.lb-inspect-button {
+  border-color: #555;
+  color: #eee;
+  background: linear-gradient(145deg, #292929, #151515);
+}
+.lb-inspect-button:hover { border-color: #bbb; background: #303030; }
+.lb-inspect-button span, .lb-inspect-button strong, .lb-inspect-button small { color: #eee; }
+.lb-card-remove {
+  border-color: #555;
+  color: #ddd;
+  background: linear-gradient(145deg, #383838, #1c1c1c);
+}
+.lb-card-remove:hover { border-color: #bbb; color: #fff; background: #454545; }
+.lb-modal, .lb-profile-menu {
+  border-color: #454545;
+  color: #f3f3f3;
+  background: #171717;
+}
+.lb-modal-header, .lb-dialog-actions, .lb-profile-menu-footer { border-color: #383838; }
+.lb-modal-subtitle, .lb-dialog-help, .lb-dialog-message, .lb-field-help { color: #aaa; }
+.lb-close-button, .lb-dialog-cancel {
+  border-color: #555;
+  color: #eee;
+  background: #292929;
+}
+.lb-close-button:hover, .lb-dialog-cancel:hover { border-color: #aaa; color: #fff; background: #383838; }
+.lb-picker-card.selected { border-color: #cfcfcf; }
+.lb-rarity-label { /* Item rarity remains data-coded, as in Armory. */ }
+.lb-settings-summary {
+  border-color: #383838;
+  background: linear-gradient(145deg, #202020, #131313);
+}
+.lb-settings-summary strong, .lb-setting-label strong { color: #eee; }
+.lb-setting-label label { color: #eee; }
+.lb-float-slider, .lb-seed-slider { accent-color: #eee; }
+.lb-float-slider::-webkit-slider-thumb, .lb-seed-slider::-webkit-slider-thumb { background: #f2f2f2; border: 2px solid #111; }
+.lb-float-slider::-moz-range-thumb, .lb-seed-slider::-moz-range-thumb { background: #f2f2f2; border: 2px solid #111; }
+.lb-save-settings-button, .lb-dialog-confirm {
+  border-color: #f0f0f0;
+  color: #111;
+  background: #eee;
+}
+.lb-save-settings-button:hover, .lb-dialog-confirm:hover:not(:disabled) { color: #000; background: #fff; }
+.lb-dialog-confirm.danger { border-color: #aaa; color: #fff; background: #555; }
+.lb-dialog-confirm.danger:hover:not(:disabled) { background: #777; }
+.lb-unequip-button { border-color: #666; color: #eee; background: #303030; }
+.lb-unequip-button:hover { border-color: #aaa; color: #fff; background: #454545; }
+.lb-empty { border-color: #444; color: #aaa; background: linear-gradient(145deg, #202020, #141414); }
+.lb-empty h3 { color: #eee; }
+.lb-section button:focus-visible, .lb-section input:focus-visible,
+.lb-section select:focus-visible { outline-color: #f2f2f2; }
+.lb-team-button.active.team-ct { border-color: #bcbcbc; }
+
