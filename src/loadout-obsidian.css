@@ -1597,7 +1597,7 @@ button.lb-loadout-item-foot:hover { color: #fff; background: #242424; }
 .lb-weapon-card-wrap.lb-inventory-card {
   min-height: 210px;
   height: auto;
-  background: linear-gradient(155deg, color-mix(in srgb, var(--rarity) 5%, #202522), #151a17 72%);
+  background: linear-gradient(155deg, color-mix(in srgb, var(--rarity) 5%, #202522), rgba(21,26,23,.95) 72%);
   border-color: color-mix(in srgb, var(--rarity) 30%, #343b36);
 }
 .lb-loadout-item-art {
@@ -1628,7 +1628,7 @@ button.lb-loadout-item-foot:hover { color: #fff; background: #242424; }
 .lb-board-t .lb-inventory-card {
   background-image:
     radial-gradient(ellipse at 8% 0%, rgba(226, 139, 72, .085), transparent 62%),
-    linear-gradient(155deg, color-mix(in srgb, var(--rarity) 5%, #202522), #151a17 72%);
+    linear-gradient(155deg, color-mix(in srgb, var(--rarity) 5%, #202522), rgba(21,26,23,.95) 72%);
 }
 .lb-board-ct .lb-inventory-card {
   background-image:
