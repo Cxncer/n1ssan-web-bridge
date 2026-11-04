@@ -20,7 +20,7 @@ const snapshot = {
     inventoryRevision: 7,
     profileId: 'profile-main',
     validationErrors: [],
-    assignments: [{ team: 'T', slot: 'weapon', target: 'AK-47', itemInstanceId: item.id, item }],
+    assignments: [{ loadoutProfileId: 'loadout-main', team: 'T', slot: 'weapon', target: 'AK-47', itemInstanceId: item.id, item }],
   },
 }
 
