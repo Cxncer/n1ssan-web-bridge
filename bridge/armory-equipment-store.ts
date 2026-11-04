@@ -59,7 +59,7 @@ export class ArmoryEquipmentStore {
 
   private async persist(document: ArmoryEquipmentDocument, backupCurrent = true): Promise<void> {
     const temporaryPath = `${this.filePath}.tmp`
-    await writeFile(temporaryPath, `${JSON.stringify(document, null, 2)}\\n`, 'utf8')
+    await writeFile(temporaryPath, `${JSON.stringify(document, null, 2)}\n`, 'utf8')
     if (backupCurrent) {
       try { await copyFile(this.filePath, `${this.filePath}.bak`) }
       catch (error) { if ((error as NodeJS.ErrnoException).code !== 'ENOENT') throw error }
