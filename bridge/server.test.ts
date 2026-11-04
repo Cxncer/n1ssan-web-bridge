@@ -333,4 +333,23 @@ test('Armory API persists complete profiles and rejects stale or invalid writes'
   const restoredEquipmentBody = await restoredEquipment.json() as { data: { assignments: Array<{ itemInstanceId: string }> }; validationErrors: string[] }
   assert.deepEqual(restoredEquipmentBody.validationErrors, [])
   assert.equal(restoredEquipmentBody.data.assignments[0].itemInstanceId, 'armory-test-item')
+
+  // Any inventory revision change invalidates the previous equipment snapshot.
+  const changedArmory = structuredClone(finalState.data)
+  changedArmory.profiles[0].name = 'Renamed after equipment save'
+  const changedArmoryResponse = await fetch(`${BASE_URL}/armory`, {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ expectedRevision: finalState.data.revision, data: changedArmory }),
+  })
+  assert.equal(changedArmoryResponse.status, 200)
+
+  const staleEquipmentRead = await fetch(`${BASE_URL}/armory/equipment`)
+  const staleEquipmentBody = await staleEquipmentRead.json() as { validationErrors: string[] }
+  assert.ok(staleEquipmentBody.validationErrors.some(error => error.includes('inventory changed')))
+
+  const staleSnapshotResponse = await fetch(`${BASE_URL}/integration/snapshot`)
+  const staleSnapshot = await staleSnapshotResponse.json() as { data: { equipment: { state: string; assignments: unknown[] } } }
+  assert.equal(staleSnapshot.data.equipment.state, 'stale')
+  assert.deepEqual(staleSnapshot.data.equipment.assignments, [])
 })
