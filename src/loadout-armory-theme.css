@@ -134,3 +134,42 @@
  .lb-progress{align-items:flex-start;min-height:0;width:100%}
  .lb-team-save-row{padding:12px}
 }
+
+
+/* Shared Armory workspace chrome, adapted for Loadout. */
+.lb-workspace-shell{min-height:100vh;color:#e8e9e8;background:radial-gradient(ellipse at 50% -30%,#252b2a 0,transparent 48%),#101213}
+.lb-topbar{height:72px;padding:0 clamp(24px,6vw,100px);display:flex;align-items:center;border-bottom:1px solid #252a2a;background:rgba(15,18,18,.86);backdrop-filter:blur(20px);position:sticky;top:0;z-index:15}
+.lb-brand{display:flex;align-items:center;gap:10px;color:#e9ece9;text-decoration:none;font:700 18px Barlow,sans-serif;letter-spacing:-.7px}
+.lb-brand-mark{width:30px;height:30px;display:grid;place-items:center;border:1px solid #49524e;border-radius:9px;color:#a7b9ad;font-size:17px}
+.lb-brand i{height:16px;width:1px;background:#343a37;margin:0 5px 0 9px}
+.lb-brand small{font:500 9px 'DM Mono',monospace;letter-spacing:2px;color:#93a197}
+.lb-nav{display:flex;align-items:center;gap:32px;margin-left:clamp(45px,8vw,125px);height:100%}
+.lb-nav a{height:100%;display:flex;align-items:center;color:#777f7b;text-decoration:none;font-size:12px;position:relative;transition:color .18s}
+.lb-nav a:hover,.lb-nav a.active{color:#e5e9e5}
+.lb-nav a.active:after{content:'';position:absolute;bottom:-1px;left:0;right:0;height:2px;background:#9aad9f}
+.lb-top-status{margin-left:auto;display:flex;align-items:center;gap:9px;color:#9ba69e;font:9px 'DM Mono',monospace;letter-spacing:1.2px;max-width:38%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.lb-status-indicator{width:6px;height:6px;flex:0 0 6px;border-radius:50%;background:#8aa493;box-shadow:0 0 10px #8aa49366}
+.lb-section{background:transparent}
+.lb-overview{display:grid;grid-template-columns:1.6fr repeat(3,minmax(90px,.65fr)) 1.3fr;border:1px solid #2a302d;border-radius:8px;background:linear-gradient(110deg,#191e1c,#171b1a);min-height:100px;overflow:hidden;margin:0 0 22px}
+.lb-overview-total,.lb-overview-stat,.lb-overview-status{padding:17px 18px;display:flex;flex-direction:column;justify-content:center;position:relative;min-width:0}
+.lb-overview-total:after,.lb-overview-stat:after{content:'';position:absolute;right:0;top:20px;bottom:20px;width:1px;background:#2b322e}
+.lb-metric-label,.lb-overview-stat small{color:#9ba69e;font:9px 'DM Mono',monospace;letter-spacing:1.1px}
+.lb-overview-total strong{font:500 22px Barlow,sans-serif;color:#f3f5f3;margin:5px 0 2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.lb-overview-total small{font-size:10px;color:#9aa49c}
+.lb-overview-stat strong{font:500 27px Barlow,sans-serif;color:#f3f5f3;margin:3px 0}
+.lb-overview-stat small{font-size:8px}
+.lb-overview-status{flex-direction:row;align-items:center;gap:11px}
+.lb-overview-ring{width:27px;height:27px;flex:0 0 27px;border:1px solid #536b5b;color:#a4b9a9;border-radius:50%;display:grid;place-items:center;font-size:12px}
+.lb-overview-status strong,.lb-overview-status small{display:block}
+.lb-overview-status strong{font-size:10px;font-weight:600;color:#e2e9e3}
+.lb-overview-status small{font-size:9px;color:#9aa49c;margin-top:5px}
+@media(max-width:760px){
+ .lb-topbar{height:62px;padding:0 18px}
+ .lb-nav{margin-left:25px;gap:18px}
+ .lb-top-status{font-size:0;max-width:none}
+ .lb-overview{grid-template-columns:1.4fr 1fr 1fr}
+ .lb-overview-stat:nth-of-type(4),.lb-overview-status{display:none}
+ .lb-overview-total,.lb-overview-stat{padding:14px 12px}
+ .lb-overview-total strong{font-size:18px}
+}
+@media(max-width:420px){.lb-brand small,.lb-brand i{display:none}.lb-nav{margin-left:20px;gap:14px}.lb-nav a{font-size:11px}}
