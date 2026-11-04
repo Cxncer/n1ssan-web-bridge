@@ -1,6 +1,9 @@
 import { useEffect, useMemo, useState } from 'react'
 import './LoadoutBuilder.css'
 import { findImageColorMatches } from './skinColorDetection'
+import { readArmoryDocument } from './armory/bridge-client'
+import { readArmoryEquipment, writeArmoryEquipment } from './armory/equipment-client'
+import { buildProfileEquipmentAssignments, replaceProfileEquipmentAssignments } from './armory/loadout-adapter'
 
 type Skin = {
   id: number; weapon: string; name: string; type: string; rarity: string
@@ -167,6 +170,8 @@ export default function LoadoutBuilder({ skins }: LoadoutBuilderProps) {
   const [seedDraft, setSeedDraft] = useState('0')
   const [profileMenuOpen, setProfileMenuOpen] = useState(false)
   const [dialog, setDialog] = useState<DialogState>(null)
+  const [bridgeStatus, setBridgeStatus] = useState('Not synced')
+  const [bridgeSaving, setBridgeSaving] = useState(false)
 
   // --- Color scan: weapon picker ---
   useEffect(() => {
@@ -398,57 +403,32 @@ export default function LoadoutBuilder({ skins }: LoadoutBuilderProps) {
   }
   function matches() { return true }
 
-    async function sendToBridge() {
-    const bridgeSkins: Record<string, unknown>[] = []
-
-    for (const side of ['T', 'CT'] as Team[]) {
-      const sideLoadout = loadouts[side]
-      const sideEquipment = equipment[side]
-
-      for (const [weapon, id] of Object.entries(sideLoadout)) {
-        if (id == null) continue
-        const skin = skins.find(item => item.id === id)
-        if (!skin) continue
-        const settings = skinSettings[side][settingsKey(weapon, id)] ?? defaults(skin)
-        bridgeSkins.push({
-          ...skin,
-          slot: 'weapon',
-          equippedFor: weapon,
-          team: side,
-          float: settings.float,
-          seed: settings.seed,
-        })
-      }
-
-      for (const slot of ['agent', 'knife', 'gloves', 'zeus'] as EquipmentSlot[]) {
-        const id = sideEquipment[slot]
-        if (id == null) continue
-        const item = skins.find(skin => skin.id === id)
-        if (!item) continue
-        bridgeSkins.push({ ...item, slot, team: side })
-      }
-    }
-
+  async function sendToBridge() {
+    if (bridgeSaving) return
+    setBridgeSaving(true)
+    setBridgeStatus('Connecting to Armory…')
     try {
-      const response = await fetch('http://127.0.0.1:3210/skins', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          profile: activeProfile.name,
-          skins: bridgeSkins,
-        }),
-      })
-
-      if (!response.ok) {
-        throw new Error(`Bridge returned HTTP ${response.status}`)
+      const armory = await readArmoryDocument()
+      const current = await readArmoryEquipment(armory)
+      if (current.validationErrors.length) {
+        throw new Error('Armory equipment needs attention before syncing: ' + current.validationErrors.join('; '))
       }
-
-      const result = await response.json() as { received?: number; teams?: string[] }
-      const teamsLabel = result.teams?.length ? ` (${result.teams.join(' + ')})` : ''
-      alert(`n1ssan Bridge received ${result.received ?? bridgeSkins.length} items${teamsLabel}!`)
+      const profileAssignments = buildProfileEquipmentAssignments({
+        loadoutProfileId: activeProfile.id,
+        loadouts,
+        equipment,
+      }, skins, armory)
+      const next = replaceProfileEquipmentAssignments(current.data, activeProfile.id, profileAssignments)
+      const saved = await writeArmoryEquipment(next, armory)
+      const savedCount = saved.assignments.filter(item => item.loadoutProfileId === activeProfile.id).length
+      setBridgeStatus('Synced · ' + savedCount + ' assignments')
     } catch (error) {
-      console.error('n1ssan Bridge error:', error)
-      alert('Could not connect to n1ssan Bridge. Make sure it is running at http://127.0.0.1:3210.')
+      const message = error instanceof Error ? error.message : 'Unknown Bridge error'
+      console.error('n1ssan Armory sync failed:', error)
+      setBridgeStatus('Sync failed · ' + message)
+      alert(message)
+    } finally {
+      setBridgeSaving(false)
     }
   }
 
@@ -512,7 +492,7 @@ export default function LoadoutBuilder({ skins }: LoadoutBuilderProps) {
           <span><strong>{t === 'T' ? 'TERRORIST' : 'COUNTER-TERRORIST'}</strong><small>{t === 'T' ? 'Attacker loadout' : 'Defender loadout'}</small></span>
         </button>)}
       </div>
-      <div className="lb-team-save-actions"><span className="lb-profile-status"><span className="lb-profile-status-dot" />Saved locally</span><button className="lb-clear-button" type="button" onClick={() => openDialog('clear')}>Clear loadout</button><button className="lb-clear-button lb-bridge-button" type="button" onClick={sendToBridge}>Send to Bridge</button></div>
+      <div className="lb-team-save-actions"><span className="lb-profile-status" title={bridgeStatus}><span className="lb-profile-status-dot" />{bridgeStatus}</span><button className="lb-clear-button" type="button" onClick={() => openDialog('clear')}>Clear loadout</button><button className="lb-clear-button lb-bridge-button" type="button" onClick={sendToBridge} disabled={bridgeSaving}>{bridgeSaving ? 'Syncing…' : 'Sync to Armory'}</button></div>
     </div>
     </div>
 
@@ -552,7 +532,7 @@ export default function LoadoutBuilder({ skins }: LoadoutBuilderProps) {
         </section>
       })}
     </div>
-        <p className="lb-save-note">Profile: <strong>{activeProfile.name}</strong>. T and CT selections, equipment, float values, and seeds are saved separately in this browser.</p>
+        <p className="lb-save-note">Profile: <strong>{activeProfile.name}</strong>. T and CT selections, equipment, float values, and seeds are saved locally; owned-item assignments sync to the canonical Armory.</p>
 
     {pickerOpen && activeWeapon && <div className="lb-modal-backdrop" onClick={() => setPickerOpen(false)}><div className="lb-modal" role="dialog" aria-modal="true" aria-label={`Choose a skin for ${activeWeapon}`} onClick={e => e.stopPropagation()}>
       <div className="lb-modal-header"><div><p className="lb-eyebrow">SKIN PICKER</p><h3>{activeWeapon}</h3><p className="lb-modal-subtitle">{weaponSkins.length} matching {weaponSkins.length === 1 ? 'skin' : 'skins'} · Search and sort finishes</p></div><button className="lb-close-button" type="button" onClick={() => { setPickerOpen(false); setPickerSearch('') }} aria-label="Close skin picker">×</button></div>
