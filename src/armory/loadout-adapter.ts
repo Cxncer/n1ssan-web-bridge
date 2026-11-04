@@ -17,7 +17,7 @@ export type LoadoutSelection = {
 const equipmentSlots = ['agent', 'knife', 'gloves', 'zeus'] as const
 
 function definitionIdFor(item: LoadoutCatalogueItem): string {
-  const source = item.type.toLowerCase().includes('knife') ? 'n1ssan-knives' : 'n1ssan-skins'
+  const source = /knif|kniv/.test(item.type.toLowerCase()) ? 'n1ssan-knives' : 'n1ssan-skins'
   return catalogueDefinitionId('skin', item.id, source)
 }
 
