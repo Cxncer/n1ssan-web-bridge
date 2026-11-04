@@ -274,6 +274,7 @@ export default function LoadoutBuilder({ skins }: LoadoutBuilderProps) {
     const outgoing = { ...activeProfile, loadouts: clone(loadouts), skinSettings: clone(skinSettings), equipment: clone(equipment) }
     setProfiles(prev => prev.map(p => p.id === outgoing.id ? outgoing : p))
     setActiveProfileId(next.id)
+    setBridgeStatus('Profile changed · not synced')
     setLoadouts(clone(next.loadouts)); setSkinSettings(clone(next.skinSettings)); setEquipment(clone(next.equipment))
     resetTransient()
   }
