@@ -269,7 +269,7 @@ test('Armory API persists complete profiles and rejects stale or invalid writes'
     schemaVersion: 1,
     inventoryRevision: saved.data.revision,
     profileId: saved.data.activeProfileId,
-    assignments: [{ team: 'T', slot: 'weapon', target: 'AK-47', itemInstanceId: 'armory-test-item' }],
+    assignments: [{ loadoutProfileId: 'loadout-main', team: 'T', slot: 'weapon', target: 'AK-47', itemInstanceId: 'armory-test-item' }],
   }
   const equipmentSave = await fetch(`${BASE_URL}/armory/equipment`, {
     method: 'PUT',
