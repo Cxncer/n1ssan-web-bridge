@@ -5,6 +5,23 @@ import { spawn, type ChildProcess } from 'node:child_process'
 import { mkdtemp, readFile, rm } from 'node:fs/promises'
 import os from 'node:os'
 import path from 'node:path'
+import type {
+  ArmoryDocument,
+  ArmoryReadResponse,
+  ArmoryWriteResponse,
+} from '../src/armory/contracts.ts'
+
+type LegacySkinsResponse = {
+  skins: Array<Record<string, unknown>>
+  loadout: {
+    id: number
+    profile: string
+    team: 'T' | 'CT'
+    teams: ('T' | 'CT')[]
+    receivedAt: string
+    itemCount: number
+  } | null
+}
 
 const HOST = '127.0.0.1'
 const PORT = 3211
@@ -109,7 +126,8 @@ test('Bridge validates submissions, backs up previous data, and restores saved d
   // Capture the initially accepted API state.
   const beforeInvalidRequest = await fetch(`${BASE_URL}/skins`)
   assert.equal(beforeInvalidRequest.status, 200)
-  const savedState = await beforeInvalidRequest.json()
+  const savedState =
+  await beforeInvalidRequest.json() as LegacySkinsResponse
 
   // An invalid ID should be rejected.
   const invalidLoadout = {
@@ -160,7 +178,8 @@ test('Bridge validates submissions, backs up previous data, and restores saved d
   // Capture the updated API state for the restart check.
   const updatedResponse = await fetch(`${BASE_URL}/skins`)
   assert.equal(updatedResponse.status, 200)
-  const updatedState = await updatedResponse.json()
+  const updatedState =
+    await updatedResponse.json() as LegacySkinsResponse
 
   // Restart the isolated Bridge using the same test data file.
   await stopServer()
@@ -175,34 +194,35 @@ test('Bridge validates submissions, backs up previous data, and restores saved d
 test('Armory API persists complete profiles and rejects stale or invalid writes', async () => {
   const readResponse = await fetch(`${BASE_URL}/armory`)
   assert.equal(readResponse.status, 200)
-  const initial = await readResponse.json()
+  const initial =
+  await readResponse.json() as ArmoryReadResponse
 
   assert.equal(initial.data.schemaVersion, 1)
   assert.equal(initial.data.revision, 0)
   assert.equal(initial.data.profiles.length, 1)
 
   const timestamp = new Date().toISOString()
-  const nextDocument = {
-    ...initial.data,
-    profiles: [{
-      ...initial.data.profiles[0],
-      items: [{
-        id: 'armory-test-item',
-        definitionId: 'skin:ak47-redline',
-        kind: 'skin',
-        quantity: 1,
-        customization: {
-          float: 0.18,
-          seed: 413,
-          statTrak: { enabled: true, kills: 12 },
-          customName: null,
-        },
-        createdAt: timestamp,
-        updatedAt: timestamp,
-      }],
+  const nextDocument: ArmoryDocument = {
+  ...initial.data,
+  profiles: [{
+    ...initial.data.profiles[0],
+    items: [{
+      id: 'armory-test-item',
+      definitionId: 'skin:ak47-redline',
+      kind: 'skin',
+      quantity: 1,
+      customization: {
+        float: 0.18,
+        seed: 413,
+        statTrak: { enabled: true, kills: 12 },
+        customName: null,
+      },
+      createdAt: timestamp,
       updatedAt: timestamp,
     }],
-  }
+    updatedAt: timestamp,
+  }],
+}
 
   const saveResponse = await fetch(`${BASE_URL}/armory`, {
     method: 'PUT',
@@ -214,7 +234,7 @@ test('Armory API persists complete profiles and rejects stale or invalid writes'
   })
 
   assert.equal(saveResponse.status, 200)
-  const saved = await saveResponse.json()
+  const saved = await saveResponse.json() as ArmoryWriteResponse
   assert.equal(saved.data.revision, 1)
   assert.equal(saved.data.profiles[0].items.length, 1)
 
@@ -240,13 +260,17 @@ test('Armory API persists complete profiles and rejects stale or invalid writes'
     }),
   })
 
-  assert.equal(invalidResponse.status, 400)
+    assert.equal(invalidResponse.status, 400)
 
   await stopServer()
   await startServer()
 
   const finalResponse = await fetch(`${BASE_URL}/armory`)
-  const finalState = await finalResponse.json()
-  assert.equal(finalState.data.revision, 1)
-  assert.equal(finalState.data.profiles[0].items[0].id, 'armory-test-item')
+  assert.equal(finalResponse.status, 200)
+
+  const finalState =
+    await finalResponse.json() as ArmoryReadResponse
+
+  assert.equal(finalState.data.revision, saved.data.revision)
+  assert.deepEqual(finalState.data.profiles, saved.data.profiles)
 })

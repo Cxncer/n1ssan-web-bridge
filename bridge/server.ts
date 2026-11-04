@@ -525,7 +525,7 @@ app.use(
     // handler. The `next` parameter must be present in the signature even
     // though it is not called in this branch.
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    next: NextFunction,
+    _next: NextFunction,
   ) => {
     if (err instanceof SyntaxError && err.status === 400) {
       res.status(400).json({

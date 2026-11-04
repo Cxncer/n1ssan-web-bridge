@@ -47,7 +47,11 @@ export class ArmoryStore {
   private document: ArmoryDocument = createEmptyDocument()
   private writeQueue: Promise<void> = Promise.resolve()
 
-  constructor(private readonly filePath: string) {}
+  private readonly filePath: string
+
+constructor(filePath: string) {
+  this.filePath = filePath
+}
 
   async initialize(): Promise<void> {
     await mkdir(path.dirname(this.filePath), { recursive: true })

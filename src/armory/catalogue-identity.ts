@@ -3,7 +3,7 @@ import {
   type CatalogueDefinition,
   type CatalogueSource,
 } from './contracts.ts'
-import gameDefinitionIndex from './game-definition-index.json'
+import gameDefinitionIndex from './game-definition-index.json' with { type: 'json' }
 
 export type CatalogueSourceRecord = {
   id: string | number

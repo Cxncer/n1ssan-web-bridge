@@ -5,11 +5,12 @@ import { validateArmoryDocument } from '../src/armory/contracts.ts'
 import { migrateLegacyInventory } from '../src/armory/migrate-legacy.ts'
 import { fromArmoryDocument, toArmoryDocument } from '../src/armory/obsidian-adapter.ts'
 import { catalogueDefinitionId, resolveGameDefinitionId, toCatalogueDefinition } from '../src/armory/catalogue-identity.ts'
+import type { ArmoryDocument } from '../src/armory/contracts.ts'
 
 const timestamp = '2026-11-03T08:00:00.000Z'
 
-const validDocument = () => ({
-  schemaVersion: 1,
+const validDocument = (): ArmoryDocument => ({
+  schemaVersion: 1 as const,
   revision: 0,
   activeProfileId: 'profile-main',
   profiles: [{
@@ -71,8 +72,8 @@ test('rejects duplicate profile and item instance IDs', () => {
 test('rejects invalid skin attributes and stacked skin quantities', () => {
   const document = validDocument()
   document.profiles[0].items[0].quantity = 2
-  document.profiles[0].items[0].customization.float = 1.2
-  document.profiles[0].items[0].customization.seed = 1001
+  document.profiles[0].items[0].customization!.float = 1.2
+  document.profiles[0].items[0].customization!.seed = 1001
 
   const errors = validateArmoryDocument(document)
   assert.ok(errors.some(error => error.includes('skins must be individual instances')))
