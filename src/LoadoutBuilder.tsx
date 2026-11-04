@@ -6,7 +6,7 @@ import { readArmoryDocument } from './armory/bridge-client'
 import { readArmoryEquipment, writeArmoryEquipment } from './armory/equipment-client'
 import { buildProfileEquipmentAssignments, replaceProfileEquipmentAssignments, resolveProfileEquipmentSelections } from './armory/loadout-adapter'
 
-type Skin = {
+export type Skin = {
   id: number; weapon: string; name: string; type: string; rarity: string
   color: string; art: string; description: string; image?: string
   minFloat?: number | null; maxFloat?: number | null
