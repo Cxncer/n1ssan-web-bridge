@@ -10,6 +10,7 @@ import {
 import { createLocalIntegrationSnapshot } from '../src/integration/local-snapshot.ts'
 import { ArmoryEquipmentStore, EquipmentRevisionConflictError, EquipmentValidationError } from './armory-equipment-store.ts'
 import { validateArmoryEquipmentDocument } from '../src/armory/equipment.ts'
+import { simulateLocalIntegration } from '../src/integration/simulator.ts'
 
 const app = express()
 
@@ -438,6 +439,20 @@ app.get('/integration/snapshot', (_req: Request, res: Response) => {
     equipmentStore.read(),
   )
 
+  res.setHeader('Cache-Control', 'no-store')
+  res.json({ data })
+})
+
+
+app.get('/integration/simulator', (_req: Request, res: Response) => {
+  const snapshot = createLocalIntegrationSnapshot(
+    armoryStore.read(),
+    selectedSkins,
+    latestLoadout,
+    undefined,
+    equipmentStore.read(),
+  )
+  const data = simulateLocalIntegration(snapshot)
   res.setHeader('Cache-Control', 'no-store')
   res.json({ data })
 })
