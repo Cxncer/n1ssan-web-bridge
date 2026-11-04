@@ -1148,3 +1148,36 @@
 .lb-section select:focus-visible { outline-color: #fff !important; }
 .lb-section ::selection { color: #111; background: #ddd; }
 
+/* Armory component finish: rounded inventory surfaces and tactile pill actions. */
+.lb-profile-trigger, .lb-profile-actions button, .lb-clear-button,
+.lb-team-button, .lb-category-list button, .lb-color-chip,
+.lb-color-swatch, .lb-custom-color, .lb-inspect-button,
+.lb-card-remove, .lb-close-button, .lb-unequip-button,
+.lb-save-settings-button, .lb-dialog-confirm, .lb-dialog-cancel {
+  border-radius: 999px;
+}
+.lb-weapon-card, .lb-picker-card, .lb-modal, .lb-profile-menu,
+.lb-empty, .lb-settings-summary { border-radius: 12px; }
+.lb-weapon-card {
+  position: relative;
+  border-width: 1px;
+  box-shadow: 0 9px 28px #0007;
+}
+.lb-weapon-card::before {
+  content: '';
+  position: absolute;
+  inset: 0 0 auto;
+  z-index: 3;
+  height: 3px;
+  background: linear-gradient(90deg, transparent, #bdbdbd, transparent);
+  opacity: .7;
+  pointer-events: none;
+}
+.lb-weapon-card.is-equipped::before { background: linear-gradient(90deg, transparent, #fff, transparent); opacity: 1; }
+.lb-weapon-image, .lb-picker-image { border-radius: 7px; }
+.lb-profile-trigger { border-radius: 999px; }
+.lb-team-button { border-radius: 10px; }
+.lb-picker-card { padding: 10px; }
+.lb-picker-image { height: 120px; }
+.lb-float-slider, .lb-seed-slider { accent-color: #f0f0f0; }
+
