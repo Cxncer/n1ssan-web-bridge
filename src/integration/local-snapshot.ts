@@ -6,7 +6,7 @@ import {
   type EquippedItemAssignment,
 } from '../armory/equipment.ts'
 
-export const LOCAL_INTEGRATION_SCHEMA_VERSION = 1 as const
+export const LOCAL_INTEGRATION_SCHEMA_VERSION = 2 as const
 
 export type LegacySelectionItem = Record<string, unknown> & {
   id: number
