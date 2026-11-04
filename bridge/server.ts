@@ -434,6 +434,7 @@ app.get('/integration/snapshot', (_req: Request, res: Response) => {
     armoryStore.read(),
     selectedSkins,
     latestLoadout,
+    undefined,
     equipmentStore.read(),
   )
 
