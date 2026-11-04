@@ -49,7 +49,7 @@ test('reads canonical equipment and reports stale assignments without hiding the
 
 test('writes equipment using the current inventory revision', async () => {
   const document = createEmptyEquipmentDocument(armory)
-  document.assignments = [{ team: 'T', slot: 'weapon', target: 'AK-47', itemInstanceId: 'instance-ak' }]
+  document.assignments = [{ loadoutProfileId: 'loadout-main', team: 'T', slot: 'weapon', target: 'AK-47', itemInstanceId: 'instance-ak' }]
   let requestInit: RequestInit | undefined
   const result = await writeArmoryEquipment(document, armory, async (_input, init) => {
     requestInit = init
@@ -65,7 +65,7 @@ test('writes equipment using the current inventory revision', async () => {
 
 test('rejects invalid assignments before making a Bridge request', async () => {
   const document = createEmptyEquipmentDocument(armory)
-  document.assignments = [{ team: 'T', slot: 'weapon', target: 'AK-47', itemInstanceId: 'missing' }]
+  document.assignments = [{ loadoutProfileId: 'loadout-main', team: 'T', slot: 'weapon', target: 'AK-47', itemInstanceId: 'missing' }]
   await assert.rejects(
     writeArmoryEquipment(document, armory, async () => assert.fail('Bridge must not be called')),
     error => error instanceof ArmoryEquipmentBridgeError && error.code === 'VALIDATION_FAILED',
