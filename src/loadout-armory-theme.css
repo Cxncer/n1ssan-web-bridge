@@ -88,3 +88,49 @@
 .lb-section button:focus-visible,.lb-section input:focus-visible,.lb-section select:focus-visible{outline:2px solid #a7b8ab;outline-offset:3px}
 @media(max-width:1000px){.lb-section{padding:24px clamp(18px,4vw,40px) 36px}.lb-board{grid-template-columns:repeat(5,minmax(175px,1fr));overflow-x:auto;padding-bottom:10px}.lb-board>section{min-width:175px}}
 @media(max-width:650px){.lb-section{padding:22px 18px 30px}.lb-heading h2{font-size:34px}.lb-team-button{border-radius:9px}.lb-weapon-image,.lb-equipment-art{height:96px;min-height:96px}}
+
+
+/* Armory component port — Loadout workspace shell and shared visual primitives. */
+.lb-section{max-width:1320px;margin:0 auto;padding:30px clamp(24px,6vw,100px) 42px;background:radial-gradient(ellipse at 50% -30%,#252b2a 0,transparent 48%)}
+.lb-breadcrumb{display:flex;align-items:center;gap:11px;color:#69716d;font:9px 'DM Mono',monospace;letter-spacing:1.5px;margin:0 0 18px}
+.lb-breadcrumb b{font-weight:400;color:#424946}
+.lb-breadcrumb strong{font-weight:400;color:#a7b1aa}
+.lb-heading{display:flex;justify-content:space-between;align-items:end;gap:30px;padding:24px 0 32px;margin:0}
+.lb-eyebrow{display:flex;align-items:center;gap:9px;color:#9aaa9f;font:10px 'DM Mono',monospace;letter-spacing:1.7px;margin:0 0 10px}
+.lb-heading h2{font:500 clamp(38px,5vw,58px)/1.05 Barlow,sans-serif;letter-spacing:-2.8px;color:#eef0ed;margin:0}
+.lb-title-accent{color:#91a699}
+.lb-subtitle{font:13px 'DM Sans',sans-serif;color:#89918c;margin:12px 0 0;line-height:1.6}
+.lb-progress{min-width:150px;min-height:96px;display:flex;flex-shrink:0;flex-direction:column;align-items:flex-end;justify-content:center;gap:7px;padding:14px 18px;background:linear-gradient(110deg,#191e1c,#171b1a);border:1px solid #2a302d;border-radius:8px;box-shadow:none}
+.lb-progress-counts{display:flex;align-items:center;gap:12px}
+.lb-progress-team{display:flex;align-items:baseline;gap:6px}
+.lb-progress-team strong{font:500 35px Barlow,sans-serif;color:#eef0ed}
+.lb-progress-team small{font:10px 'DM Mono',monospace;color:#a7b1aa}
+.lb-progress-divider{color:#59645d}
+.lb-progress-label{font:9px 'DM Mono',monospace;letter-spacing:1.2px;color:#78837c}
+.lb-loadout-controls-row{display:grid;grid-template-columns:minmax(280px,1fr) minmax(0,1.35fr);gap:12px;align-items:stretch;margin:0 0 24px}
+.lb-profiles{margin:0;min-width:0;border:1px solid #2a302d;border-radius:8px;background:linear-gradient(110deg,#191e1c,#171b1a);padding:16px}
+.lb-profile-select-wrap>label{color:#7b8780;font:9px 'DM Mono',monospace;letter-spacing:1.1px}
+.lb-profile-trigger{border-radius:5px;background:#191e1c;border-color:#303834}
+.lb-profile-actions button,.lb-clear-button{border-radius:5px}
+.lb-team-save-row{min-width:0;display:flex;flex-direction:column;justify-content:space-between;gap:10px;padding:16px;border:1px solid #2a302d;border-radius:8px;background:linear-gradient(110deg,#191e1c,#171b1a)}
+.lb-team-switch{margin:0;gap:8px}
+.lb-team-button{border-radius:5px}
+.lb-team-save-actions{display:flex;align-items:center;flex-wrap:wrap;gap:8px}
+.lb-board{gap:14px}
+.lb-column-heading{padding-bottom:12px;margin-bottom:12px}
+.lb-weapon-card{border-radius:7px}
+.lb-weapon-card:hover{transform:translateY(-2px)}
+.lb-modal{border-radius:10px}
+.lb-picker-card{border-radius:7px}
+.lb-save-note{padding:10px 2px;border-top:1px solid #252c28}
+@media(max-width:1050px){
+ .lb-section{padding:24px clamp(18px,4vw,40px) 36px}
+ .lb-loadout-controls-row{grid-template-columns:1fr}
+}
+@media(max-width:650px){
+ .lb-section{padding:22px 18px 30px}
+ .lb-heading{align-items:flex-start;flex-direction:column;gap:18px;padding:18px 0 24px}
+ .lb-heading h2{font-size:34px}
+ .lb-progress{align-items:flex-start;min-height:0;width:100%}
+ .lb-team-save-row{padding:12px}
+}
