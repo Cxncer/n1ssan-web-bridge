@@ -42,6 +42,7 @@ async function startServer(): Promise<void> {
         N1SSAN_PORT: String(PORT),
         N1SSAN_DATA_FILE: dataFile,
         N1SSAN_ARMORY_FILE: path.join(tempDir, 'armory-data.json'),
+        N1SSAN_EQUIPMENT_FILE: path.join(tempDir, 'armory-equipment.json'),
       },
       stdio: 'ignore',
     },
@@ -258,6 +259,37 @@ test('Armory API persists complete profiles and rejects stale or invalid writes'
   assert.equal(saved.data.revision, 1)
   assert.equal(saved.data.profiles[0].items.length, 1)
 
+  // Canonical equipment references the unique owned instance, not a catalogue ID.
+  const equipmentRead = await fetch(`${BASE_URL}/armory/equipment`)
+  assert.equal(equipmentRead.status, 200)
+  const equipmentCurrent = await equipmentRead.json() as { data: { schemaVersion: number; inventoryRevision: number; profileId: string; assignments: unknown[] } }
+  const equipmentDocument = {
+    schemaVersion: 1,
+    inventoryRevision: saved.data.revision,
+    profileId: saved.data.activeProfileId,
+    assignments: [{ team: 'T', slot: 'weapon', target: 'AK-47', itemInstanceId: 'armory-test-item' }],
+  }
+  const equipmentSave = await fetch(`${BASE_URL}/armory/equipment`, {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ expectedInventoryRevision: saved.data.revision, data: equipmentDocument }),
+  })
+  assert.equal(equipmentSave.status, 200)
+  const equipmentSaved = await equipmentSave.json() as { data: typeof equipmentDocument }
+  assert.equal(equipmentSaved.data.assignments[0].itemInstanceId, 'armory-test-item')
+
+  const integrationSnapshot = await fetch(`${BASE_URL}/integration/snapshot`)
+  const integrationData = await integrationSnapshot.json() as { data: { equipment: { state: string; assignments: Array<{ itemInstanceId: string }> } } }
+  assert.equal(integrationData.data.equipment.state, 'available')
+  assert.equal(integrationData.data.equipment.assignments[0].itemInstanceId, 'armory-test-item')
+
+  const staleEquipmentSave = await fetch(`${BASE_URL}/armory/equipment`, {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ expectedInventoryRevision: 0, data: { ...equipmentDocument, inventoryRevision: 0 } }),
+  })
+  assert.equal(staleEquipmentSave.status, 409)
+
   const staleResponse = await fetch(`${BASE_URL}/armory`, {
     method: 'PUT',
     headers: { 'Content-Type': 'application/json' },
@@ -293,4 +325,10 @@ test('Armory API persists complete profiles and rejects stale or invalid writes'
 
   assert.equal(finalState.data.revision, saved.data.revision)
   assert.deepEqual(finalState.data.profiles, saved.data.profiles)
+
+  const restoredEquipment = await fetch(`${BASE_URL}/armory/equipment`)
+  assert.equal(restoredEquipment.status, 200)
+  const restoredEquipmentBody = await restoredEquipment.json() as { data: { assignments: Array<{ itemInstanceId: string }> }; validationErrors: string[] }
+  assert.deepEqual(restoredEquipmentBody.validationErrors, [])
+  assert.equal(restoredEquipmentBody.data.assignments[0].itemInstanceId, 'armory-test-item')
 })
