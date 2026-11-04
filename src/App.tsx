@@ -35,7 +35,11 @@ function getCategory(skin: Skin) {
   return 'Other'
 }
 function App() {
-  const [page, setPage] = useState<Page>('catalogue')
+  const [page, setPage] = useState<Page>(() =>
+    new URLSearchParams(window.location.search).get('page') === 'loadout'
+      ? 'loadout'
+      : 'catalogue',
+  )
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false)
   const [search, setSearch] = useState('')
   const [category, setCategory] = useState('All Skins')
@@ -85,7 +89,16 @@ function App() {
       setColorScanBusy(false)
     }
   }
-  function navigate(next: Page) { setPage(next); setSearch(''); setCategory('All Skins'); setColorFilter('') }
+  function navigate(next: Page) {
+    setPage(next)
+    const url = new URL(window.location.href)
+    if (next === 'loadout') url.searchParams.set('page', 'loadout')
+    else url.searchParams.delete('page')
+    window.history.replaceState({}, '', `${url.pathname}${url.search}${url.hash}`)
+    setSearch('')
+    setCategory('All Skins')
+    setColorFilter('')
+  }
   const pageTitle = page === 'catalogue' ? 'Skins Catalogue' : page === 'favorites' ? 'Your Favorites' : 'Loadout Builder'
   return <div className={`n1ssan-layout ${sidebarCollapsed ? 'sidebar-is-collapsed' : ''}`}>
     <aside className="sidebar">
