@@ -6,26 +6,10 @@ import {
   type EquippedItemAssignment,
 } from '../armory/equipment.ts'
 
-export const LOCAL_INTEGRATION_SCHEMA_VERSION = 2 as const
-
+export const LOCAL_INTEGRATION_SCHEMA_VERSION = 3 as const
 export type ResolvedEquipmentAssignment = EquippedItemAssignment & { item: InventoryItemInstance }
-
-export type LegacySelectionItem = Record<string, unknown> & {
-  id: number
-  weapon: string
-  name: string
-  team: 'T' | 'CT'
-  slot: 'weapon' | 'agent' | 'knife' | 'gloves' | 'zeus'
-}
-
-export type LegacyLoadoutInfo = {
-  id: number
-  profile: string
-  team: 'T' | 'CT'
-  teams: ('T' | 'CT')[]
-  receivedAt: string
-  itemCount: number
-}
+export type LegacySelectionItem = Record<string, unknown> & { id: number; weapon: string; name: string; team: 'T' | 'CT'; slot: 'weapon' | 'agent' | 'knife' | 'gloves' | 'zeus' }
+export type LegacyLoadoutInfo = { id: number; profile: string; team: 'T' | 'CT'; teams: ('T' | 'CT')[]; receivedAt: string; itemCount: number }
 
 export type LocalIntegrationSnapshot = {
   contract: 'n1ssan.local-integration'
@@ -38,6 +22,8 @@ export type LocalIntegrationSnapshot = {
     activeProfileId: string
     activeProfileItemCount: number
     profileCount: number
+    /** Actual owned instances from the active Armory profile, not catalogue rows. */
+    items: InventoryItemInstance[]
   }
   equipment: {
     source: 'armory-equipment-api'
@@ -55,7 +41,7 @@ export type LocalIntegrationSnapshot = {
   }
 }
 
-/** Build a read-only integration view without conflating canonical equipment and legacy selections. */
+/** Build a read-only integration view without conflating inventory, equipment, and legacy selections. */
 export function createLocalIntegrationSnapshot(
   armory: ArmoryDocument,
   selectedItems: LegacySelectionItem[],
@@ -64,6 +50,7 @@ export function createLocalIntegrationSnapshot(
   equipment: ArmoryEquipmentDocument | null = null,
 ): LocalIntegrationSnapshot {
   const activeProfile = armory.profiles.find(profile => profile.id === armory.activeProfileId)
+  const inventoryItems = activeProfile?.items ?? []
   const currentEquipment = equipment ?? createEmptyEquipmentDocument(armory)
   const validationErrors = validateArmoryEquipmentDocument(currentEquipment, armory)
   const resolvedAssignments: ResolvedEquipmentAssignment[] = []
@@ -90,8 +77,9 @@ export function createLocalIntegrationSnapshot(
       schemaVersion: armory.schemaVersion,
       revision: armory.revision,
       activeProfileId: armory.activeProfileId,
-      activeProfileItemCount: activeProfile?.items.length ?? 0,
+      activeProfileItemCount: inventoryItems.length,
       profileCount: armory.profiles.length,
+      items: structuredClone(inventoryItems),
     },
     equipment: {
       source: 'armory-equipment-api',
