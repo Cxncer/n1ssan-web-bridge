@@ -945,3 +945,56 @@ body,button,input,select{font-family:'Barlow',sans-serif}
   background: #8aa493;
   box-shadow: 0 0 9px #8aa49377;
 }
+
+
+/* Armory persistence feedback: keep the workspace visible when a save is blocked. */
+.ob-armory-save-error {
+  position: sticky;
+  top: 0;
+  z-index: 80;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 18px;
+  padding: 12px clamp(18px, 4vw, 56px);
+  border-bottom: 1px solid #8d5b38;
+  background: #21170f;
+  color: #f0e4d8;
+}
+.ob-armory-save-error > div {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  min-width: 0;
+}
+.ob-armory-save-error strong {
+  color: #e7b68b;
+  font: 600 9px 'DM Mono', monospace;
+  letter-spacing: 1.2px;
+}
+.ob-armory-save-error span {
+  color: #d8c4b2;
+  font: 12px 'Barlow', sans-serif;
+  line-height: 1.5;
+}
+.ob-armory-save-error button {
+  flex: 0 0 auto;
+  padding: 8px 14px;
+  border: 1px solid #8d6a4c;
+  border-radius: 999px;
+  background: #302116;
+  color: #f3e5d7;
+  font: 500 11px 'Barlow', sans-serif;
+  cursor: pointer;
+}
+.ob-armory-save-error button:hover {
+  border-color: #d2a47c;
+  background: #422d1d;
+}
+@media (max-width: 680px) {
+  .ob-armory-save-error {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 10px;
+  }
+}
