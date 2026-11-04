@@ -23,9 +23,21 @@ export function simulateLocalIntegration(value: unknown): IntegrationSimulationR
   }
 
   const equipment = value.equipment
-  const inventoryRevision = isRecord(value.inventory) && Number.isSafeInteger(value.inventory.revision)
-    ? value.inventory.revision as number
+  const inventory = isRecord(value.inventory) ? value.inventory : null
+  const inventoryRevision = inventory && Number.isSafeInteger(inventory.revision)
+    ? inventory.revision as number
     : null
+  const equipmentRevision = Number.isSafeInteger(equipment.inventoryRevision)
+    ? equipment.inventoryRevision as number
+    : null
+  if (
+    inventoryRevision === null ||
+    equipmentRevision !== inventoryRevision ||
+    typeof inventory?.activeProfileId !== 'string' ||
+    equipment.profileId !== inventory.activeProfileId
+  ) {
+    return { status: 'stale', schemaVersion: 2, inventoryRevision, assignments: [], errors: ['Equipment profile or inventory revision does not match the inventory snapshot'] }
+  }
   if (equipment.state === 'stale') {
     const details = Array.isArray(equipment.validationErrors)
       ? equipment.validationErrors.filter((entry): entry is string => typeof entry === 'string')
