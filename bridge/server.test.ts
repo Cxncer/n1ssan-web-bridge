@@ -263,6 +263,8 @@ test('Armory API persists complete profiles and rejects stale or invalid writes'
   const equipmentRead = await fetch(`${BASE_URL}/armory/equipment`)
   assert.equal(equipmentRead.status, 200)
   const equipmentCurrent = await equipmentRead.json() as { data: { schemaVersion: number; inventoryRevision: number; profileId: string; assignments: unknown[] } }
+  assert.equal(equipmentCurrent.data.inventoryRevision, saved.data.revision)
+  assert.equal(equipmentCurrent.data.assignments.length, 0)
   const equipmentDocument = {
     schemaVersion: 1,
     inventoryRevision: saved.data.revision,
