@@ -1,4 +1,10 @@
 import type { ArmoryDocument } from '../armory/contracts.ts'
+import {
+  createEmptyEquipmentDocument,
+  validateArmoryEquipmentDocument,
+  type ArmoryEquipmentDocument,
+  type EquippedItemAssignment,
+} from '../armory/equipment.ts'
 
 export const LOCAL_INTEGRATION_SCHEMA_VERSION = 1 as const
 
@@ -31,9 +37,15 @@ export type LocalIntegrationSnapshot = {
     activeProfileItemCount: number
     profileCount: number
   }
+  equipment: {
+    source: 'armory-equipment-api'
+    state: 'available' | 'empty' | 'stale'
+    inventoryRevision: number
+    profileId: string
+    assignments: EquippedItemAssignment[]
+    validationErrors: string[]
+  }
   selection: {
-    // This is deliberately separate from Armory inventory. The legacy /skins
-    // endpoint does not carry canonical Armory instance IDs.
     source: 'legacy-skins-api'
     state: 'available' | 'empty'
     loadout: LegacyLoadoutInfo | null
@@ -41,20 +53,20 @@ export type LocalIntegrationSnapshot = {
   }
 }
 
-/**
- * Creates a read-only local snapshot for integration tooling and simulators.
- * It does not translate inventory into equipped items: the current Bridge
- * stores those in separate APIs until an explicit equipment model exists.
- */
+/** Build a read-only integration view without conflating canonical equipment and legacy selections. */
 export function createLocalIntegrationSnapshot(
   armory: ArmoryDocument,
   selectedItems: LegacySelectionItem[],
   loadout: LegacyLoadoutInfo | null,
+  equipment: ArmoryEquipmentDocument | null = null,
   generatedAt = new Date().toISOString(),
 ): LocalIntegrationSnapshot {
-  const activeProfile = armory.profiles.find(
-    profile => profile.id === armory.activeProfileId,
-  )
+  const activeProfile = armory.profiles.find(profile => profile.id === armory.activeProfileId)
+  const currentEquipment = equipment ?? createEmptyEquipmentDocument(armory)
+  const validationErrors = validateArmoryEquipmentDocument(currentEquipment, armory)
+  const equipmentState = validationErrors.length > 0
+    ? 'stale'
+    : currentEquipment.assignments.length > 0 ? 'available' : 'empty'
 
   return {
     contract: 'n1ssan.local-integration',
@@ -67,6 +79,14 @@ export function createLocalIntegrationSnapshot(
       activeProfileId: armory.activeProfileId,
       activeProfileItemCount: activeProfile?.items.length ?? 0,
       profileCount: armory.profiles.length,
+    },
+    equipment: {
+      source: 'armory-equipment-api',
+      state: equipmentState,
+      inventoryRevision: currentEquipment.inventoryRevision,
+      profileId: currentEquipment.profileId,
+      assignments: validationErrors.length ? [] : structuredClone(currentEquipment.assignments),
+      validationErrors,
     },
     selection: {
       source: 'legacy-skins-api',
