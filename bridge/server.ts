@@ -341,7 +341,7 @@ app.get('/armory', (_req: Request, res: Response) => {
 
 app.get('/armory/equipment', (_req: Request, res: Response) => {
   const armory = armoryStore.read()
-  const data = equipmentStore.read()
+  const data = equipmentStore.read(armory)
   const validationErrors = validateArmoryEquipmentDocument(data, armory)
   res.setHeader('Cache-Control', 'no-store')
   res.json({ data, validationErrors })
@@ -431,12 +431,13 @@ app.put('/armory', async (req: Request, res: Response) => {
 
 
 app.get('/integration/snapshot', (_req: Request, res: Response) => {
+  const armory = armoryStore.read()
   const data = createLocalIntegrationSnapshot(
-    armoryStore.read(),
+    armory,
     selectedSkins,
     latestLoadout,
     undefined,
-    equipmentStore.read(),
+    equipmentStore.read(armory),
   )
 
   res.setHeader('Cache-Control', 'no-store')
@@ -445,12 +446,13 @@ app.get('/integration/snapshot', (_req: Request, res: Response) => {
 
 
 app.get('/integration/simulator', (_req: Request, res: Response) => {
+  const armory = armoryStore.read()
   const snapshot = createLocalIntegrationSnapshot(
-    armoryStore.read(),
+    armory,
     selectedSkins,
     latestLoadout,
     undefined,
-    equipmentStore.read(),
+    equipmentStore.read(armory),
   )
   const data = simulateLocalIntegration(snapshot)
   res.setHeader('Cache-Control', 'no-store')
