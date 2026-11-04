@@ -14,9 +14,11 @@ const item = {
 const snapshot = {
   contract: 'n1ssan.local-integration',
   schemaVersion: 2,
-  inventory: { revision: 7 },
+  inventory: { revision: 7, activeProfileId: 'profile-main' },
   equipment: {
     state: 'available',
+    inventoryRevision: 7,
+    profileId: 'profile-main',
     validationErrors: [],
     assignments: [{ team: 'T', slot: 'weapon', target: 'AK-47', itemInstanceId: item.id, item }],
   },
