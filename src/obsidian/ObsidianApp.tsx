@@ -6,6 +6,7 @@ import {
   type ObsidianInventoryProfile,
 } from '../armory/obsidian-adapter'
 import { migrateLegacyInventory } from '../armory/migrate-legacy'
+import { ArmoryBridgeError, readArmoryDocument, writeArmoryDocument } from '../armory/bridge-client'
 import { catalogueDefinitionId, toCatalogueDefinition } from '../armory/catalogue-identity'
 import skinData from '../skins.json'
 import knifeData from './knife-skins.json'
@@ -114,21 +115,8 @@ export default function ObsidianApp() {
       saveQueueRef.current = saveQueueRef.current.then(async () => {
         if (writeBlockedRef.current) return
         const document = toArmoryDocument(snapshot, nextActiveId, revisionRef.current)
-        const response = await fetch('http://127.0.0.1:3210/armory', {
-          method: 'PUT',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ expectedRevision: revisionRef.current, data: document }),
-        })
-        if (response.status === 409) {
-          writeBlockedRef.current = true
-          throw new Error('Armory was changed by another session. Refresh Obsidian to load the latest inventory before continuing.')
-        }
-        if (!response.ok) {
-          const payload = await response.json().catch(() => null)
-          throw new Error(payload?.error?.message ?? `Armory save failed (HTTP ${response.status}).`)
-        }
-        const payload = await response.json()
-        revisionRef.current = payload.data.revision
+        const saved = await writeArmoryDocument(document, revisionRef.current)
+        revisionRef.current = saved.revision
       }).catch(error => {
         writeBlockedRef.current = true
         setArmoryError(error instanceof Error ? error.message : 'Armory could not save your changes.')
@@ -249,9 +237,7 @@ export default function ObsidianApp() {
 
     const connect = async () => {
       try {
-        const response = await fetch('http://127.0.0.1:3210/armory')
-        if (!response.ok) throw new Error(`Bridge returned HTTP ${response.status}`)
-        let document = (await response.json()).data
+        let document = await readArmoryDocument()
 
         const isPristine = document.revision === 0 &&
           document.profiles.length === 1 &&
@@ -267,19 +253,15 @@ export default function ObsidianApp() {
                   parsed,
                   window.localStorage.getItem(`${STORAGE_KEY}:active`),
                 )
-                const migrationResponse = await fetch('http://127.0.0.1:3210/armory', {
-                  method: 'PUT',
-                  headers: { 'Content-Type': 'application/json' },
-                  body: JSON.stringify({ expectedRevision: document.revision, data: migrated }),
-                })
-                if (migrationResponse.status === 409) {
-                  const latest = await fetch('http://127.0.0.1:3210/armory')
-                  if (!latest.ok) throw new Error('Could not reload Armory after a migration conflict.')
-                  document = (await latest.json()).data
-                } else {
-                  if (!migrationResponse.ok) throw new Error('Existing Obsidian inventory could not be migrated.')
-                  document = (await migrationResponse.json()).data
+                try {
+                  document = await writeArmoryDocument(migrated, document.revision)
                   window.localStorage.setItem(`${STORAGE_KEY}:armory-migrated`, new Date().toISOString())
+                } catch (migrationError) {
+                  if (migrationError instanceof ArmoryBridgeError && migrationError.status === 409) {
+                    document = await readArmoryDocument()
+                  } else {
+                    throw migrationError
+                  }
                 }
               }
             } catch (migrationError) {
