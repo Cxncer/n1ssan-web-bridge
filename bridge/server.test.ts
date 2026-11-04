@@ -137,7 +137,7 @@ test('Bridge validates submissions, backs up previous data, and restores saved d
     }
   }
   assert.equal(integration.data.contract, 'n1ssan.local-integration')
-  assert.equal(integration.data.schemaVersion, 1)
+  assert.equal(integration.data.schemaVersion, 2)
   assert.equal(integration.data.inventory.source, 'armory-api')
   assert.equal(integration.data.inventory.activeProfileItemCount, 0)
   assert.equal(integration.data.selection.source, 'legacy-skins-api')
