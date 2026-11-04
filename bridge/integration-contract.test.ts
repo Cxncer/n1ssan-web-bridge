@@ -50,7 +50,7 @@ test('local integration snapshot keeps Armory inventory and legacy selection sep
   const snapshot = createLocalIntegrationSnapshot(armory, selected, loadout, timestamp)
 
   assert.equal(snapshot.contract, 'n1ssan.local-integration')
-  assert.equal(snapshot.schemaVersion, 1)
+  assert.equal(snapshot.schemaVersion, 2)
   assert.equal(snapshot.generatedAt, timestamp)
   assert.deepEqual(snapshot.inventory, {
     source: 'armory-api',
