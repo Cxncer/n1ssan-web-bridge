@@ -285,6 +285,13 @@ test('Armory API persists complete profiles and rejects stale or invalid writes'
   assert.equal(integrationData.data.equipment.state, 'available')
   assert.equal(integrationData.data.equipment.assignments[0].itemInstanceId, 'armory-test-item')
 
+  const simulationResponse = await fetch(`${BASE_URL}/integration/simulator`)
+  assert.equal(simulationResponse.status, 200)
+  const simulation = await simulationResponse.json() as { data: { status: string; assignments: Array<{ item: { id: string; customization: { float: number } } }> } }
+  assert.equal(simulation.data.status, 'ready')
+  assert.equal(simulation.data.assignments[0].item.id, 'armory-test-item')
+  assert.equal(simulation.data.assignments[0].item.customization.float, 0.18)
+
   const staleEquipmentSave = await fetch(`${BASE_URL}/armory/equipment`, {
     method: 'PUT',
     headers: { 'Content-Type': 'application/json' },
@@ -352,4 +359,9 @@ test('Armory API persists complete profiles and rejects stale or invalid writes'
   const staleSnapshot = await staleSnapshotResponse.json() as { data: { equipment: { state: string; assignments: unknown[] } } }
   assert.equal(staleSnapshot.data.equipment.state, 'stale')
   assert.deepEqual(staleSnapshot.data.equipment.assignments, [])
+
+  const staleSimulationResponse = await fetch(`${BASE_URL}/integration/simulator`)
+  const staleSimulation = await staleSimulationResponse.json() as { data: { status: string; assignments: unknown[] } }
+  assert.equal(staleSimulation.data.status, 'stale')
+  assert.deepEqual(staleSimulation.data.assignments, [])
 })
