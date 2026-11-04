@@ -123,6 +123,26 @@ test('Bridge validates submissions, backs up previous data, and restores saved d
 
   assert.equal(validResponse.status, 200)
 
+  // The integration contract exposes inventory and the legacy equipped selection
+  // as separate sources; it must not pretend legacy IDs are Armory instance IDs.
+  const integrationResponse = await fetch(`${BASE_URL}/integration/snapshot`)
+  assert.equal(integrationResponse.status, 200)
+  const integration = await integrationResponse.json() as {
+    data: {
+      contract: string
+      schemaVersion: number
+      inventory: { source: string; activeProfileItemCount: number }
+      selection: { source: string; state: string; items: Array<Record<string, unknown>> }
+    }
+  }
+  assert.equal(integration.data.contract, 'n1ssan.local-integration')
+  assert.equal(integration.data.schemaVersion, 1)
+  assert.equal(integration.data.inventory.source, 'armory-api')
+  assert.equal(integration.data.inventory.activeProfileItemCount, 0)
+  assert.equal(integration.data.selection.source, 'legacy-skins-api')
+  assert.equal(integration.data.selection.state, 'available')
+  assert.equal(integration.data.selection.items[0].weapon, 'AK-47')
+
   // Capture the initially accepted API state.
   const beforeInvalidRequest = await fetch(`${BASE_URL}/skins`)
   assert.equal(beforeInvalidRequest.status, 200)
