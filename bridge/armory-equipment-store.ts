@@ -26,7 +26,11 @@ function isEquipmentDocumentShape(value: unknown): value is ArmoryEquipmentDocum
 export class ArmoryEquipmentStore {
   private document!: ArmoryEquipmentDocument
   private writeQueue: Promise<void> = Promise.resolve()
-  constructor(private readonly filePath: string) {}
+  private readonly filePath: string
+
+  constructor(filePath: string) {
+    this.filePath = filePath
+  }
 
   async initialize(armory: ArmoryDocument): Promise<void> {
     await mkdir(path.dirname(this.filePath), { recursive: true })
@@ -64,7 +68,22 @@ export class ArmoryEquipmentStore {
     }
   }
 
-  read(): ArmoryEquipmentDocument { return structuredClone(this.document) }
+  read(armory?: ArmoryDocument): ArmoryEquipmentDocument {
+    const current = structuredClone(this.document)
+
+    // An empty equipment document contains no assignments to invalidate.
+    // Rebase it to the active inventory so adding the first owned item does
+    // not leave an otherwise-empty equipment state permanently stale.
+    if (
+      armory &&
+      current.assignments.length === 0 &&
+      (current.inventoryRevision !== armory.revision || current.profileId !== armory.activeProfileId)
+    ) {
+      return createEmptyEquipmentDocument(armory)
+    }
+
+    return current
+  }
 
   replace(expectedInventoryRevision: number, candidate: unknown, armory: ArmoryDocument): Promise<ArmoryEquipmentDocument> {
     const operation = this.writeQueue.then(async () => {
