@@ -80,17 +80,17 @@ let bridgeShutdownStarted = false
 
 function pruneBrowserSessions(): void {
   const now = Date.now()
-  let expired = false
+  let latestExpiredAt = 0
   for (const [sessionId, lastSeen] of browserSessions) {
     if (now - lastSeen > BROWSER_SESSION_TIMEOUT_MS) {
       browserSessions.delete(sessionId)
-      expired = true
+      latestExpiredAt = Math.max(latestExpiredAt, lastSeen)
     }
   }
-  if (expired && browserSessions.size === 0) {
+  if (latestExpiredAt > 0 && browserSessions.size === 0) {
     browserSessionGraceUntil = Math.max(
       browserSessionGraceUntil,
-      lastSeen + BROWSER_SESSION_TIMEOUT_MS,
+      latestExpiredAt + BROWSER_SESSION_TIMEOUT_MS,
     )
   }
 }
