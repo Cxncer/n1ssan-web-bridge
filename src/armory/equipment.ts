@@ -51,7 +51,7 @@ export function validateArmoryEquipmentDocument(
     errors.push('assignments: expected an array')
     return errors
   }
-  if (value.assignments.length > 100) errors.push('assignments: maximum of 100 assignments exceeded')
+  if (value.assignments.length > 1000) errors.push('assignments: maximum of 1000 assignments exceeded')
 
   const profile = armory.profiles.find(entry => entry.id === armory.activeProfileId)
   const instances = new Map((profile?.items ?? []).map(item => [item.id, item]))
