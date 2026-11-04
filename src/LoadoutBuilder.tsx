@@ -493,7 +493,7 @@ export default function LoadoutBuilder({ skins }: LoadoutBuilderProps) {
       <div className="lb-overview-stat"><strong>{String(equippedCountT).padStart(2, '0')}</strong><small>T SKINS</small></div>
       <div className="lb-overview-stat"><strong>{String(equippedCountCT).padStart(2, '0')}</strong><small>CT SKINS</small></div>
       <div className="lb-overview-stat"><strong>{String(Object.values(equipment[team]).filter(id => id !== null).length).padStart(2, '0')}</strong><small>{team} EQUIPMENT</small></div>
-      <div className="lb-overview-status"><span className="lb-overview-ring">✓</span><span><strong>LOADOUT READY</strong><small>Changes save automatically</small></span></div>
+      <div className="lb-overview-status"><span className="lb-overview-ring">✓</span><span><strong>ACTIVE CONFIGURATION</strong><small>Local profile state</small></span></div>
     </section>
 
     <div className="lb-loadout-controls-row">
