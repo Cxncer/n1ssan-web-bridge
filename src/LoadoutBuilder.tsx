@@ -572,7 +572,7 @@ export default function LoadoutBuilder({ skins }: LoadoutBuilderProps) {
         <div className="lb-breadcrumb"><span>WORKSPACE</span><b>/</b><strong>DIAGNOSTICS</strong></div>
         <div className="lb-heading lb-diagnostics-heading">
           <div><p className="lb-eyebrow">LOCAL WORKSPACE HEALTH</p><h2>Diagnostics<span className="lb-title-accent">.</span></h2><p className="lb-subtitle">A read-only overview of the Loadout page, saved profiles, and local browser data.</p></div>
-          <div className="lb-diagnostics-status"><span className={`lb-diagnostics-dot ${browserStorageAvailable ? 'is-ready' : 'is-warning'}`} /><div><strong>{browserStorageAvailable ? 'LOCAL STORAGE AVAILABLE' : 'LOCAL STORAGE UNAVAILABLE'}</strong><small>Browser persistence check</small></div></div>
+          <div className="lb-diagnostics-status"><span className={`lb-diagnostics-dot ${browserStorageAvailable ? 'is-ready' : 'is-warning'}`} /><div><strong>{browserStorageAvailable ? 'BROWSER STORAGE ACCESSIBLE' : 'BROWSER STORAGE UNAVAILABLE'}</strong><small>LocalStorage read access</small></div></div>
         </div>
         <div className="lb-diagnostics-grid">
           <article className="lb-diagnostic-card"><span>SKIN CATALOGUE</span><strong>{skins.length.toLocaleString()}</strong><small>Items loaded into this page</small></article>
