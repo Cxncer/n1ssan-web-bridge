@@ -1,4 +1,4 @@
-import type { ArmoryDocument } from '../armory/contracts.ts'
+import type { ArmoryDocument, InventoryItemInstance } from '../armory/contracts.ts'
 import {
   createEmptyEquipmentDocument,
   validateArmoryEquipmentDocument,
@@ -7,6 +7,8 @@ import {
 } from '../armory/equipment.ts'
 
 export const LOCAL_INTEGRATION_SCHEMA_VERSION = 2 as const
+
+export type ResolvedEquipmentAssignment = EquippedItemAssignment & { item: InventoryItemInstance }
 
 export type LegacySelectionItem = Record<string, unknown> & {
   id: number
@@ -42,7 +44,7 @@ export type LocalIntegrationSnapshot = {
     state: 'available' | 'empty' | 'stale'
     inventoryRevision: number
     profileId: string
-    assignments: EquippedItemAssignment[]
+    assignments: ResolvedEquipmentAssignment[]
     validationErrors: string[]
   }
   selection: {
@@ -64,9 +66,20 @@ export function createLocalIntegrationSnapshot(
   const activeProfile = armory.profiles.find(profile => profile.id === armory.activeProfileId)
   const currentEquipment = equipment ?? createEmptyEquipmentDocument(armory)
   const validationErrors = validateArmoryEquipmentDocument(currentEquipment, armory)
+  const resolvedAssignments: ResolvedEquipmentAssignment[] = []
+  if (validationErrors.length === 0 && activeProfile) {
+    currentEquipment.assignments.forEach((assignment, index) => {
+      const item = activeProfile.items.find(candidate => candidate.id === assignment.itemInstanceId)
+      if (!item) {
+        validationErrors.push(`assignments[${index}].itemInstanceId: item could not be resolved`)
+        return
+      }
+      resolvedAssignments.push({ ...structuredClone(assignment), item: structuredClone(item) })
+    })
+  }
   const equipmentState = validationErrors.length > 0
     ? 'stale'
-    : currentEquipment.assignments.length > 0 ? 'available' : 'empty'
+    : resolvedAssignments.length > 0 ? 'available' : 'empty'
 
   return {
     contract: 'n1ssan.local-integration',
@@ -85,7 +98,7 @@ export function createLocalIntegrationSnapshot(
       state: equipmentState,
       inventoryRevision: currentEquipment.inventoryRevision,
       profileId: currentEquipment.profileId,
-      assignments: validationErrors.length ? [] : structuredClone(currentEquipment.assignments),
+      assignments: validationErrors.length ? [] : resolvedAssignments,
       validationErrors,
     },
     selection: {
