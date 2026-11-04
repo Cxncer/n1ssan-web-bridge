@@ -520,7 +520,7 @@ export default function LoadoutBuilder({ skins }: LoadoutBuilderProps) {
         </section>
       })}
     </div>
-        <p className="lb-save-note">Profile: <strong>{activeProfile.name}</strong>. T and CT selections, equipment, float values, and seeds are saved locally; owned-item assignments sync to the canonical Armory.</p>
+        <p className="lb-save-note">Profile: <strong>{activeProfile.name}</strong>. T and CT selections, equipment, float values, and seeds are saved locally in Loadout.</p>
 
     {pickerOpen && activeWeapon && <div className="lb-modal-backdrop" onClick={() => setPickerOpen(false)}><div className="lb-modal" role="dialog" aria-modal="true" aria-label={`Choose a skin for ${activeWeapon}`} onClick={e => e.stopPropagation()}>
       <div className="lb-modal-header"><div><p className="lb-eyebrow">SKIN PICKER</p><h3>{activeWeapon}</h3><p className="lb-modal-subtitle">{weaponSkins.length} matching {weaponSkins.length === 1 ? 'skin' : 'skins'} · Search and sort finishes</p></div><button className="lb-close-button" type="button" onClick={() => { setPickerOpen(false); setPickerSearch('') }} aria-label="Close skin picker">×</button></div>
