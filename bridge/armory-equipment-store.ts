@@ -39,25 +39,27 @@ export class ArmoryEquipmentStore {
       // diagnostics. They cannot be saved or consumed until revalidated.
       this.document = parsed
     } catch (error) {
-      if ((error as NodeJS.ErrnoException).code === 'ENOENT') {
-        this.document = createEmptyEquipmentDocument(armory)
-        await this.persist(this.document, false)
-        return
-      }
-
-      // Recover only from a structurally valid backup; preserve the damaged primary.
+      const primaryMissing = (error as NodeJS.ErrnoException).code === 'ENOENT'
       let backup: unknown
       try {
         backup = JSON.parse(await readFile(`${this.filePath}.bak`, 'utf8'))
       } catch (backupError) {
+        if (primaryMissing && (backupError as NodeJS.ErrnoException).code === 'ENOENT') {
+          this.document = createEmptyEquipmentDocument(armory)
+          await this.persist(this.document, false)
+          return
+        }
         throw new Error('Armory equipment primary and backup could not be restored', { cause: backupError })
       }
       if (!isEquipmentDocumentShape(backup)) {
         throw new Error('Armory equipment backup has an invalid structure')
       }
       this.document = backup
-      const damagedPath = `${this.filePath}.corrupt-${Date.now()}`
-      await copyFile(this.filePath, damagedPath)
+      if (!primaryMissing) {
+        // Keep the damaged primary for inspection before restoring the backup.
+        const damagedPath = `${this.filePath}.corrupt-${Date.now()}`
+        await copyFile(this.filePath, damagedPath)
+      }
       await this.persist(this.document, false)
     }
   }
