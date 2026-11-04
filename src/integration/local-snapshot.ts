@@ -58,8 +58,8 @@ export function createLocalIntegrationSnapshot(
   armory: ArmoryDocument,
   selectedItems: LegacySelectionItem[],
   loadout: LegacyLoadoutInfo | null,
-  equipment: ArmoryEquipmentDocument | null = null,
   generatedAt = new Date().toISOString(),
+  equipment: ArmoryEquipmentDocument | null = null,
 ): LocalIntegrationSnapshot {
   const activeProfile = armory.profiles.find(profile => profile.id === armory.activeProfileId)
   const currentEquipment = equipment ?? createEmptyEquipmentDocument(armory)
