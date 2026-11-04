@@ -90,7 +90,7 @@ function pruneBrowserSessions(): void {
   if (expired && browserSessions.size === 0) {
     browserSessionGraceUntil = Math.max(
       browserSessionGraceUntil,
-      now + BROWSER_SESSION_TIMEOUT_MS,
+      lastSeen + BROWSER_SESSION_TIMEOUT_MS,
     )
   }
 }
