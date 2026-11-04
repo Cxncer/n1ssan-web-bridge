@@ -1,6 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
 import './LoadoutBuilder.css'
-import './loadout-armory-theme.css'
 import './loadout-obsidian.css'
 import { findImageColorMatches } from './skinColorDetection'
 import { readArmoryDocument } from './armory/bridge-client'
@@ -467,16 +466,7 @@ export default function LoadoutBuilder({ skins }: LoadoutBuilderProps) {
   const activeEquipmentTitle = activeEquipment ? EQUIPMENT_INFO[activeEquipment].title : ''
 
   return <div className="lb-workspace-shell">
-    <header className="lb-topbar">
-      <a className="lb-brand" href="/obsidian.html" aria-label="n1ssan Armory"><span className="lb-brand-mark">n.</span><span>n1ssan</span><i /><small>OBSIDIAN</small></a>
-      <nav className="lb-nav" aria-label="Workspace navigation">
-        <a href="/obsidian.html">Armory</a>
-        <a className="active" href="/?page=loadout" aria-current="page">Loadout</a>
-      </nav>
-      <div className="lb-top-status"><span className="lb-status-indicator" /><span>{bridgeStatus.toUpperCase()}</span></div>
-    </header>
     <section className="lb-section" data-team={team}>
-    <div className="lb-breadcrumb"><span>WORKSPACE</span><b>/</b><strong>LOADOUT</strong></div>
     <div className="lb-heading">
       <div><p className="lb-eyebrow">YOUR EQUIPMENT CONFIGURATION</p><h2>Your Loadout<span className="lb-title-accent">.</span></h2><p className="lb-subtitle">Configure every weapon and equipment slot for both sides.</p></div>
       <div className="lb-progress" aria-label={`Skins equipped: Terrorists ${equippedCountT}, Counter-Terrorists ${equippedCountCT}`}>
@@ -488,14 +478,6 @@ export default function LoadoutBuilder({ skins }: LoadoutBuilderProps) {
         <small className="lb-progress-label">SKINS EQUIPPED</small>
       </div>
     </div>
-
-    <section className="lb-overview" aria-label="Loadout overview">
-      <div className="lb-overview-total"><span className="lb-metric-label">ACTIVE PROFILE</span><strong>{activeProfile.name}</strong><small>{profiles.length} saved profile{profiles.length === 1 ? '' : 's'}</small></div>
-      <div className="lb-overview-stat"><strong>{String(equippedCountT).padStart(2, '0')}</strong><small>T SKINS</small></div>
-      <div className="lb-overview-stat"><strong>{String(equippedCountCT).padStart(2, '0')}</strong><small>CT SKINS</small></div>
-      <div className="lb-overview-stat"><strong>{String(Object.values(equipment[team]).filter(id => id !== null).length).padStart(2, '0')}</strong><small>{team} EQUIPMENT</small></div>
-      <div className="lb-overview-status"><span className="lb-overview-ring">✓</span><span><strong>ACTIVE CONFIGURATION</strong><small>Local profile state</small></span></div>
-    </section>
 
     <div className="lb-loadout-controls-row">
     <div className="lb-profiles">
