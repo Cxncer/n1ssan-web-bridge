@@ -17,8 +17,8 @@ const armory: ArmoryDocument = {
 test('equipment assignments reference unique owned instances and preserve team-specific copies', () => {
   const document = createEmptyEquipmentDocument(armory)
   document.assignments = [
-    { team: 'T', slot: 'weapon', target: 'AK-47', itemInstanceId: 'ak-instance-a' },
-    { team: 'CT', slot: 'weapon', target: 'AK-47', itemInstanceId: 'ak-instance-b' },
+    { loadoutProfileId: 'loadout-main', team: 'T', slot: 'weapon', target: 'AK-47', itemInstanceId: 'ak-instance-a' },
+    { loadoutProfileId: 'loadout-main', team: 'CT', slot: 'weapon', target: 'AK-47', itemInstanceId: 'ak-instance-b' },
   ]
   assert.deepEqual(validateArmoryEquipmentDocument(document, armory), [])
 })
@@ -26,10 +26,10 @@ test('equipment assignments reference unique owned instances and preserve team-s
 test('equipment rejects missing instances, stack items, duplicate slots and duplicate team instances', () => {
   const document = createEmptyEquipmentDocument(armory)
   document.assignments = [
-    { team: 'T', slot: 'weapon', target: 'AK-47', itemInstanceId: 'missing' },
-    { team: 'T', slot: 'weapon', target: 'AK-47', itemInstanceId: 'ak-instance-a' },
-    { team: 'T', slot: 'knife', target: 'knife', itemInstanceId: 'ak-instance-a' },
-    { team: 'T', slot: 'gloves', target: 'gloves', itemInstanceId: 'sticker-stack' },
+    { loadoutProfileId: 'loadout-main', team: 'T', slot: 'weapon', target: 'AK-47', itemInstanceId: 'missing' },
+    { loadoutProfileId: 'loadout-main', team: 'T', slot: 'weapon', target: 'AK-47', itemInstanceId: 'ak-instance-a' },
+    { loadoutProfileId: 'loadout-main', team: 'T', slot: 'knife', target: 'knife', itemInstanceId: 'ak-instance-a' },
+    { loadoutProfileId: 'loadout-main', team: 'T', slot: 'gloves', target: 'gloves', itemInstanceId: 'sticker-stack' },
   ]
   const errors = validateArmoryEquipmentDocument(document, armory)
   assert.ok(errors.some(error => error.includes('does not exist')))
