@@ -15,6 +15,14 @@ export class EquipmentValidationError extends Error {
   constructor(details: string[]) { super('Armory equipment validation failed'); this.name = 'EquipmentValidationError'; this.details = details }
 }
 
+function isEquipmentDocumentShape(value: unknown): value is ArmoryEquipmentDocument {
+  return typeof value === 'object' && value !== null && !Array.isArray(value) &&
+    (value as Record<string, unknown>).schemaVersion === 1 &&
+    Number.isSafeInteger((value as Record<string, unknown>).inventoryRevision) &&
+    typeof (value as Record<string, unknown>).profileId === 'string' &&
+    Array.isArray((value as Record<string, unknown>).assignments)
+}
+
 export class ArmoryEquipmentStore {
   private document!: ArmoryEquipmentDocument
   private writeQueue: Promise<void> = Promise.resolve()
@@ -24,13 +32,12 @@ export class ArmoryEquipmentStore {
     await mkdir(path.dirname(this.filePath), { recursive: true })
     try {
       const parsed: unknown = JSON.parse(await readFile(this.filePath, 'utf8'))
-      const errors = validateArmoryEquipmentDocument(parsed, armory)
-      if (errors.length) {
-        // Preserve stale/invalid data for inspection; do not silently discard it.
-        this.document = createEmptyEquipmentDocument(armory)
-        return
+      if (!isEquipmentDocumentShape(parsed)) {
+        throw new Error('Invalid Armory equipment file structure')
       }
-      this.document = parsed as ArmoryEquipmentDocument
+      // Keep structurally readable but stale assignments visible to GET/snapshot
+      // diagnostics. They cannot be saved or consumed until revalidated.
+      this.document = parsed
     } catch (error) {
       if ((error as NodeJS.ErrnoException).code !== 'ENOENT') throw error
       this.document = createEmptyEquipmentDocument(armory)
