@@ -185,6 +185,7 @@ export default function LoadoutBuilder({ skins }: LoadoutBuilderProps) {
   const [seedDraft, setSeedDraft] = useState('0')
   const [profileMenuOpen, setProfileMenuOpen] = useState(false)
   const [dialog, setDialog] = useState<DialogState>(null)
+  const [activeTab, setActiveTab] = useState<'loadout' | 'diagnostics'>('loadout')
 
   // --- Color scan: weapon picker ---
   useEffect(() => {
@@ -245,11 +246,9 @@ export default function LoadoutBuilder({ skins }: LoadoutBuilderProps) {
     return () => window.removeEventListener('keydown', onKey)
   }, [])
 
-  // Sync the active profile in `profiles` whenever a loadout field changes.
-  // Called by the mutation helpers below. Not an effect, so it never fires
-  // on every keystroke.
+  // Keep the active profile snapshot current whenever a loadout field changes.
+  // Called by mutation helpers, not on every keystroke.
   function syncActiveProfile(next: { loadouts: SavedLoadouts; skinSettings: SavedSkinSettings; equipment: SavedEquipment }) {
-    setBridgeStatus('Local changes not synced')
     setProfiles(prev => prev.map(p => p.id === activeProfileId ? {
       ...p, loadouts: clone(next.loadouts), skinSettings: clone(next.skinSettings), equipment: clone(next.equipment),
     } : p))
@@ -287,7 +286,6 @@ export default function LoadoutBuilder({ skins }: LoadoutBuilderProps) {
     const outgoing = { ...activeProfile, loadouts: clone(loadouts), skinSettings: clone(skinSettings), equipment: clone(equipment) }
     setProfiles(prev => prev.map(p => p.id === outgoing.id ? outgoing : p))
     setActiveProfileId(next.id)
-    setBridgeStatus('Profile changed · not synced')
     setLoadouts(clone(next.loadouts)); setSkinSettings(clone(next.skinSettings)); setEquipment(clone(next.equipment))
     resetTransient()
   }
@@ -386,7 +384,7 @@ export default function LoadoutBuilder({ skins }: LoadoutBuilderProps) {
     }
     setLoadouts(nextLoadouts)
     syncActiveProfile({ loadouts: nextLoadouts, skinSettings: nextSkinSettings, equipment })
-    setPickerOpen(false); setPickerSearch('')
+    setPickerOpen(false); setPickerSearch(''); setActiveWeapon(null)
   }
   function equipItem(slot: EquipmentSlot, id: number | null) {
     const nextEquipment = { ...equipment, [team]: { ...equipment[team], [slot]: id } }
@@ -424,8 +422,20 @@ export default function LoadoutBuilder({ skins }: LoadoutBuilderProps) {
   const activeSettings = activeSkin ? skinSettings[team][activeSettingsKey] ?? defaults(activeSkin) : null
   const activeLimits = limits(activeSkin)
   const activeEquipmentTitle = activeEquipment ? EQUIPMENT_INFO[activeEquipment].title : ''
+  const totalEquipped = equippedCountT + equippedCountCT
+  const savedFloatSeedCount = Object.keys(skinSettings.T).length + Object.keys(skinSettings.CT).length
+  const browserStorageAvailable = (() => { try { window.localStorage.getItem(PROFILES_STORAGE_KEY); return true } catch { return false } })()
 
   return <div className="lb-workspace-shell">
+    <header className="lb-topbar">
+      <a className="lb-brand" href="?page=loadout" onClick={e => e.preventDefault()} aria-label="n1ssan Loadout home"><span className="lb-brand-mark">n.</span><span>n1ssan</span><i /><small>LOADOUT</small></a>
+      <nav className="lb-nav" aria-label="Loadout workspace tabs">
+        <button type="button" className={activeTab === 'loadout' ? 'active' : ''} aria-current={activeTab === 'loadout' ? 'page' : undefined} onClick={() => setActiveTab('loadout')}>Loadout</button>
+        <button type="button" className={activeTab === 'diagnostics' ? 'active' : ''} aria-current={activeTab === 'diagnostics' ? 'page' : undefined} onClick={() => setActiveTab('diagnostics')}>Diagnostics</button>
+      </nav>
+      <div className="lb-top-status"><span className="lb-status-indicator" />LOCAL PROFILE · {activeProfile.name}</div>
+    </header>
+    {activeTab === 'loadout' ? (
     <section className="lb-section" data-team={team}>
     <div className="lb-heading">
       <div><p className="lb-eyebrow">YOUR EQUIPMENT CONFIGURATION</p><h2>Your Loadout<span className="lb-title-accent">.</span></h2><p className="lb-subtitle">Configure every weapon and equipment slot for both sides.</p></div>
@@ -503,7 +513,7 @@ export default function LoadoutBuilder({ skins }: LoadoutBuilderProps) {
       {columns.map(col => {
         const visible = col.weapons.filter(matches)
         if (!visible.length) return null
-        return <section className="lb-column" key={col.title}>
+        return <section className={`lb-column lb-column-${col.title.toLowerCase().replace(/\s+/g, '-')}`} key={col.title}>
           <header className="lb-column-heading"><div className="lb-column-title-row"><span className="lb-column-mark">{col.title === 'PISTOLS' ? '⌁' : col.title === 'MID-TIER' ? '⌖' : col.title === 'RIFLES' ? '⌁' : '⌕'}</span><h3>{col.title}</h3></div><p>{col.subtitle}</p></header>
           <div className="lb-column-cards">{visible.map(weapon => {
             const s = selectedSkin(weapon), img = s ? imageOf(s) : placeholder(weapon)
@@ -557,5 +567,27 @@ export default function LoadoutBuilder({ skins }: LoadoutBuilderProps) {
       <div className="lb-dialog-actions"><button type="button" className="lb-dialog-cancel" onClick={() => setDialog(null)}>Cancel</button><button type="submit" className={`lb-dialog-confirm ${dialog.mode === 'delete' || dialog.mode === 'clear' ? 'danger' : ''}`} disabled={['create', 'duplicate', 'rename'].includes(dialog.mode) && !dialog.value.trim()}>{dialog.mode === 'create' ? 'Create profile' : dialog.mode === 'duplicate' ? 'Duplicate profile' : dialog.mode === 'rename' ? 'Save name' : dialog.mode === 'delete' ? 'Delete profile' : 'Clear loadout'}</button></div>
     </form></div>}
     </section>
+    ) : (
+      <section className="lb-section lb-diagnostics-page">
+        <div className="lb-breadcrumb"><span>WORKSPACE</span><b>/</b><strong>DIAGNOSTICS</strong></div>
+        <div className="lb-heading lb-diagnostics-heading">
+          <div><p className="lb-eyebrow">LOCAL WORKSPACE HEALTH</p><h2>Diagnostics<span className="lb-title-accent">.</span></h2><p className="lb-subtitle">A read-only overview of the Loadout page, saved profiles, and local browser data.</p></div>
+          <div className="lb-diagnostics-status"><span className={`lb-diagnostics-dot ${browserStorageAvailable ? 'is-ready' : 'is-warning'}`} /><div><strong>{browserStorageAvailable ? 'LOCAL STORAGE AVAILABLE' : 'LOCAL STORAGE UNAVAILABLE'}</strong><small>Browser persistence check</small></div></div>
+        </div>
+        <div className="lb-diagnostics-grid">
+          <article className="lb-diagnostic-card"><span>SKIN CATALOGUE</span><strong>{skins.length.toLocaleString()}</strong><small>Items loaded into this page</small></article>
+          <article className="lb-diagnostic-card"><span>SAVED PROFILES</span><strong>{profiles.length}</strong><small>Current: {activeProfile.name}</small></article>
+          <article className="lb-diagnostic-card"><span>EQUIPPED ITEMS</span><strong>{totalEquipped}</strong><small>T: {equippedCountT} · CT: {equippedCountCT}</small></article>
+          <article className="lb-diagnostic-card"><span>FLOAT / SEED RECORDS</span><strong>{savedFloatSeedCount}</strong><small>Saved skin setting entries</small></article>
+        </div>
+        <div className="lb-diagnostics-panel">
+          <div className="lb-diagnostics-panel-heading"><div><p className="lb-eyebrow">INTEGRATION CHECKS</p><h3>Runtime connections</h3></div><span>READ ONLY</span></div>
+          <div className="lb-diagnostics-row"><div><strong>Browser storage</strong><small>Loadout profiles, equipment, float values, and seeds</small></div><span className={`diagnostic-state ${browserStorageAvailable ? 'ready' : 'warning'}`}>{browserStorageAvailable ? 'AVAILABLE' : 'UNAVAILABLE'}</span></div>
+          <div className="lb-diagnostics-row"><div><strong>DOMINATE Bridge</strong><small>This standalone page does not currently query live Bridge health.</small></div><span className="diagnostic-state neutral">NOT REPORTED</span></div>
+          <div className="lb-diagnostics-row"><div><strong>n1ssan DLL</strong><small>DLL readiness is not inferred from browser-side Loadout data.</small></div><span className="diagnostic-state neutral">NOT REPORTED</span></div>
+        </div>
+        <p className="lb-diagnostics-note">Diagnostics is intentionally read-only. It does not modify your loadout or claim that the Bridge or DLL is ready.</p>
+      </section>
+    )}
   </div>
 }
