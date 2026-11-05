@@ -2798,276 +2798,33 @@ button.lb-loadout-item-foot:hover {
     transition-duration: .01ms !important;
   }
 }
-
-
-/* Loadout skin cards now use Obsidian's native .ob-item-card DOM and design rules. */
-.lb-section .ob-item-card { cursor: pointer; }
-.lb-section .ob-item-card:focus-visible { outline: 2px solid #9caf9f; outline-offset: 3px; }
-.lb-section .ob-item-card .lb-card-hover-action {
-  position: absolute;
-  z-index: 4;
-  right: 10px;
-  bottom: 10px;
-  opacity: 0;
-  transition: opacity .2s;
-}
-.lb-section .ob-item-card:hover .lb-card-hover-action,
-.lb-section .ob-item-card:focus-visible .lb-card-hover-action { opacity: 1; }
-.lb-section .ob-item-card .ob-item-foot {
-  width: 100%;
-  margin: 0;
-  background: transparent;
-  text-align: left;
-  cursor: pointer;
-}
-.lb-section .ob-item-card .ob-item-foot:hover { color: #e4e9e4; }
-.lb-section .ob-item-card .item-remove-x {
-  position: absolute;
-  z-index: 5;
-  top: 9px;
-  right: 9px;
-  opacity: 0;
-}
-.lb-section .ob-item-card:hover .item-remove-x,
-.lb-section .ob-item-card .item-remove-x:focus-visible { opacity: 1; }
-.lb-section .ob-item-card .ob-item-copy > small {
-  display: block;
-  margin-top: 5px;
-  color: #829087;
-  font: 9px 'DM Mono',monospace;
-}
-
-
-/* Native Obsidian inventory-card styles — mirrored from obsidian.css */
-.lb-section .ob-item-card {
-  --rarity:#a9b5ac;
-  --rarity-rgb:169,181,172;
-  position:relative;
-  display:block;
-  min-width:0;
-  padding:0;
-  overflow:hidden;
-  border:1px solid color-mix(in srgb,var(--rarity) 28%,#252c28);
-  border-radius:12px;
-  background:linear-gradient(155deg,color-mix(in srgb,var(--rarity) 8%,#1b211d),#151a17 62%);
-  color:#e5e9e5;
-  text-align:left;
-  box-shadow:0 9px 28px #0004;
-  isolation:isolate;
-  transition:border-color .2s,transform .2s,box-shadow .2s;
-  cursor:pointer;
-}
-.lb-section .ob-item-card:before {
-  content:'';
-  position:absolute;
-  inset:0 0 auto;
-  height:3px;
-  background:linear-gradient(90deg,transparent,var(--rarity),transparent);
-  opacity:.9;
-  z-index:3;
-  pointer-events:none;
-}
-.lb-section .ob-item-card:hover {
-  border-color:color-mix(in srgb,var(--rarity) 75%,#fff);
-  transform:translateY(-2px);
-  box-shadow:0 14px 32px #0008,0 0 22px rgba(var(--rarity-rgb),.12);
-}
-.lb-section .ob-item-card:focus-visible { outline:2px solid #9caf9f; outline-offset:3px; }
-.lb-section .ob-item-art {
-  height:168px;
-  position:relative;
-  display:grid;
-  place-items:center;
-  overflow:hidden;
-  background:radial-gradient(ellipse at 50% 58%,rgba(var(--rarity-rgb),.22),transparent 66%),linear-gradient(145deg,#262d28,#151a17 75%);
-  border-bottom:1px solid color-mix(in srgb,var(--rarity) 23%,#2b322e);
-}
-.lb-section .ob-item-art:after {
-  content:'';
-  position:absolute;
-  inset:0;
-  background:linear-gradient(135deg,transparent 40%,#ffffff05 50%,transparent 60%);
-  pointer-events:none;
-}
-.lb-section .ob-item-art img {
-  position:relative;
-  z-index:1;
-  width:88%;
-  height:82%;
-  object-fit:contain;
-  filter:drop-shadow(0 14px 17px #000b);
-  transition:transform .3s;
-}
-.lb-section .ob-item-card:hover .ob-item-art img { transform:scale(1.06); }
-.lb-section .ob-item-art .item-glow {
-  position:absolute;
-  width:170px;
-  height:90px;
-  border-radius:50%;
-  background:#90a99517;
-  filter:blur(35px);
-}
-.lb-section .ob-item-art .item-rarity {
-  position:absolute;
-  z-index:2;
-  top:12px;
-  right:12px;
-  color:var(--rarity);
-  font:500 8px 'DM Mono',monospace;
-  letter-spacing:.8px;
-  text-transform:uppercase;
-  text-shadow:0 1px 8px #000;
-}
-.lb-section .ob-item-copy { min-width:0; padding:13px 14px 15px; }
-.lb-section .ob-item-weapon {
-  display:flex;
-  align-items:center;
-  gap:7px;
-  color:#c0c9c1;
-  font:10px 'DM Mono',monospace;
-  letter-spacing:.8px;
-  text-transform:uppercase;
-}
-.lb-section .ob-item-copy>strong {
-  display:block;
-  min-height:38px;
-  margin:5px 0 12px;
-  color:#fff;
-  font:600 14px/1.35 Barlow,sans-serif;
-  overflow-wrap:normal;
-}
-.lb-section .ob-item-copy>small {
-  display:block;
-  margin-top:5px;
-  color:#829087;
-  font:9px 'DM Mono',monospace;
-}
-.lb-section .ob-item-foot {
-  display:flex;
-  align-items:center;
-  gap:18px;
-  width:100%;
-  margin:0;
-  padding:10px 0 0;
-  border:0;
-  border-top:1px solid #2b322e;
-  color:#a0aaa2;
-  background:transparent;
-  font:9px 'DM Mono',monospace;
-  letter-spacing:.5px;
-  text-align:left;
-  box-shadow:none;
-  white-space:nowrap;
-  cursor:pointer;
-}
-.lb-section .ob-item-foot b { margin-left:4px; color:#e4e9e4; font-weight:400; }
-.lb-section .ob-item-foot .float-wear {
-  margin-left:auto;
-  padding:2px 5px;
-  border:1px solid color-mix(in srgb,var(--rarity) 45%,#444);
-  border-radius:3px;
-  color:var(--rarity);
-  background:#111513;
-  font:8px 'DM Mono',monospace;
-}
-.lb-section .ob-item-foot:hover { color:#fff; }
-.lb-section .ob-item-card .item-remove-x {
-  position:absolute;
-  z-index:5;
-  top:9px;
-  right:9px;
-  display:grid;
-  width:24px;
-  height:24px;
-  place-items:center;
-  padding:0;
-  border:1px solid #39433d;
-  border-radius:4px;
-  color:#aab4ac;
-  background:#171d1acc;
-  opacity:0;
-  cursor:pointer;
-  transition:opacity .2s,border-color .2s,color .2s;
-}
-.lb-section .ob-item-card:hover .item-remove-x,
-.lb-section .ob-item-card .item-remove-x:focus-visible { opacity:1; }
-.lb-section .ob-item-card .item-remove-x:hover { border-color:#9a625b; color:#f1c1b9; background:#35211f; }
-.lb-section .ob-item-card.rarity-card-consumer-grade,
-.lb-section .ob-item-card.rarity-card-base-grade { --rarity:#b0c3d9; --rarity-rgb:176,195,217; }
-.lb-section .ob-item-card.rarity-card-industrial-grade,
-.lb-section .ob-item-card.rarity-card-high-grade { --rarity:#5e98d9; --rarity-rgb:94,152,217; }
-.lb-section .ob-item-card.rarity-card-mil-spec-grade,
-.lb-section .ob-item-card.rarity-card-remarkable { --rarity:#4b69ff; --rarity-rgb:75,105,255; }
-.lb-section .ob-item-card.rarity-card-restricted,
-.lb-section .ob-item-card.rarity-card-exotic { --rarity:#8847ff; --rarity-rgb:136,71,255; }
-.lb-section .ob-item-card.rarity-card-classified,
-.lb-section .ob-item-card.rarity-card-extraordinary { --rarity:#d32ce6; --rarity-rgb:211,44,230; }
-.lb-section .ob-item-card.rarity-card-covert,
-.lb-section .ob-item-card.rarity-card-master { --rarity:#eb4b4b; --rarity-rgb:235,75,75; }
-.lb-section .ob-item-card.rarity-card-contraband { --rarity:#e4ae39; --rarity-rgb:228,174,57; }
-.lb-section .ob-item-card .lb-card-hover-action {
-  position:absolute;
-  z-index:4;
-  right:10px;
-  bottom:10px;
-  padding:6px 10px;
-  border:1px solid #526257;
-  border-radius:4px;
-  color:#dce5de;
-  background:#171d1ad9;
-  font:8px 'DM Mono',monospace;
-  letter-spacing:.7px;
-  opacity:0;
-  transition:opacity .2s;
-}
-.lb-section .ob-item-card:hover .lb-card-hover-action,
-.lb-section .ob-item-card:focus-visible .lb-card-hover-action { opacity:1; }
-@media(max-width:680px) {
-  .lb-section .ob-item-art { height:135px; }
-  .lb-section .ob-item-copy { padding:11px; }
-  .lb-section .ob-item-copy>strong { font-size:12px; }
-  .lb-section .ob-item-foot { gap:9px; font-size:7px; }
-}
-
-
-/* Obsidian inventory grid geometry, applied to each Loadout weapon family. */
-.lb-section .ob-item-grid {
-  display: grid;
-  grid-template-columns: repeat(5, minmax(0, 1fr));
-  gap: 15px;
-  width: 100%;
-  min-width: 0;
-}
-.lb-section .ob-item-card .item-open {
-  position: absolute;
-  right: 13px;
-  bottom: 14px;
-  color: #7c8d80;
-  opacity: 0;
-  transition: opacity .2s;
-  pointer-events: none;
-}
-.lb-section .ob-item-card:hover .item-open,
-.lb-section .ob-item-card:focus-visible .item-open { opacity: 1; }
-@media (max-width: 1180px) {
-  .lb-section .ob-item-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); }
-}
-@media (max-width: 900px) {
-  .lb-section .ob-item-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
-}
-@media (max-width: 680px) {
-  .lb-section .ob-item-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
-  .lb-section .ob-item-art { height: 120px; }
-  .lb-section .ob-item-copy { padding: 10px 9px; }
-  .lb-section .ob-item-copy > strong { font-size: 11px; min-height: 31px; }
-  .lb-section .ob-item-foot { gap: 5px; font-size: 7px; flex-wrap: wrap; }
-}
-@media (max-width: 420px) {
-  .lb-section .ob-item-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
-  .lb-section .ob-item-art { height: 100px; }
-  .lb-section .ob-item-copy > strong { font-size: 10px; }
-  .lb-section .ob-item-foot { font-size: 6px; }
-}
-
-/* Temporary visual reset: disable the old weapon-card decoration. */
-.lb-section .ob-item-card,.lb-section .ob-item-card:before,.lb-section .ob-item-card:after{border:0!important;box-shadow:none!important;background-image:none!important;}
+/* Course Design Cards adaptation — legacy Loadout card visuals removed. */
+.lb-section .course-skin-grid{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:22px;width:100%;min-width:0}
+.lb-section .course-skin-card{--course-accent:#01c3a8;position:relative;display:grid;grid-template-rows:auto 1fr auto;min-width:0;min-height:330px;padding:0;overflow:hidden;border:0;border-radius:22px;color:#fff;background:radial-gradient(ellipse at right top,color-mix(in srgb,var(--course-accent) 35%,transparent) 0%,#151419 48%,#151419 100%);box-shadow:0 10px 25px #000c;text-align:left;cursor:pointer;transition:transform .2s,box-shadow .2s}
+.lb-section .course-skin-card:before{content:"";position:absolute;inset:0;z-index:0;padding:2px;border-radius:22px;background:linear-gradient(45deg,#232228,#232228,#232228,#232228,var(--course-accent));-webkit-mask:linear-gradient(#fff 0 0) content-box,linear-gradient(#fff 0 0);-webkit-mask-composite:xor;mask-composite:exclude;pointer-events:none}
+.lb-section .course-skin-card:hover{transform:translateY(-3px);box-shadow:0 16px 32px #000e}
+.lb-section .course-skin-card.green{--course-accent:#01c3a8}.lb-section .course-skin-card.blue{--course-accent:#1890ff}.lb-section .course-skin-card.orange{--course-accent:#ffb741}.lb-section .course-skin-card.red{--course-accent:#a63d2a}
+.lb-section .course-skin-header{display:flex;align-items:center;gap:7px;min-width:0;padding:13px 14px 0 17px;color:#ddd;font:600 9px/1.3 'Nunito',sans-serif}
+.lb-section .course-skin-weapon{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.lb-section .course-skin-rarity{margin-left:auto;color:#bfc5c2;font:8px 'DM Mono',monospace;text-transform:uppercase;white-space:nowrap}
+.lb-section .course-skin-remove{flex:none;width:21px;height:21px;padding:0;border:0;border-radius:50%;color:#ddd;background:#ffffff12;font-size:15px;line-height:1;opacity:.65;cursor:pointer}
+.lb-section .course-skin-remove:hover{color:#fff;background:#ffffff2b;opacity:1}
+.lb-section .course-skin-body{display:flex;flex-direction:column;justify-content:center;min-width:0;padding:9px 16px 13px;text-align:center}
+.lb-section .course-skin-art{display:grid;place-items:center;width:100%;height:142px;margin:0 auto 5px;overflow:hidden;background:transparent!important;border:0!important}
+.lb-section .course-skin-art img{width:100%;height:100%;object-fit:contain;filter:drop-shadow(0 12px 15px #000b);transition:transform .25s}
+.lb-section .course-skin-card:hover .course-skin-art img{transform:scale(1.055)}
+.lb-section .course-skin-art>span{color:#747b78;font:9px 'DM Mono',monospace}
+.lb-section .course-skin-body h3,.lb-section .course-skin-body strong{display:block;margin:5px 0 3px;color:#fff;font:700 16px/1.25 'Nunito',sans-serif;overflow-wrap:anywhere;text-transform:capitalize}
+.lb-section .course-skin-body p{min-height:16px;margin:0;color:#ddd;font:10px/1.4 'Nunito',sans-serif;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.lb-section .course-skin-progress{margin-top:13px;text-align:left}
+.lb-section .course-skin-progress-label{display:flex;justify-content:space-between;gap:8px;margin-bottom:5px;color:#fff;font:600 8px 'Nunito',sans-serif}
+.lb-section .course-skin-progress-track{height:4px;overflow:hidden;border-radius:99px;background:#363636}
+.lb-section .course-skin-progress-track span{display:block;height:100%;border-radius:99px;background:var(--course-accent)}
+.lb-section .course-skin-progress small{display:block;margin-top:4px;color:#aaa;font:8px 'DM Mono',monospace;text-align:right}
+.lb-section .course-skin-footer{display:flex;align-items:center;justify-content:space-between;gap:8px;min-width:0;min-height:43px;padding:8px 13px 8px 16px;border-top:1px solid #292929;border-radius:0 0 22px 22px;background:#151419;color:#ddd;font:8px 'DM Mono',monospace}
+.lb-section .course-skin-footer span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.lb-section .course-skin-footer b{color:var(--course-accent)}
+.lb-section .course-skin-glow,.lb-section .course-skin-open{display:none!important}
+@media(max-width:1180px){.lb-section .course-skin-grid{grid-template-columns:repeat(4,minmax(0,1fr));gap:16px}}
+@media(max-width:900px){.lb-section .course-skin-grid{grid-template-columns:repeat(3,minmax(0,1fr))}}
+@media(max-width:680px){.lb-section .course-skin-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}.lb-section .course-skin-card{min-height:290px;border-radius:18px}.lb-section .course-skin-card:before{border-radius:18px}.lb-section .course-skin-art{height:112px}.lb-section .course-skin-body{padding:8px 10px 10px}.lb-section .course-skin-body strong{font-size:13px}.lb-section .course-skin-footer{padding-inline:10px;border-radius:0 0 18px 18px}}
