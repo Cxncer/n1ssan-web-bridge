@@ -3068,3 +3068,6 @@ button.lb-loadout-item-foot:hover {
   .lb-section .ob-item-copy > strong { font-size: 10px; }
   .lb-section .ob-item-foot { font-size: 6px; }
 }
+
+/* Temporary visual reset: disable the old weapon-card decoration. */
+.lb-section .ob-item-card,.lb-section .ob-item-card:before,.lb-section .ob-item-card:after{border:0!important;box-shadow:none!important;background-image:none!important;}
