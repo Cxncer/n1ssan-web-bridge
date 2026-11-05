@@ -515,39 +515,47 @@ export default function LoadoutBuilder({ skins }: LoadoutBuilderProps) {
         if (!visible.length) return null
         return <section className={`lb-column lb-column-${col.title.toLowerCase().replace(/\s+/g, '-')}`} key={col.title}>
           <header className="lb-column-heading"><div className="lb-column-title-row"><span className="lb-column-mark">{col.title === 'PISTOLS' ? '⌁' : col.title === 'MID-TIER' ? '⌖' : col.title === 'RIFLES' ? '⌁' : '⌕'}</span><h3>{col.title}</h3></div><p>{col.subtitle}</p></header>
-          <div className="lb-column-cards">{visible.map(weapon => {
-            const s = selectedSkin(weapon), img = s ? imageOf(s) : placeholder(weapon)
+          <div className={`ob-item-grid ${visible.length ? '' : 'is-empty'}`}>{visible.map(weapon => {
+            const s = selectedSkin(weapon)
+            const img = s ? imageOf(s) : placeholder(weapon)
             const st = s ? skinSettings[team][settingsKey(weapon, s.id)] ?? defaults(s) : null
+            const grade = s ? rarityClass(s.rarity) : 'base-grade'
+            const category = col.title.toLowerCase().replace(/\\s+/g, '-')
             return <div
-              key={weapon}
-              className={`ob-item-card rarity-card-${s ? rarityClass(s.rarity) : 'base-grade'} ${s ? 'is-equipped' : 'is-empty'}`}
               role="button"
               tabIndex={0}
-              aria-label={`Choose a skin for ${weapon}`}
-              onClick={() => openPicker(weapon)}
+              key={weapon}
+              className={`ob-item-card rarity-card-${grade} item-category-${category} ${s ? 'is-equipped' : 'is-empty'}`}
+              aria-label={`${weapon}: ${s ? s.name : 'No skin equipped'}. Choose skin.`}
               onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); openPicker(weapon) } }}
+              onClick={() => openPicker(weapon)}
             >
-              <button type="button" className="item-remove-x" title={`Remove ${weapon} skin`} aria-label={`Remove ${weapon} skin`} onClick={e => { e.stopPropagation(); equipSkin(weapon, null) }}>×</button>
-              <div className={`ob-item-art rarity-${s ? rarityClass(s.rarity) : 'base-grade'}`}>
+              <button
+                type="button"
+                className="item-remove-x"
+                aria-label={`Remove ${weapon} skin`}
+                title="Remove item"
+                onClick={e => { e.stopPropagation(); equipSkin(weapon, null) }}
+              >×</button>
+              <div className={`ob-item-art rarity-${grade}`}>
                 <span className="item-glow" />
                 {img
-                  ? <img src={img} alt={s ? s.name : `${weapon} placeholder`} className={s ? 'lb-equipped-image' : 'lb-placeholder-image'} loading="lazy" />
+                  ? <img src={img} alt="" loading="lazy" />
                   : <span className="item-fallback">NO IMAGE</span>}
                 <span className="item-rarity">{s?.rarity ?? 'EMPTY SLOT'}</span>
-                <span className="lb-card-hover-action">{s ? 'CHANGE SKIN' : 'CHOOSE SKIN'}</span>
               </div>
               <div className="ob-item-copy">
                 <div className="ob-item-weapon">{weapon}</div>
                 <strong>{s ? s.name : 'No skin equipped'}</strong>
-                {!s && <small>{img ? 'Default preview' : 'Image unavailable'}</small>}
-                {s && st
-                  ? <button type="button" className="ob-item-foot" onClick={e => { e.stopPropagation(); openSettings(weapon) }} aria-label={`Edit float and seed for ${weapon}`} title="Edit float and pattern seed">
-                      <span>FLOAT <b>{st.float.toFixed(6)}</b></span>
-                      <span>SEED <b>{st.seed}</b></span>
-                      <span className="float-wear">{wearCode(st.float)}</span>
-                    </button>
-                  : <div className="ob-item-foot"><span>NO FINISH EQUIPPED</span></div>}
+                <div className="ob-item-foot">
+                  {s && st ? <>
+                    <span>FLOAT <b>{st.float.toFixed(5)}</b></span>
+                    <span>SEED <b>{st.seed}</b></span>
+                    <span className="float-wear">{wearCode(st.float)}</span>
+                  </> : null}
+                </div>
               </div>
+              <span className="item-open">↗</span>
             </div>
           })}</div>
         </section>
