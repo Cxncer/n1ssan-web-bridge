@@ -3615,3 +3615,28 @@ button.lb-loadout-item-foot:hover {
   justify-content: center;
   cursor: default;
 }
+
+
+/* Keep the shared artwork + title + Float bar inside the card's content area. */
+.lb-section .lb-board {
+  min-width: 0;
+  width: 100%;
+  grid-template-columns: repeat(7, minmax(170px, 1fr));
+  overflow-x: auto;
+}
+.lb-section .course-design-card .course-card-art {
+  flex-basis: 70px;
+  height: 70px;
+  min-height: 70px;
+  margin-bottom: 4px;
+}
+.lb-section .course-design-card .card-body h3 {
+  max-height: 32px;
+  margin: 1px 0 2px;
+}
+.lb-section .course-design-card .progress {
+  margin-top: 3px;
+}
+.lb-section .course-design-card .progress .course-card-float-value {
+  margin-bottom: 3px;
+}
