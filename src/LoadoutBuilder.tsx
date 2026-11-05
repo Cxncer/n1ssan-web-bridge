@@ -16,7 +16,7 @@ type EquipmentSlot = 'agent' | 'knife' | 'gloves' | 'zeus'
 type TeamEquipment = Record<EquipmentSlot, number | null>
 type SavedEquipment = Record<Team, TeamEquipment>
 type LoadoutBuilderProps = { skins: Skin[] }
-type WeaponColumn = { title: string; subtitle: string; weapons: string[] }
+type WeaponColumn = { title: string; weapons: string[] }
 type LoadoutProfile = { id: string; name: string; loadouts: SavedLoadouts; skinSettings: SavedSkinSettings; equipment: SavedEquipment }
 type DialogState = { mode: 'create' | 'duplicate' | 'rename' | 'delete' | 'clear'; value: string } | null
 
@@ -38,16 +38,16 @@ const emptyEquipment: SavedEquipment = { T: { ...emptyTeamEquipment }, CT: { ...
 
 const TEAM_WEAPONS: Record<Team, WeaponColumn[]> = {
   T: [
-    { title: 'PISTOLS', subtitle: 'SIDEARMS', weapons: ['Glock-18', 'Dual Berettas', 'P250', 'Tec-9', 'CZ75-Auto', 'Desert Eagle', 'R8 Revolver'] },
-    { title: 'MID-TIER', subtitle: 'SMGs · SHOTGUNS · MACHINE GUNS', weapons: ['MAC-10', 'MP7', 'MP5-SD', 'UMP-45', 'P90', 'PP-Bizon', 'Nova', 'XM1014', 'Sawed-Off', 'M249', 'Negev'] },
-    { title: 'RIFLES', subtitle: 'ASSAULT RIFLES', weapons: ['Galil AR', 'AK-47', 'SG 553'] },
-    { title: 'SNIPERS', subtitle: 'PRECISION', weapons: ['SSG 08', 'AWP', 'G3SG1'] },
+    { title: 'PISTOLS', weapons: ['Glock-18', 'Dual Berettas', 'P250', 'Tec-9', 'CZ75-Auto', 'Desert Eagle', 'R8 Revolver'] },
+    { title: 'MID-TIER', weapons: ['MAC-10', 'MP7', 'MP5-SD', 'UMP-45', 'P90', 'PP-Bizon', 'Nova', 'XM1014', 'Sawed-Off', 'M249', 'Negev'] },
+    { title: 'RIFLES', weapons: ['Galil AR', 'AK-47', 'SG 553'] },
+    { title: 'SNIPERS', weapons: ['SSG 08', 'AWP', 'G3SG1'] },
   ],
   CT: [
-    { title: 'PISTOLS', subtitle: 'SIDEARMS', weapons: ['USP-S', 'P2000', 'Dual Berettas', 'P250', 'Five-SeveN', 'CZ75-Auto', 'Desert Eagle', 'R8 Revolver'] },
-    { title: 'MID-TIER', subtitle: 'SMGs · SHOTGUNS · MACHINE GUNS', weapons: ['MP9', 'MP7', 'MP5-SD', 'UMP-45', 'P90', 'PP-Bizon', 'Nova', 'XM1014', 'MAG-7', 'M249', 'Negev'] },
-    { title: 'RIFLES', subtitle: 'ASSAULT RIFLES', weapons: ['FAMAS', 'M4A4', 'M4A1-S', 'AUG'] },
-    { title: 'SNIPERS', subtitle: 'PRECISION', weapons: ['SSG 08', 'AWP', 'SCAR-20'] },
+    { title: 'PISTOLS', weapons: ['USP-S', 'P2000', 'Dual Berettas', 'P250', 'Five-SeveN', 'CZ75-Auto', 'Desert Eagle', 'R8 Revolver'] },
+    { title: 'MID-TIER', weapons: ['MP9', 'MP7', 'MP5-SD', 'UMP-45', 'P90', 'PP-Bizon', 'Nova', 'XM1014', 'MAG-7', 'M249', 'Negev'] },
+    { title: 'RIFLES', weapons: ['FAMAS', 'M4A4', 'M4A1-S', 'AUG'] },
+    { title: 'SNIPERS', weapons: ['SSG 08', 'AWP', 'SCAR-20'] },
   ],
 }
 const TEAM_IMAGES: Record<Team, string> = {
@@ -521,7 +521,7 @@ export default function LoadoutBuilder({ skins }: LoadoutBuilderProps) {
         const visible = col.weapons.filter(matches)
         if (!visible.length) return null
         return <section className={`lb-column lb-column-${col.title.toLowerCase().replace(/\s+/g, '-')}`} key={col.title}>
-          <header className="lb-column-heading"><div className="lb-column-title-row"><span className="lb-column-mark">{col.title === 'PISTOLS' ? '⌁' : col.title === 'MID-TIER' ? '⌖' : col.title === 'RIFLES' ? '⌁' : '⌕'}</span><h3>{col.title}</h3></div><p>{col.subtitle}</p></header>
+          <header className="lb-column-heading"><div className="lb-column-title-row"><span className="lb-column-mark">{col.title === 'PISTOLS' ? '⌁' : col.title === 'MID-TIER' ? '⌖' : col.title === 'RIFLES' ? '⌁' : '⌕'}</span><h3>{col.title}</h3></div></header>
           <div className="course-skin-grid">{visible.map(weapon => {
             const s = selectedSkin(weapon)
             const img = s ? imageOf(s) : placeholder(weapon)
@@ -556,7 +556,7 @@ export default function LoadoutBuilder({ skins }: LoadoutBuilderProps) {
                   {img ? <img src={img} alt={s?.name ?? weapon} loading="lazy" /> : <span>NO IMAGE</span>}
                 </div>
                 <h3>{s ? s.name : 'Choose a skin'}</h3>
-                <p>{s ? (s.description || s.rarity) : 'Select a finish from your catalogue'}</p>
+                
                 {s && st && <div className="progress">
                   <span>FLOAT</span>
                   <div className="progress-bar"><span style={{ width: `${floatPercent}%`, backgroundColor: floatColor(st.float) }} /></div>
