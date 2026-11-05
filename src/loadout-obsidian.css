@@ -3357,3 +3357,33 @@ button.lb-loadout-item-foot:hover {
   max-height: 230px;
   justify-self: center;
 }
+
+
+/* Restore clear Float visibility within the compact 230px skin cards. */
+.lb-section .course-design-card .card-body {
+  top: 45%;
+  z-index: 2;
+}
+.lb-section .course-design-card .course-card-art {
+  height: 82px;
+  margin-bottom: 2px;
+}
+.lb-section .course-design-card .progress {
+  display: block;
+  margin-top: 7px;
+  text-align: left;
+}
+.lb-section .course-design-card .progress > span:first-child {
+  margin-bottom: 5px;
+  color: #fff;
+  font: 700 10px/1.2 "Barlow", sans-serif;
+}
+.lb-section .course-design-card .progress .progress-bar {
+  height: 5px;
+}
+.lb-section .course-design-card .progress > span:last-child {
+  margin-top: 5px;
+  color: #fff;
+  font: 10px/1.2 "Barlow", monospace;
+  text-align: right;
+}
