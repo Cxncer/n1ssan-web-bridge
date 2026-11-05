@@ -3262,3 +3262,44 @@ button.lb-loadout-item-foot:hover {
     font-size:8px;
   }
 }
+
+
+/* Compact every Loadout card by a further 20%; keep Equipment in lockstep. */
+.lb-section .course-design-card.card,
+.lb-section .course-design-card.card.course-equipment-card {
+  min-height:223px;
+}
+.lb-section .course-design-card .course-card-art,
+.lb-section .course-equipment-card .course-card-art {
+  height:96px;
+}
+.lb-section .course-design-card .card-body h3,
+.lb-section .course-equipment-card .card-body h3 {
+  max-height:36px;
+  margin:5px 0 2px;
+  font-size:15px;
+}
+.lb-section .course-design-card .card-footer,
+.lb-section .course-equipment-card .card-footer {
+  min-height:41px;
+  padding:7px 15px 8px;
+}
+@media(max-width:680px) {
+  .lb-section .course-design-card.card,
+  .lb-section .course-design-card.card.course-equipment-card {
+    min-height:210px;
+  }
+  .lb-section .course-design-card .course-card-art,
+  .lb-section .course-equipment-card .course-card-art {
+    height:84px;
+  }
+  .lb-section .course-design-card .card-body h3,
+  .lb-section .course-equipment-card .card-body h3 {
+    font-size:13px;
+  }
+  .lb-section .course-design-card .card-footer,
+  .lb-section .course-equipment-card .card-footer {
+    min-height:38px;
+    padding:6px 10px;
+  }
+}
