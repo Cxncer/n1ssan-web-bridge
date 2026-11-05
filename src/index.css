@@ -1,7 +1,9 @@
 
+@import url('https://fonts.googleapis.com/css2?family=Barlow:wght@400;500;600;700;800&family=Barlow+Condensed:wght@500;600;700&display=swap');
+
 :root {
   color-scheme: dark;
-  font-family: 'DM Sans', sans-serif;
+  font-family: 'Barlow', sans-serif;
   background: #101012;
   color: #eeedf0;
 }
@@ -20,7 +22,7 @@ body {
 }
 
 body, button, input, select {
-  font-family: 'DM Sans', sans-serif;
+  font-family: 'Barlow', sans-serif;
 }
 
 button, input, select {
