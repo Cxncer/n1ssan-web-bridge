@@ -3303,3 +3303,28 @@ button.lb-loadout-item-foot:hover {
     padding:6px 10px;
   }
 }
+
+/* Match every weapon skin card to the Equipment card's exact footprint. */
+.lb-section .course-design-card.card,
+.lb-section .course-design-card.card.course-equipment-card {
+  box-sizing:border-box;
+  width:95%;
+  height:223px;
+  min-height:223px;
+  justify-self:center;
+}
+@media(max-width:680px) {
+  .lb-section .course-design-card.card,
+  .lb-section .course-design-card.card.course-equipment-card {
+    height:210px;
+    min-height:210px;
+  }
+  /* Equipment is one card per row; keep every weapon category consistent. */
+  .lb-section .course-skin-grid,
+  .lb-section .lb-column-pistols .course-skin-grid,
+  .lb-section .lb-column-mid-tier .course-skin-grid,
+  .lb-section .lb-column-rifles .course-skin-grid,
+  .lb-section .lb-column-snipers .course-skin-grid {
+    grid-template-columns:minmax(0,1fr);
+  }
+}
