@@ -554,7 +554,7 @@ export default function LoadoutBuilder({ skins }: LoadoutBuilderProps) {
                 <div className="course-card-art">
                   {img ? <img src={img} alt={s?.name ?? weapon} loading="lazy" /> : <span>NO IMAGE</span>}
                 </div>
-                <h3>{s ? s.name : 'Choose a skin'}</h3>
+                {s && <h3>{s.name}</h3>}
                 
                 {s && st && <div className="progress">
                   <span>FLOAT</span>
