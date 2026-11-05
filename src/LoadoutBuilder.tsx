@@ -481,7 +481,7 @@ export default function LoadoutBuilder({ skins }: LoadoutBuilderProps) {
 
     <div className={`lb-board lb-board-${team.toLowerCase()}`}>
       <section className="lb-equipment-column">
-        <header className="lb-column-heading"><div className="lb-column-title-row"><span className="lb-column-mark">◇</span><h3>EQUIPMENT</h3></div><p>AGENT · KNIFE · GLOVES · ZEUS</p></header>
+        <header className="lb-column-heading"><div className="lb-column-title-row"><span className="lb-column-mark">◇</span><h3>EQUIPMENT</h3></div></header>
         <div className="lb-equipment-cards">{(['agent', 'knife', 'gloves', 'zeus'] as EquipmentSlot[]).map(slot => {
           const info = EQUIPMENT_INFO[slot], item = selectedItem(slot), img = item ? imageOf(item) : ''
           const label = slot === 'agent' ? `${team} Agent` : info.title
