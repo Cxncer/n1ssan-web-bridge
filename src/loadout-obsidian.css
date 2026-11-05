@@ -3331,8 +3331,8 @@ button.lb-loadout-item-foot:hover {
 
 
 /* Match every skin card to the requested fixed Equipment footprint. */
-/* One fixed desktop card size for Equipment and every weapon category. */
-.lb-section .course-design-card.card,
+/* Override the earlier weapon-only min-height rule as well as Equipment sizing. */
+.lb-section .course-design-card.card:not(.course-equipment-card),
 .lb-section .course-design-card.card.course-equipment-card {
   box-sizing: border-box;
   width: 160px;
