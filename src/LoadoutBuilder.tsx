@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
 import './LoadoutBuilder.css'
-import './loadout-obsidian.css'
+import './loadout-obsidian.css' // Loadout-specific visual layer
 import { findImageColorMatches } from './skinColorDetection'
 
 export type Skin = {
