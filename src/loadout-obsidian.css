@@ -3343,3 +3343,17 @@ button.lb-loadout-item-foot:hover {
   max-height: 220px;
   justify-self: center;
 }
+
+
+/* Final requested footprint: ALL Loadout skin cards are exactly 165 × 230 px. */
+.lb-section .course-design-card.card:not(.course-equipment-card),
+.lb-section .course-design-card.card.course-equipment-card {
+  box-sizing: border-box;
+  width: 165px;
+  min-width: 165px;
+  max-width: 165px;
+  height: 230px;
+  min-height: 230px;
+  max-height: 230px;
+  justify-self: center;
+}
