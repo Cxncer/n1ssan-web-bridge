@@ -3640,3 +3640,37 @@ button.lb-loadout-item-foot:hover {
 .lb-section .course-design-card .progress .course-card-float-value {
   margin-bottom: 3px;
 }
+
+
+/* Expand the Loadout canvas to preserve all seven fixed-width card tracks. */
+.lb-section {
+  box-sizing: border-box;
+  width: max(100%, 1310px);
+  min-width: 1310px;
+  max-width: none;
+}
+.lb-section .lb-board {
+  box-sizing: border-box;
+  width: 100%;
+  min-width: 1262px;
+  grid-template-columns: repeat(7, 170px);
+  column-gap: 12px;
+  overflow-x: visible;
+}
+.lb-section .lb-board > section {
+  min-width: 170px;
+}
+.lb-section .lb-equipment-cards,
+.lb-section .course-skin-grid {
+  grid-auto-rows: 250px;
+  gap: 10px;
+}
+.lb-section .course-design-card.card,
+.lb-section .course-design-card.card.course-equipment-card {
+  width: 170px;
+  min-width: 170px;
+  max-width: 170px;
+  height: 250px;
+  min-height: 250px;
+  max-height: 250px;
+}
