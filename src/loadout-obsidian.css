@@ -3016,3 +3016,56 @@ button.lb-loadout-item-foot:hover {
   .lb-section .course-design-card .card-body h3 { font-size:14px; }
   .lb-section .course-design-card .card-footer { min-height:45px; padding:8px 12px; border-radius:0 0 1.5rem 1.5rem; font-size:8px; }
 }
+
+
+/* Equipment column uses the same Course Design Cards visual system. */
+.lb-section .lb-equipment-cards {
+  display:grid;
+  grid-template-columns:minmax(0,1fr);
+  align-items:stretch;
+  gap:12px;
+}
+.lb-section .course-equipment-card {
+  min-height:218px;
+  border-radius:1.5rem;
+  cursor:pointer;
+}
+.lb-section .course-equipment-card:before { border-radius:1.5rem; }
+.lb-section .course-equipment-card .card-header { padding:12px 12px 0 15px; }
+.lb-section .course-equipment-card .course-card-weapon { font-size:10px; }
+.lb-section .course-equipment-card .course-card-rarity { max-width:75px; font-size:7px; }
+.lb-section .course-equipment-card .course-card-remove { width:21px; height:21px; font-size:14px; }
+.lb-section .course-equipment-card .card-body {
+  top:48%;
+  padding:8px 13px 0;
+}
+.lb-section .course-equipment-card .course-card-art {
+  height:76px;
+  margin-bottom:1px;
+}
+.lb-section .course-equipment-card .card-body h3 {
+  max-height:34px;
+  margin:5px 0 2px;
+  font-size:14px;
+}
+.lb-section .course-equipment-card .card-body p { font-size:9px; }
+.lb-section .course-equipment-card .card-footer {
+  min-height:39px;
+  padding:7px 12px;
+  border-radius:0 0 1.5rem 1.5rem;
+  font-size:7px;
+}
+.lb-section .course-equipment-footer { cursor:pointer; }
+.lb-section .course-equipment-footer>span:last-child {
+  color:var(--course-accent);
+  font-weight:700;
+  text-align:right;
+}
+@media(max-width:680px) {
+  .lb-section .lb-equipment-cards { grid-template-columns:repeat(2,minmax(0,1fr)); gap:10px; }
+  .lb-section .course-equipment-card { min-height:205px; }
+  .lb-section .course-equipment-card .card-body { padding-inline:9px; }
+  .lb-section .course-equipment-card .course-card-art { height:68px; }
+  .lb-section .course-equipment-card .card-body h3 { font-size:12px; }
+  .lb-section .course-equipment-card .card-footer { gap:5px; padding-inline:8px; font-size:6px; }
+}
