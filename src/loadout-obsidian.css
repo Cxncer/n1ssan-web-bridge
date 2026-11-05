@@ -3069,3 +3069,73 @@ button.lb-loadout-item-foot:hover {
   .lb-section .course-equipment-card .card-body h3 { font-size:12px; }
   .lb-section .course-equipment-card .card-footer { gap:5px; padding-inline:8px; font-size:6px; }
 }
+
+
+/* Seven-track Loadout board: 1 equipment + 2 pistols + 2 mid-tier + 1 rifle + 1 sniper. */
+.lb-section {
+  padding-left:clamp(12px,1.4vw,22px);
+  padding-right:clamp(12px,1.4vw,22px);
+}
+.lb-section .lb-board {
+  display:grid;
+  grid-template-columns:repeat(7,minmax(0,1fr));
+  align-items:stretch;
+  gap:clamp(8px,.9vw,13px);
+  width:100%;
+  min-width:0;
+  overflow:visible;
+}
+.lb-section .lb-equipment-column { grid-column:span 1; }
+.lb-section .lb-column-pistols,
+.lb-section .lb-column-mid-tier { grid-column:span 2; }
+.lb-section .lb-column-rifles,
+.lb-section .lb-column-snipers { grid-column:span 1; }
+.lb-section .lb-equipment-cards,
+.lb-section .course-skin-grid {
+  display:grid;
+  grid-template-columns:minmax(0,1fr);
+  align-content:start;
+  gap:10px;
+  min-width:0;
+}
+.lb-section .lb-column-pistols .course-skin-grid,
+.lb-section .lb-column-mid-tier .course-skin-grid {
+  grid-template-columns:repeat(2,minmax(0,1fr));
+}
+.lb-section .course-design-card.card {
+  background:radial-gradient(ellipse at right top,color-mix(in srgb,var(--course-accent) 43%,transparent) 0%,#151419 48%,#151419 100%);
+}
+.lb-section .course-design-card.card.green,
+.lb-section .course-design-card.card.blue,
+.lb-section .course-design-card.card.orange,
+.lb-section .course-design-card.card.red {
+  background:radial-gradient(ellipse at right top,color-mix(in srgb,var(--course-accent) 43%,transparent) 0%,#151419 48%,#151419 100%);
+}
+.lb-section .course-design-card .progress-bar>span {
+  background-color:var(--float-accent,#35d07f);
+}
+@media(max-width:1100px) {
+  .lb-section .lb-board {
+    grid-template-columns:repeat(7,minmax(125px,1fr));
+    overflow-x:auto;
+    padding-bottom:12px;
+  }
+}
+@media(max-width:680px) {
+  .lb-section .lb-board {
+    grid-template-columns:repeat(2,minmax(0,1fr));
+    overflow:visible;
+  }
+  .lb-section .lb-equipment-column,
+  .lb-section .lb-column-pistols,
+  .lb-section .lb-column-mid-tier,
+  .lb-section .lb-column-rifles,
+  .lb-section .lb-column-snipers { grid-column:span 2; }
+  .lb-section .lb-equipment-cards,
+  .lb-section .lb-column-pistols .course-skin-grid,
+  .lb-section .lb-column-mid-tier .course-skin-grid {
+    grid-template-columns:repeat(2,minmax(0,1fr));
+  }
+  .lb-section .lb-column-rifles .course-skin-grid,
+  .lb-section .lb-column-snipers .course-skin-grid { grid-template-columns:repeat(2,minmax(0,1fr)); }
+}
