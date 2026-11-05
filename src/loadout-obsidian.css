@@ -3145,3 +3145,23 @@ button.lb-loadout-item-foot:hover {
   .lb-section .lb-column-rifles .course-skin-grid,
   .lb-section .lb-column-snipers .course-skin-grid { grid-template-columns:minmax(0,1fr); }
 }
+
+
+/* Loadout refinement pass — cleaner category headers and tighter weapon cards. */
+.lb-section .lb-board {
+  column-gap:clamp(16px,1.5vw,22px);
+}
+.lb-section .course-design-card.card:not(.course-equipment-card) {
+  width:95%;
+  justify-self:center;
+  min-height:310px;
+}
+.lb-section .course-design-card:not(.course-equipment-card) .course-card-art {
+  height:120px;
+}
+.lb-section .course-design-card.is-empty .course-card-art img {
+  opacity:.03;
+}
+.lb-section .course-design-card .card-body p {
+  display:none;
+}
