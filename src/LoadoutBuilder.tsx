@@ -428,7 +428,7 @@ export default function LoadoutBuilder({ skins }: LoadoutBuilderProps) {
 
   return <div className="lb-workspace-shell">
     <header className="lb-topbar">
-      <a className="lb-brand" href="?page=loadout" onClick={e => e.preventDefault()} aria-label="n1ssan Loadout home"><span className="lb-brand-mark">n.</span><span>n1ssan</span><i /><small>LOADOUT</small></a>
+      <a className="lb-brand" href="/loadout" aria-label="n1ssan Loadout home"><span className="lb-brand-mark">n.</span><span>n1ssan</span><i /><small>LOADOUT</small></a>
       <nav className="lb-nav" aria-label="Loadout workspace tabs">
         <button type="button" className={activeTab === 'loadout' ? 'active' : ''} aria-current={activeTab === 'loadout' ? 'page' : undefined} onClick={() => setActiveTab('loadout')}>Loadout</button>
         <button type="button" className={activeTab === 'diagnostics' ? 'active' : ''} aria-current={activeTab === 'diagnostics' ? 'page' : undefined} onClick={() => setActiveTab('diagnostics')}>Diagnostics</button>
