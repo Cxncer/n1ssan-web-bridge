@@ -61,22 +61,6 @@ const EQUIPMENT_INFO: Record<EquipmentSlot, { title: string; subtitle: string; i
   zeus: { title: 'Zeus x27', subtitle: 'Electroshock weapon', icon: 'ϟ' },
 }
 function imageOf(s: Skin) { return s.image || s.art || '' }
-function rarityClass(rarity: string) {
-  const value = (rarity || '').toLowerCase()
-  if (value.includes('contraband')) return 'contraband'
-  if (value.includes('extraordinary')) return 'extraordinary'
-  if (value.includes('exotic')) return 'exotic'
-  if (value.includes('covert')) return 'covert'
-  if (value.includes('classified')) return 'classified'
-  if (value.includes('restricted')) return 'restricted'
-  if (value.includes('remarkable')) return 'remarkable'
-  if (value.includes('mil-spec') || value.includes('mil spec')) return 'mil-spec-grade'
-  if (value.includes('industrial')) return 'industrial-grade'
-  if (value.includes('high grade')) return 'high-grade'
-  if (value.includes('consumer')) return 'consumer-grade'
-  if (value.includes('base grade')) return 'base-grade'
-  return 'base-grade'
-}
 function wearCode(f: number) { return f <= .07 ? 'FN' : f <= .15 ? 'MW' : f <= .38 ? 'FT' : f <= .45 ? 'WW' : 'BS' }
 function rarityColor(rarity: string) {
   const value = (rarity || '').toLowerCase()
