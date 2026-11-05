@@ -509,10 +509,7 @@ export default function LoadoutBuilder({ skins }: LoadoutBuilderProps) {
               </div>
               <h3>{item ? item.name : 'No item equipped'}</h3>
             </div>
-            <div className="card-footer course-equipment-footer">
-              <span>{item ? 'EQUIPPED' : 'EMPTY SLOT'} <b>{item ? item.rarity : slot.toUpperCase()}</b></span>
-              <span>{item ? 'CHANGE ITEM' : 'CHOOSE ITEM'}</span>
-            </div>
+            <div className="card-footer course-card-footer course-equipment-footer" aria-hidden="true" />
           </article>
         })}</div>
       </section>
@@ -557,7 +554,7 @@ export default function LoadoutBuilder({ skins }: LoadoutBuilderProps) {
                 {s && <h3>{s.name}</h3>}
                 
                 {s && st && <div className="progress">
-                  <span>{st.float.toFixed(5)}</span>
+                  <span className="course-card-float-value">{st.float.toFixed(5)}</span>
                   <div className="progress-bar"><span style={{ width: `${floatPercent}%`, backgroundColor: floatColor(st.float) }} /></div>
                 </div>}
               </div>
