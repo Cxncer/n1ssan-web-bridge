@@ -484,14 +484,35 @@ export default function LoadoutBuilder({ skins }: LoadoutBuilderProps) {
         <div className="lb-equipment-cards">{(['agent', 'knife', 'gloves', 'zeus'] as EquipmentSlot[]).map(slot => {
           const info = EQUIPMENT_INFO[slot], item = selectedItem(slot), img = item ? imageOf(item) : ''
           const label = slot === 'agent' ? `${team} Agent` : info.title
-          return <div className="lb-equipment-card-wrap" key={slot}>
-            <button type="button" className={`lb-weapon-card lb-equipment-card ${item ? 'is-equipped' : ''}`} onClick={() => openEquipmentPicker(slot)} aria-label={`Choose ${label}`}>
-              <div className="lb-card-top"><span>{label}</span><span className="lb-slot-icon">{item ? '✓' : '+'}</span></div>
-              <div className="lb-weapon-image lb-equipment-art">{img ? <img src={img} alt={item?.name || label} className="lb-equipped-image" loading="lazy" /> : <span className="lb-placeholder-label">{info.icon}</span>}<span className="lb-card-hover-action">{item ? 'CHANGE ITEM' : 'CHOOSE ITEM'}</span></div>
-              <div className="lb-card-bottom lb-equipment-card-bottom">{item ? <><strong>{item.name}</strong><small>{item.weapon}</small></> : <><strong>No item equipped</strong><small>{info.subtitle}</small></>}</div>
-            </button>
-            {item && <button type="button" className="lb-card-remove" title={`Remove ${label}`} aria-label={`Remove ${label}`} onClick={() => equipItem(slot, null)}><span aria-hidden="true">×</span></button>}
-          </div>
+          const tone = team === 'T' ? 'green' : 'blue'
+          return <article
+            key={slot}
+            role="button"
+            tabIndex={0}
+            className={`course-design-card card course-equipment-card ${tone} ${item ? 'is-equipped' : 'is-empty'}`}
+            aria-label={`${label}: ${item ? item.name : 'No item equipped'}. Choose item.`}
+            onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); openEquipmentPicker(slot) } }}
+            onClick={() => openEquipmentPicker(slot)}
+          >
+            <div className="card-header">
+              <div className="date course-card-weapon">{label}</div>
+              <div className="course-card-header-actions">
+                <span className="course-card-rarity">{item?.rarity ?? 'EMPTY SLOT'}</span>
+                {item && <button type="button" className="course-card-remove" title={`Remove ${label}`} aria-label={`Remove ${label}`} onClick={e => { e.stopPropagation(); equipItem(slot, null) }}>×</button>}
+              </div>
+            </div>
+            <div className="card-body">
+              <div className="course-card-art">
+                {img ? <img src={img} alt={item?.name ?? label} loading="lazy" /> : <span>{info.icon}</span>}
+              </div>
+              <h3>{item ? item.name : 'No item equipped'}</h3>
+              <p>{item ? item.weapon : info.subtitle}</p>
+            </div>
+            <div className="card-footer course-equipment-footer">
+              <span>{item ? 'EQUIPPED' : 'EMPTY SLOT'} <b>{item ? item.rarity : slot.toUpperCase()}</b></span>
+              <span>{item ? 'CHANGE ITEM' : 'CHOOSE ITEM'}</span>
+            </div>
+          </article>
         })}</div>
       </section>
       {columns.map(col => {
