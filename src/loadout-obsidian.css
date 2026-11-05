@@ -3160,8 +3160,25 @@ button.lb-loadout-item-foot:hover {
   height:120px;
 }
 .lb-section .course-design-card.is-empty .course-card-art img {
-  opacity:.03;
+  opacity:.08;
 }
 .lb-section .course-design-card .card-body p {
   display:none;
+}
+
+
+/* Compact card height by approximately 10%, including mobile sizing. */
+.lb-section .course-design-card.card:not(.course-equipment-card) {
+  min-height:279px;
+}
+.lb-section .course-design-card.card.course-equipment-card {
+  min-height:196px;
+}
+@media(max-width:680px) {
+  .lb-section .course-design-card.card:not(.course-equipment-card) {
+    min-height:263px;
+  }
+  .lb-section .course-design-card.card.course-equipment-card {
+    min-height:185px;
+  }
 }
