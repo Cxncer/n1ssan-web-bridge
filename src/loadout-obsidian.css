@@ -2788,9 +2788,7 @@ button.lb-loadout-item-foot:hover {
     transition-duration: .01ms !important;
   }
 }
-/* Course Design Cards adaptation — legacy Loadout card visuals removed. */
-.lb-section .course-skin-grid{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:22px;width:100%;min-width:0}
-.lb-section .course-skin-card{--course-accent:#01c3a8;position:relative;display:grid;grid-template-r/* 21st.dev — Course Design Cards adaptation.
+/* 21st.dev — Course Design Cards adaptation.
    Card geometry, radial surfaces, header/body/footer composition and accent border
    follow the original Kristen17 CodePen component. Loadout's previous card chrome
    is intentionally not used by these skin cards. */
