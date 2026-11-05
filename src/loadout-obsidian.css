@@ -3071,414 +3071,34 @@ button.lb-loadout-item-foot:hover {
 }
 
 
-/* Seven-track Loadout board: 1 equipment + 2 pistols + 2 mid-tier + 1 rifle + 1 sniper. */
+/* Loadout board + card system
+   Seven fixed tracks: Equipment (1), Pistols (2), Mid-tier (2), Rifles (1), Snipers (1).
+   One card geometry is shared by every category. */
 .lb-section {
-  padding-left:clamp(12px,1.4vw,22px);
-  padding-right:clamp(12px,1.4vw,22px);
-}
-.lb-section .lb-board {
-  display:grid;
-  grid-template-columns:repeat(7,minmax(0,1fr));
-  align-items:stretch;
-  gap:clamp(8px,.9vw,13px);
-  width:100%;
-  min-width:0;
-  overflow:visible;
-}
-.lb-section .lb-equipment-column { grid-column:span 1; }
-.lb-section .lb-column-pistols,
-.lb-section .lb-column-mid-tier { grid-column:span 2; }
-.lb-section .lb-column-rifles,
-.lb-section .lb-column-snipers { grid-column:span 1; }
-.lb-section .lb-equipment-cards,
-.lb-section .course-skin-grid {
-  display:grid;
-  grid-template-columns:minmax(0,1fr);
-  align-content:start;
-  gap:10px;
-  min-width:0;
-}
-.lb-section .lb-column-pistols .course-skin-grid,
-.lb-section .lb-column-mid-tier .course-skin-grid {
-  grid-template-columns:repeat(2,minmax(0,1fr));
-}
-.lb-section .course-design-card.card {
-  background:radial-gradient(ellipse at right top,color-mix(in srgb,var(--course-accent) 43%,transparent) 0%,#151419 48%,#151419 100%);
-}
-.lb-section .course-design-card.card.green,
-.lb-section .course-design-card.card.blue,
-.lb-section .course-design-card.card.orange,
-.lb-section .course-design-card.card.red {
-  background:radial-gradient(ellipse at right top,color-mix(in srgb,var(--course-accent) 43%,transparent) 0%,#151419 48%,#151419 100%);
-}
-.lb-section .course-design-card .progress-bar>span {
-  background-color:var(--float-accent,#35d07f);
-}
-@media(max-width:1100px) {
-  .lb-section .lb-board {
-    grid-template-columns:repeat(7,minmax(125px,1fr));
-    overflow-x:auto;
-    padding-bottom:12px;
-  }
-}
-@media(max-width:680px) {
-  .lb-section .lb-board {
-    grid-template-columns:repeat(2,minmax(0,1fr));
-    overflow:visible;
-  }
-  .lb-section .lb-equipment-column,
-  .lb-section .lb-column-pistols,
-  .lb-section .lb-column-mid-tier,
-  .lb-section .lb-column-rifles,
-  .lb-section .lb-column-snipers { grid-column:span 2; }
-  .lb-section .lb-equipment-cards,
-  .lb-section .lb-column-pistols .course-skin-grid,
-  .lb-section .lb-column-mid-tier .course-skin-grid {
-    grid-template-columns:repeat(2,minmax(0,1fr));
-  }
-  .lb-section .lb-column-rifles .course-skin-grid,
-  .lb-section .lb-column-snipers .course-skin-grid { grid-template-columns:repeat(2,minmax(0,1fr)); }
-}
-
-@media(max-width:680px) {
-  .lb-section .lb-equipment-cards { grid-template-columns:minmax(0,1fr); }
-  .lb-section .lb-column-rifles .course-skin-grid,
-  .lb-section .lb-column-snipers .course-skin-grid { grid-template-columns:minmax(0,1fr); }
-}
-
-
-/* Loadout refinement pass — cleaner category headers and tighter weapon cards. */
-.lb-section .lb-board {
-  column-gap:clamp(16px,1.5vw,22px);
-}
-.lb-section .course-design-card.card:not(.course-equipment-card) {
-  width:95%;
-  justify-self:center;
-  min-height:310px;
-}
-.lb-section .course-design-card:not(.course-equipment-card) .course-card-art {
-  height:120px;
-}
-.lb-section .course-design-card.is-empty .course-card-art img {
-  opacity:.08;
-}
-.lb-section .course-design-card .card-body p {
-  display:none;
-}
-
-
-/* Compact card height by approximately 10%, including mobile sizing. */
-.lb-section .course-design-card.card:not(.course-equipment-card) {
-  min-height:279px;
-}
-.lb-section .course-design-card.card.course-equipment-card {
-  min-height:196px;
-}
-@media(max-width:680px) {
-  .lb-section .course-design-card.card:not(.course-equipment-card) {
-    min-height:263px;
-  }
-  .lb-section .course-design-card.card.course-equipment-card {
-    min-height:185px;
-  }
-}
-
-
-/* Final Loadout consistency pass: identical card geometry and Barlow typography. */
-.lb-section,
-.lb-section *,
-.lb-section *::before,
-.lb-section *::after {
-  font-family:"Barlow",sans-serif !important;
-}
-.lb-section .course-design-card.card,
-.lb-section .course-design-card.card.course-equipment-card {
-  width:95%;
-  justify-self:center;
-  min-height:279px;
-  border-radius:1.5rem;
-}
-.lb-section .course-design-card.card:before {
-  border-radius:1.5rem;
-}
-.lb-section .course-design-card .card-header,
-.lb-section .course-equipment-card .card-header {
-  padding:15px 15px 0 22px;
-}
-.lb-section .course-design-card .card-body,
-.lb-section .course-equipment-card .card-body {
-  top:49%;
-  padding:10px 22px 0;
-}
-.lb-section .course-design-card .course-card-art,
-.lb-section .course-equipment-card .course-card-art {
-  height:120px;
-  margin:0 auto 3px;
-}
-.lb-section .course-design-card .card-body h3,
-.lb-section .course-equipment-card .card-body h3 {
-  max-height:42px;
-  margin:7px 0 3px;
-  font-size:18px;
-}
-.lb-section .course-design-card .card-footer,
-.lb-section .course-equipment-card .card-footer {
-  min-height:51px;
-  padding:9px 19px 10px 22px;
-  border-radius:0 0 1.5rem 1.5rem;
-  font-size:9px;
-}
-.lb-section .course-design-card.is-empty .course-card-art img {
-  opacity:.15;
-}
-.lb-section .course-equipment-card .card-body p {
-  display:none;
-}
-@media(max-width:680px) {
-  .lb-section .course-design-card.card,
-  .lb-section .course-design-card.card.course-equipment-card {
-    min-height:263px;
-  }
-  .lb-section .course-design-card .card-header,
-  .lb-section .course-equipment-card .card-header {
-    padding:12px 10px 0 14px;
-  }
-  .lb-section .course-design-card .card-body,
-  .lb-section .course-equipment-card .card-body {
-    padding-inline:12px;
-  }
-  .lb-section .course-design-card .course-card-art,
-  .lb-section .course-equipment-card .course-card-art {
-    height:105px;
-  }
-  .lb-section .course-design-card .card-body h3,
-  .lb-section .course-equipment-card .card-body h3 {
-    font-size:14px;
-  }
-  .lb-section .course-design-card .card-footer,
-  .lb-section .course-equipment-card .card-footer {
-    min-height:45px;
-    padding:8px 12px;
-    font-size:8px;
-  }
-}
-
-
-/* Compact every Loadout card by a further 20%; keep Equipment in lockstep. */
-.lb-section .course-design-card.card,
-.lb-section .course-design-card.card.course-equipment-card {
-  min-height:223px;
-}
-.lb-section .course-design-card .course-card-art,
-.lb-section .course-equipment-card .course-card-art {
-  height:96px;
-}
-.lb-section .course-design-card .card-body h3,
-.lb-section .course-equipment-card .card-body h3 {
-  max-height:36px;
-  margin:5px 0 2px;
-  font-size:15px;
-}
-.lb-section .course-design-card .card-footer,
-.lb-section .course-equipment-card .card-footer {
-  min-height:41px;
-  padding:7px 15px 8px;
-}
-@media(max-width:680px) {
-  .lb-section .course-design-card.card,
-  .lb-section .course-design-card.card.course-equipment-card {
-    min-height:210px;
-  }
-  .lb-section .course-design-card .course-card-art,
-  .lb-section .course-equipment-card .course-card-art {
-    height:84px;
-  }
-  .lb-section .course-design-card .card-body h3,
-  .lb-section .course-equipment-card .card-body h3 {
-    font-size:13px;
-  }
-  .lb-section .course-design-card .card-footer,
-  .lb-section .course-equipment-card .card-footer {
-    min-height:38px;
-    padding:6px 10px;
-  }
-}
-
-/* Match every weapon skin card to the Equipment card's exact footprint. */
-.lb-section .course-design-card.card,
-.lb-section .course-design-card.card.course-equipment-card {
-  box-sizing:border-box;
-  width:95%;
-  height:223px;
-  min-height:223px;
-  justify-self:center;
-}
-@media(max-width:680px) {
-  .lb-section .course-design-card.card,
-  .lb-section .course-design-card.card.course-equipment-card {
-    height:210px;
-    min-height:210px;
-  }
-  /* Equipment is one card per row; keep every weapon category consistent. */
-  .lb-section .course-skin-grid,
-  .lb-section .lb-column-pistols .course-skin-grid,
-  .lb-section .lb-column-mid-tier .course-skin-grid,
-  .lb-section .lb-column-rifles .course-skin-grid,
-  .lb-section .lb-column-snipers .course-skin-grid {
-    grid-template-columns:minmax(0,1fr);
-  }
-}
-
-
-/* Match every skin card to the requested fixed Equipment footprint. */
-/* Override the earlier weapon-only min-height rule as well as Equipment sizing. */
-.lb-section .course-design-card.card:not(.course-equipment-card),
-.lb-section .course-design-card.card.course-equipment-card {
   box-sizing: border-box;
-  width: 160px;
-  min-width: 160px;
-  max-width: 160px;
-  height: 220px;
-  min-height: 220px;
-  max-height: 220px;
-  justify-self: center;
-}
-
-
-/* Final requested footprint: ALL Loadout skin cards are exactly 165 × 230 px. */
-.lb-section .course-design-card.card:not(.course-equipment-card),
-.lb-section .course-design-card.card.course-equipment-card {
-  box-sizing: border-box;
-  width: 165px;
-  min-width: 165px;
-  max-width: 165px;
-  height: 230px;
-  min-height: 230px;
-  max-height: 230px;
-  justify-self: center;
-}
-
-
-/* Restore clear Float visibility within the compact 230px skin cards. */
-.lb-section .course-design-card .card-body {
-  top: 45%;
-  z-index: 2;
-}
-.lb-section .course-design-card .course-card-art {
-  height: 82px;
-  margin-bottom: 2px;
-}
-.lb-section .course-design-card .progress {
-  display: block;
-  margin-top: 7px;
-  text-align: left;
-}
-.lb-section .course-design-card .progress > span:first-child {
-  margin-bottom: 5px;
-  color: #fff;
-  font: 700 10px/1.2 "Barlow", sans-serif;
-}
-.lb-section .course-design-card .progress .progress-bar {
-  height: 5px;
-}
-.lb-section .course-design-card .progress > span:last-child {
-  margin-top: 5px;
-  color: #fff;
-  font: 10px/1.2 "Barlow", monospace;
-  text-align: right;
-}
-
-
-/* Final card layout: centered artwork, natural content flow, and 170 × 240 footprint. */
-.lb-section .course-design-card.card,
-.lb-section .course-design-card.card.course-equipment-card {
-  box-sizing: border-box;
-  width: 170px;
-  min-width: 170px;
-  max-width: 170px;
-  height: 240px;
-  min-height: 240px;
-  max-height: 240px;
-  justify-self: center;
-}
-.lb-section .course-design-card .card-body {
-  position: absolute;
-  top: 48px;
-  right: 0;
-  bottom: 44px;
-  left: 0;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  width: auto;
+  width: 100%;
   min-width: 0;
-  height: auto;
-  padding: 8px 12px;
-  transform: none;
-  overflow: hidden;
-  text-align: center;
-  z-index: 2;
+  max-width: none;
 }
-.lb-section .course-design-card .course-card-art {
-  display: grid;
-  flex: 0 0 94px;
-  width: 100%;
-  height: 94px;
-  min-height: 94px;
-  margin: 0 0 5px;
-  place-items: center;
-  overflow: hidden;
-}
-.lb-section .course-design-card .course-card-art img {
-  display: block;
-  width: 100%;
-  height: 100%;
-  max-width: 100%;
-  max-height: 100%;
-  object-fit: contain;
-  object-position: center;
-}
-.lb-section .course-design-card .card-body h3 {
-  flex: 0 0 auto;
-  width: 100%;
-  max-height: 36px;
-  margin: 2px 0 3px;
-  overflow: hidden;
-  text-align: center;
-}
-.lb-section .course-design-card .progress {
-  display: block;
-  flex: 0 0 auto;
-  width: 100%;
-  margin-top: 5px;
-  text-align: left;
-}
-.lb-section .course-design-card .progress > span:first-child {
-  display: block;
-  margin: 0 0 5px;
-  color: #fff;
-  font: 10px/1.2 "Barlow", monospace;
-  text-align: right;
-}
-.lb-section .course-design-card .progress .progress-bar {
-  height: 5px;
-}
-
-
-/* Universal Loadout card system: one shared layout for every category. */
 .lb-section .lb-board {
   display: grid;
-  grid-template-columns: repeat(7, minmax(170px, 1fr));
+  box-sizing: border-box;
+  grid-template-columns: repeat(7, 170px);
+  grid-auto-flow: row;
   align-items: start;
-  column-gap: clamp(12px, 1.2vw, 18px);
+  justify-content: safe center;
+  column-gap: 12px;
   row-gap: 0;
   width: 100%;
-  min-width: max-content;
+  min-width: 0;
+  margin-inline: auto;
   overflow-x: auto;
+  overflow-y: visible;
+  padding: 0 0 12px;
 }
 .lb-section .lb-board > section {
-  min-width: 170px;
+  box-sizing: border-box;
+  min-width: 0;
   align-self: start;
 }
 .lb-section .lb-equipment-column { grid-column: span 1; }
@@ -3486,45 +3106,63 @@ button.lb-loadout-item-foot:hover {
 .lb-section .lb-column-mid-tier { grid-column: span 2; }
 .lb-section .lb-column-rifles,
 .lb-section .lb-column-snipers { grid-column: span 1; }
+
+/* Narrow categories use one card per row; only the two wide categories use two. */
 .lb-section .lb-equipment-cards,
 .lb-section .course-skin-grid {
   display: grid;
-  grid-template-columns: repeat(2, 170px);
-  grid-auto-rows: 240px;
+  grid-template-columns: 170px;
+  grid-auto-rows: 250px;
   align-content: start;
-  justify-content: start;
   align-items: start;
+  justify-content: start;
   gap: 10px;
+  width: 100%;
   min-width: 0;
+}
+.lb-section .lb-column-pistols .course-skin-grid,
+.lb-section .lb-column-mid-tier .course-skin-grid {
+  grid-template-columns: repeat(2, 170px);
 }
 .lb-section .lb-equipment-cards {
   grid-template-columns: 170px;
+  width: 170px;
 }
-.lb-section .course-design-card.card,
-.lb-section .course-design-card.card.course-equipment-card {
+
+/* Identical card footprint and shared internal layout for weapons + equipment. */
+.lb-section .lb-board .course-design-card.card,
+.lb-section .lb-board .course-design-card.card.course-equipment-card {
+  position: relative;
   box-sizing: border-box;
   display: flex;
   flex-direction: column;
+  justify-self: start;
   width: 170px;
   min-width: 170px;
   max-width: 170px;
-  height: 240px;
-  min-height: 240px;
-  max-height: 240px;
-  justify-self: start;
+  height: 250px;
+  min-height: 250px;
+  max-height: 250px;
+  padding: 0;
   overflow: hidden;
   border-radius: 1.5rem;
 }
-.lb-section .course-design-card .card-header {
+.lb-section .lb-board .course-design-card.card:before {
+  border-radius: 1.5rem;
+}
+.lb-section .lb-board .course-design-card .card-header {
   position: relative;
+  inset: auto;
   z-index: 3;
+  display: flex;
   flex: 0 0 48px;
+  align-items: center;
   box-sizing: border-box;
   width: 100%;
   min-height: 48px;
   padding: 13px 12px 0 15px;
 }
-.lb-section .course-design-card .card-body {
+.lb-section .lb-board .course-design-card .card-body {
   position: relative;
   inset: auto;
   display: flex;
@@ -3542,204 +3180,10 @@ button.lb-loadout-item-foot:hover {
   text-align: center;
   z-index: 2;
 }
-.lb-section .course-design-card .course-card-art {
-  display: grid;
-  flex: 0 0 94px;
-  width: 100%;
-  height: 94px;
-  min-height: 94px;
-  margin: 0 0 5px;
-  place-items: center;
-  overflow: hidden;
-}
-.lb-section .course-design-card .course-card-art img {
-  display: block;
-  width: 100%;
-  height: 100%;
-  max-width: 100%;
-  max-height: 100%;
-  object-fit: contain;
-  object-position: center;
-}
-.lb-section .course-design-card .card-body h3 {
-  flex: 0 0 auto;
-  width: 100%;
-  max-height: 36px;
-  margin: 2px 0 3px;
-  overflow: hidden;
-  text-align: center;
-}
-.lb-section .course-design-card .progress {
-  display: block;
-  flex: 0 0 auto;
-  width: 100%;
-  margin-top: 5px;
-  text-align: left;
-}
-.lb-section .course-design-card .progress .course-card-float-value {
-  display: block;
-  width: 100%;
-  margin: 0 0 5px;
-  color: #fff;
-  font: 10px/1.2 "Barlow", monospace;
-  text-align: right;
-}
-.lb-section .course-design-card .progress .progress-bar {
-  display: block;
-  width: 100%;
-  height: 5px;
-  overflow: hidden;
-  border-radius: 999px;
-  background: #363636;
-}
-.lb-section .course-design-card .progress .progress-bar > span {
-  display: block;
-  height: 100%;
-  border-radius: inherit;
-}
-.lb-section .course-design-card .card-footer {
-  position: relative;
-  z-index: 3;
-  display: flex;
-  flex: 0 0 44px;
-  align-items: center;
-  justify-content: space-between;
-  box-sizing: border-box;
-  width: 100%;
-  min-height: 44px;
-  height: 44px;
-  padding: 7px 13px;
-  border-radius: 0 0 1.5rem 1.5rem;
-}
-.lb-section .course-design-card .course-equipment-footer {
-  justify-content: center;
-  cursor: default;
-}
-
-
-/* Keep the shared artwork + title + Float bar inside the card's content area. */
-.lb-section .lb-board {
-  min-width: 0;
-  width: 100%;
-  grid-template-columns: repeat(7, minmax(170px, 1fr));
-  overflow-x: auto;
-}
-.lb-section .course-design-card .course-card-art {
-  flex-basis: 70px;
-  height: 70px;
-  min-height: 70px;
-  margin-bottom: 4px;
-}
-.lb-section .course-design-card .card-body h3 {
-  max-height: 32px;
-  margin: 1px 0 2px;
-}
-.lb-section .course-design-card .progress {
-  margin-top: 3px;
-}
-.lb-section .course-design-card .progress .course-card-float-value {
-  margin-bottom: 3px;
-}
-
-
-/* Expand the Loadout canvas to preserve all seven fixed-width card tracks. */
-.lb-section {
-  box-sizing: border-box;
-  width: max(100%, 1310px);
-  min-width: 1310px;
-  max-width: none;
-}
-.lb-section .lb-board {
-  box-sizing: border-box;
-  width: 100%;
-  min-width: 1262px;
-  grid-template-columns: repeat(7, 170px);
-  column-gap: 12px;
-  overflow-x: visible;
-}
-.lb-section .lb-board > section {
-  min-width: 170px;
-}
-.lb-section .lb-equipment-cards,
-.lb-section .course-skin-grid {
-  grid-auto-rows: 250px;
-  gap: 10px;
-}
-.lb-section .course-design-card.card,
-.lb-section .course-design-card.card.course-equipment-card {
-  width: 170px;
-  min-width: 170px;
-  max-width: 170px;
-  height: 250px;
-  min-height: 250px;
-  max-height: 250px;
-}
-
-
-/* FINAL LAYOUT FIX — center the complete seven-track board and hard-match card sizing. */
-.lb-section {
-  box-sizing: border-box;
-  width: 100%;
-  min-width: 0;
-  max-width: none;
-  padding: 30px 24px 42px;
-}
-.lb-section .lb-board {
-  display: grid;
-  box-sizing: border-box;
-  grid-template-columns: repeat(7, 170px);
-  column-gap: 12px;
-  row-gap: 0;
-  width: 1262px;
-  min-width: 1262px;
-  max-width: none;
-  margin: 0 auto;
-  overflow: visible;
-}
-.lb-section .lb-board > section {
-  box-sizing: border-box;
-  min-width: 0;
-  align-self: start;
-}
-.lb-section .lb-equipment-cards,
-.lb-section .course-skin-grid {
-  display: grid;
-  grid-auto-rows: 250px;
-  align-content: start;
-  align-items: start;
-  gap: 10px;
-}
-.lb-section .lb-equipment-cards {
-  grid-template-columns: 170px;
-  width: 170px;
-}
-.lb-section .course-skin-grid {
-  grid-template-columns: repeat(2, 170px);
-  width: 100%;
-}
-.lb-section .lb-board .course-design-card.card,
-.lb-section .lb-board .course-design-card.card.course-equipment-card {
-  box-sizing: border-box !important;
-  display: flex;
-  flex-direction: column;
-  justify-self: start;
-  width: 170px !important;
-  min-width: 170px !important;
-  max-width: 170px !important;
-  height: 250px !important;
-  min-height: 250px !important;
-  max-height: 250px !important;
-  overflow: hidden;
-}
-.lb-section .lb-board .course-design-card .card-body {
-  flex: 1 1 auto;
-  min-height: 0;
-  overflow: hidden;
-}
 .lb-section .lb-board .course-design-card .course-card-art {
-  box-sizing: border-box;
   display: grid;
   flex: 0 0 66px;
+  box-sizing: border-box;
   width: 100%;
   height: 66px;
   min-height: 66px;
@@ -3759,4 +3203,60 @@ button.lb-loadout-item-foot:hover {
 }
 .lb-section .lb-board .course-design-card:hover .course-card-art img {
   transform: none;
+}
+.lb-section .lb-board .course-design-card .card-body h3 {
+  flex: 0 0 auto;
+  width: 100%;
+  max-height: 36px;
+  margin: 2px 0 3px;
+  overflow: hidden;
+  text-align: center;
+}
+.lb-section .lb-board .course-design-card .progress {
+  display: block;
+  flex: 0 0 auto;
+  width: 100%;
+  margin-top: 5px;
+  text-align: left;
+}
+.lb-section .lb-board .course-design-card .progress .course-card-float-value {
+  display: block;
+  width: 100%;
+  margin: 0 0 4px;
+  color: #fff;
+  font: 10px/1.2 "Barlow", monospace;
+  text-align: right;
+}
+.lb-section .lb-board .course-design-card .progress .progress-bar {
+  display: block;
+  width: 100%;
+  height: 5px;
+  overflow: hidden;
+  border-radius: 999px;
+  background: #363636;
+}
+.lb-section .lb-board .course-design-card .progress .progress-bar > span {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+}
+.lb-section .lb-board .course-design-card .card-footer {
+  position: relative;
+  inset: auto;
+  z-index: 3;
+  display: flex;
+  flex: 0 0 44px;
+  align-items: center;
+  justify-content: space-between;
+  box-sizing: border-box;
+  width: 100%;
+  min-width: 0;
+  min-height: 44px;
+  height: 44px;
+  padding: 7px 13px;
+  border-radius: 0 0 1.5rem 1.5rem;
+}
+.lb-section .lb-board .course-design-card .course-equipment-footer {
+  justify-content: center;
+  cursor: default;
 }
