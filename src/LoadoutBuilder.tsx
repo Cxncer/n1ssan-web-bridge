@@ -515,7 +515,7 @@ export default function LoadoutBuilder({ skins }: LoadoutBuilderProps) {
         if (!visible.length) return null
         return <section className={`lb-column lb-column-${col.title.toLowerCase().replace(/\s+/g, '-')}`} key={col.title}>
           <header className="lb-column-heading"><div className="lb-column-title-row"><span className="lb-column-mark">{col.title === 'PISTOLS' ? '⌁' : col.title === 'MID-TIER' ? '⌖' : col.title === 'RIFLES' ? '⌁' : '⌕'}</span><h3>{col.title}</h3></div><p>{col.subtitle}</p></header>
-          <div className={`ob-item-grid ${visible.length ? '' : 'is-empty'}`}>{visible.map(weapon => {
+          <div className={`course-skin-grid ${visible.length ? '' : 'is-empty'}`}>{visible.map(weapon => {
             const s = selectedSkin(weapon)
             const img = s ? imageOf(s) : placeholder(weapon)
             const st = s ? skinSettings[team][settingsKey(weapon, s.id)] ?? defaults(s) : null
@@ -525,29 +525,29 @@ export default function LoadoutBuilder({ skins }: LoadoutBuilderProps) {
               role="button"
               tabIndex={0}
               key={weapon}
-              className={`ob-item-card rarity-card-${grade} item-category-${category} ${s ? 'is-equipped' : 'is-empty'}`}
+              className={`course-skin-card rarity-card-${grade} item-category-${category} ${s ? 'is-equipped' : 'is-empty'}`}
               aria-label={`${weapon}: ${s ? s.name : 'No skin equipped'}. Choose skin.`}
               onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); openPicker(weapon) } }}
               onClick={() => openPicker(weapon)}
             >
               <button
                 type="button"
-                className="item-remove-x"
+                className="course-skin-remove"
                 aria-label={`Remove ${weapon} skin`}
                 title="Remove item"
                 onClick={e => { e.stopPropagation(); equipSkin(weapon, null) }}
               >×</button>
-              <div className={`ob-item-art rarity-${grade}`}>
-                <span className="item-glow" />
+              <div className={`course-skin-art rarity-${grade}`}>
+                <span className="course-skin-glow" />
                 {img
                   ? <img src={img} alt="" loading="lazy" />
                   : <span className="item-fallback">NO IMAGE</span>}
-                <span className="item-rarity">{s?.rarity ?? 'EMPTY SLOT'}</span>
+                <span className="course-skin-rarity">{s?.rarity ?? 'EMPTY SLOT'}</span>
               </div>
-              <div className="ob-item-copy">
-                <div className="ob-item-weapon">{weapon}</div>
+              <div className="course-skin-body">
+                <div className="course-skin-weapon">{weapon}</div>
                 <strong>{s ? s.name : 'No skin equipped'}</strong>
-                <div className="ob-item-foot">
+                <div className="course-skin-footer">
                   {s && st ? <>
                     <span>FLOAT <b>{st.float.toFixed(5)}</b></span>
                     <span>SEED <b>{st.seed}</b></span>
@@ -555,7 +555,7 @@ export default function LoadoutBuilder({ skins }: LoadoutBuilderProps) {
                   </> : null}
                 </div>
               </div>
-              <span className="item-open">↗</span>
+              <span className="course-skin-open">↗</span>
             </div>
           })}</div>
         </section>
