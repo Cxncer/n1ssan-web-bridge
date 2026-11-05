@@ -518,13 +518,36 @@ export default function LoadoutBuilder({ skins }: LoadoutBuilderProps) {
           <div className="lb-column-cards">{visible.map(weapon => {
             const s = selectedSkin(weapon), img = s ? imageOf(s) : placeholder(weapon)
             const st = s ? skinSettings[team][settingsKey(weapon, s.id)] ?? defaults(s) : null
-            return <div key={weapon} className={`lb-weapon-card-wrap lb-inventory-card rarity-card-${s ? rarityClass(s.rarity) : 'base-grade'} ${s ? 'is-equipped' : 'is-empty'}`}>
-              <button type="button" className="lb-weapon-card lb-inventory-card-main" onClick={() => openPicker(weapon)} aria-label={`Choose a skin for ${weapon}`}>
-                <div className="ob-item-art lb-loadout-item-art">{img ? <img src={img} alt={s ? s.name : `${weapon} placeholder`} className={s ? 'lb-equipped-image' : 'lb-placeholder-image'} loading="lazy" /> : <span className="lb-placeholder-label">NO IMAGE YET</span>}<span className="item-rarity">{s?.rarity ?? 'EMPTY SLOT'}</span><span className="lb-card-hover-action">{s ? 'CHANGE SKIN' : 'CHOOSE SKIN'}</span></div>
-                <div className="ob-item-copy lb-loadout-item-copy"><span className="ob-item-weapon">{weapon}</span><strong>{s ? s.name : 'No skin equipped'}</strong>{!s && <small>{img ? 'Default preview' : 'Image unavailable'}</small>}</div>
-              </button>
-              {s && st ? <button type="button" className="ob-item-foot lb-loadout-item-foot" onClick={() => openSettings(weapon)} aria-label={`Edit float and seed for ${weapon}`} title="Edit float and pattern seed"><span>FLOAT <b>{st.float.toFixed(6)}</b></span><span>SEED <b>{st.seed}</b></span><span className="float-wear">{wearCode(st.float)}</span></button> : <div className="ob-item-foot lb-loadout-item-foot lb-loadout-item-foot-empty"><span>NO FINISH EQUIPPED</span></div>}
-              {s && <button type="button" className="item-remove-x" title={`Remove ${weapon} skin`} aria-label={`Remove ${weapon} skin`} onClick={e => { e.stopPropagation(); equipSkin(weapon, null) }}>×</button>}
+            return <div
+              key={weapon}
+              className={`ob-item-card rarity-card-${s ? rarityClass(s.rarity) : 'base-grade'} ${s ? 'is-equipped' : 'is-empty'}`}
+              role="button"
+              tabIndex={0}
+              aria-label={`Choose a skin for ${weapon}`}
+              onClick={() => openPicker(weapon)}
+              onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); openPicker(weapon) } }}
+            >
+              <button type="button" className="item-remove-x" title={`Remove ${weapon} skin`} aria-label={`Remove ${weapon} skin`} onClick={e => { e.stopPropagation(); equipSkin(weapon, null) }}>×</button>
+              <div className={`ob-item-art rarity-${s ? rarityClass(s.rarity) : 'base-grade'}`}>
+                <span className="item-glow" />
+                {img
+                  ? <img src={img} alt={s ? s.name : `${weapon} placeholder`} className={s ? 'lb-equipped-image' : 'lb-placeholder-image'} loading="lazy" />
+                  : <span className="item-fallback">NO IMAGE</span>}
+                <span className="item-rarity">{s?.rarity ?? 'EMPTY SLOT'}</span>
+                <span className="lb-card-hover-action">{s ? 'CHANGE SKIN' : 'CHOOSE SKIN'}</span>
+              </div>
+              <div className="ob-item-copy">
+                <div className="ob-item-weapon">{weapon}</div>
+                <strong>{s ? s.name : 'No skin equipped'}</strong>
+                {!s && <small>{img ? 'Default preview' : 'Image unavailable'}</small>}
+                {s && st
+                  ? <button type="button" className="ob-item-foot" onClick={e => { e.stopPropagation(); openSettings(weapon) }} aria-label={`Edit float and seed for ${weapon}`} title="Edit float and pattern seed">
+                      <span>FLOAT <b>{st.float.toFixed(6)}</b></span>
+                      <span>SEED <b>{st.seed}</b></span>
+                      <span className="float-wear">{wearCode(st.float)}</span>
+                    </button>
+                  : <div className="ob-item-foot"><span>NO FINISH EQUIPPED</span></div>}
+              </div>
             </div>
           })}</div>
         </section>
