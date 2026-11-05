@@ -3674,3 +3674,89 @@ button.lb-loadout-item-foot:hover {
   min-height: 250px;
   max-height: 250px;
 }
+
+
+/* FINAL LAYOUT FIX — center the complete seven-track board and hard-match card sizing. */
+.lb-section {
+  box-sizing: border-box;
+  width: 100%;
+  min-width: 0;
+  max-width: none;
+  padding: 30px 24px 42px;
+}
+.lb-section .lb-board {
+  display: grid;
+  box-sizing: border-box;
+  grid-template-columns: repeat(7, 170px);
+  column-gap: 12px;
+  row-gap: 0;
+  width: 1262px;
+  min-width: 1262px;
+  max-width: none;
+  margin: 0 auto;
+  overflow: visible;
+}
+.lb-section .lb-board > section {
+  box-sizing: border-box;
+  min-width: 0;
+  align-self: start;
+}
+.lb-section .lb-equipment-cards,
+.lb-section .course-skin-grid {
+  display: grid;
+  grid-auto-rows: 250px;
+  align-content: start;
+  align-items: start;
+  gap: 10px;
+}
+.lb-section .lb-equipment-cards {
+  grid-template-columns: 170px;
+  width: 170px;
+}
+.lb-section .course-skin-grid {
+  grid-template-columns: repeat(2, 170px);
+  width: 100%;
+}
+.lb-section .lb-board .course-design-card.card,
+.lb-section .lb-board .course-design-card.card.course-equipment-card {
+  box-sizing: border-box !important;
+  display: flex;
+  flex-direction: column;
+  justify-self: start;
+  width: 170px !important;
+  min-width: 170px !important;
+  max-width: 170px !important;
+  height: 250px !important;
+  min-height: 250px !important;
+  max-height: 250px !important;
+  overflow: hidden;
+}
+.lb-section .lb-board .course-design-card .card-body {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow: hidden;
+}
+.lb-section .lb-board .course-design-card .course-card-art {
+  box-sizing: border-box;
+  display: grid;
+  flex: 0 0 66px;
+  width: 100%;
+  height: 66px;
+  min-height: 66px;
+  margin: 0 0 5px;
+  place-items: center;
+  overflow: hidden;
+}
+.lb-section .lb-board .course-design-card .course-card-art img {
+  display: block;
+  width: auto;
+  height: auto;
+  max-width: 88%;
+  max-height: 58px;
+  object-fit: contain;
+  object-position: center;
+  transform: none;
+}
+.lb-section .lb-board .course-design-card:hover .course-card-art img {
+  transform: none;
+}
