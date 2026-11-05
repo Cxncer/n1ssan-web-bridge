@@ -557,9 +557,8 @@ export default function LoadoutBuilder({ skins }: LoadoutBuilderProps) {
                 {s && <h3>{s.name}</h3>}
                 
                 {s && st && <div className="progress">
-                  <span>FLOAT</span>
-                  <div className="progress-bar"><span style={{ width: `${floatPercent}%`, backgroundColor: floatColor(st.float) }} /></div>
                   <span>{st.float.toFixed(5)}</span>
+                  <div className="progress-bar"><span style={{ width: `${floatPercent}%`, backgroundColor: floatColor(st.float) }} /></div>
                 </div>}
               </div>
               <div
