@@ -508,7 +508,6 @@ export default function LoadoutBuilder({ skins }: LoadoutBuilderProps) {
                 {img ? <img src={img} alt={item?.name ?? label} loading="lazy" /> : <span>{info.icon}</span>}
               </div>
               <h3>{item ? item.name : 'No item equipped'}</h3>
-              <p>{item ? item.weapon : info.subtitle}</p>
             </div>
             <div className="card-footer course-equipment-footer">
               <span>{item ? 'EQUIPPED' : 'EMPTY SLOT'} <b>{item ? item.rarity : slot.toUpperCase()}</b></span>
