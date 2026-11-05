@@ -3028,3 +3028,43 @@ button.lb-loadout-item-foot:hover {
   .lb-section .ob-item-copy>strong { font-size:12px; }
   .lb-section .ob-item-foot { gap:9px; font-size:7px; }
 }
+
+
+/* Obsidian inventory grid geometry, applied to each Loadout weapon family. */
+.lb-section .ob-item-grid {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 15px;
+  width: 100%;
+  min-width: 0;
+}
+.lb-section .ob-item-card .item-open {
+  position: absolute;
+  right: 13px;
+  bottom: 14px;
+  color: #7c8d80;
+  opacity: 0;
+  transition: opacity .2s;
+  pointer-events: none;
+}
+.lb-section .ob-item-card:hover .item-open,
+.lb-section .ob-item-card:focus-visible .item-open { opacity: 1; }
+@media (max-width: 1180px) {
+  .lb-section .ob-item-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+}
+@media (max-width: 900px) {
+  .lb-section .ob-item-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+}
+@media (max-width: 680px) {
+  .lb-section .ob-item-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
+  .lb-section .ob-item-art { height: 120px; }
+  .lb-section .ob-item-copy { padding: 10px 9px; }
+  .lb-section .ob-item-copy > strong { font-size: 11px; min-height: 31px; }
+  .lb-section .ob-item-foot { gap: 5px; font-size: 7px; flex-wrap: wrap; }
+}
+@media (max-width: 420px) {
+  .lb-section .ob-item-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .lb-section .ob-item-art { height: 100px; }
+  .lb-section .ob-item-copy > strong { font-size: 10px; }
+  .lb-section .ob-item-foot { font-size: 6px; }
+}
