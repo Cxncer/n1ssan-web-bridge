@@ -1163,17 +1163,7 @@
   border-width: 1px;
   box-shadow: 0 9px 28px #0007;
 }
-.lb-weapon-card::before {
-  content: '';
-  position: absolute;
-  inset: 0 0 auto;
-  z-index: 3;
-  height: 3px;
-  background: linear-gradient(90deg, transparent, #bdbdbd, transparent);
-  opacity: .7;
-  pointer-events: none;
-}
-.lb-weapon-card.is-equipped::before { background: linear-gradient(90deg, transparent, #fff, transparent); opacity: 1; }
+/* Removed legacy Loadout silver top-sheen. */
 .lb-weapon-image, .lb-picker-image { border-radius: 7px; }
 .lb-profile-trigger { border-radius: 999px; }
 .lb-team-button { border-radius: 10px; }
@@ -2800,31 +2790,231 @@ button.lb-loadout-item-foot:hover {
 }
 /* Course Design Cards adaptation — legacy Loadout card visuals removed. */
 .lb-section .course-skin-grid{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:22px;width:100%;min-width:0}
-.lb-section .course-skin-card{--course-accent:#01c3a8;position:relative;display:grid;grid-template-rows:auto 1fr auto;min-width:0;min-height:330px;padding:0;overflow:hidden;border:0;border-radius:22px;color:#fff;background:radial-gradient(ellipse at right top,color-mix(in srgb,var(--course-accent) 35%,transparent) 0%,#151419 48%,#151419 100%);box-shadow:0 10px 25px #000c;text-align:left;cursor:pointer;transition:transform .2s,box-shadow .2s}
-.lb-section .course-skin-card:before{content:"";position:absolute;inset:0;z-index:0;padding:2px;border-radius:22px;background:linear-gradient(45deg,#232228,#232228,#232228,#232228,var(--course-accent));-webkit-mask:linear-gradient(#fff 0 0) content-box,linear-gradient(#fff 0 0);-webkit-mask-composite:xor;mask-composite:exclude;pointer-events:none}
-.lb-section .course-skin-card:hover{transform:translateY(-3px);box-shadow:0 16px 32px #000e}
-.lb-section .course-skin-card.green{--course-accent:#01c3a8}.lb-section .course-skin-card.blue{--course-accent:#1890ff}.lb-section .course-skin-card.orange{--course-accent:#ffb741}.lb-section .course-skin-card.red{--course-accent:#a63d2a}
-.lb-section .course-skin-header{display:flex;align-items:center;gap:7px;min-width:0;padding:13px 14px 0 17px;color:#ddd;font:600 9px/1.3 'Nunito',sans-serif}
-.lb-section .course-skin-weapon{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.lb-section .course-skin-rarity{margin-left:auto;color:#bfc5c2;font:8px 'DM Mono',monospace;text-transform:uppercase;white-space:nowrap}
-.lb-section .course-skin-remove{flex:none;width:21px;height:21px;padding:0;border:0;border-radius:50%;color:#ddd;background:#ffffff12;font-size:15px;line-height:1;opacity:.65;cursor:pointer}
-.lb-section .course-skin-remove:hover{color:#fff;background:#ffffff2b;opacity:1}
-.lb-section .course-skin-body{display:flex;flex-direction:column;justify-content:center;min-width:0;padding:9px 16px 13px;text-align:center}
-.lb-section .course-skin-art{display:grid;place-items:center;width:100%;height:142px;margin:0 auto 5px;overflow:hidden;background:transparent!important;border:0!important}
-.lb-section .course-skin-art img{width:100%;height:100%;object-fit:contain;filter:drop-shadow(0 12px 15px #000b);transition:transform .25s}
-.lb-section .course-skin-card:hover .course-skin-art img{transform:scale(1.055)}
-.lb-section .course-skin-art>span{color:#747b78;font:9px 'DM Mono',monospace}
-.lb-section .course-skin-body h3,.lb-section .course-skin-body strong{display:block;margin:5px 0 3px;color:#fff;font:700 16px/1.25 'Nunito',sans-serif;overflow-wrap:anywhere;text-transform:capitalize}
-.lb-section .course-skin-body p{min-height:16px;margin:0;color:#ddd;font:10px/1.4 'Nunito',sans-serif;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.lb-section .course-skin-progress{margin-top:13px;text-align:left}
-.lb-section .course-skin-progress-label{display:flex;justify-content:space-between;gap:8px;margin-bottom:5px;color:#fff;font:600 8px 'Nunito',sans-serif}
-.lb-section .course-skin-progress-track{height:4px;overflow:hidden;border-radius:99px;background:#363636}
-.lb-section .course-skin-progress-track span{display:block;height:100%;border-radius:99px;background:var(--course-accent)}
-.lb-section .course-skin-progress small{display:block;margin-top:4px;color:#aaa;font:8px 'DM Mono',monospace;text-align:right}
-.lb-section .course-skin-footer{display:flex;align-items:center;justify-content:space-between;gap:8px;min-width:0;min-height:43px;padding:8px 13px 8px 16px;border-top:1px solid #292929;border-radius:0 0 22px 22px;background:#151419;color:#ddd;font:8px 'DM Mono',monospace}
-.lb-section .course-skin-footer span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.lb-section .course-skin-footer b{color:var(--course-accent)}
-.lb-section .course-skin-glow,.lb-section .course-skin-open{display:none!important}
-@media(max-width:1180px){.lb-section .course-skin-grid{grid-template-columns:repeat(4,minmax(0,1fr));gap:16px}}
-@media(max-width:900px){.lb-section .course-skin-grid{grid-template-columns:repeat(3,minmax(0,1fr))}}
-@media(max-width:680px){.lb-section .course-skin-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}.lb-section .course-skin-card{min-height:290px;border-radius:18px}.lb-section .course-skin-card:before{border-radius:18px}.lb-section .course-skin-art{height:112px}.lb-section .course-skin-body{padding:8px 10px 10px}.lb-section .course-skin-body strong{font-size:13px}.lb-section .course-skin-footer{padding-inline:10px;border-radius:0 0 18px 18px}}
+.lb-section .course-skin-card{--course-accent:#01c3a8;position:relative;display:grid;grid-template-r/* 21st.dev — Course Design Cards adaptation.
+   Card geometry, radial surfaces, header/body/footer composition and accent border
+   follow the original Kristen17 CodePen component. Loadout's previous card chrome
+   is intentionally not used by these skin cards. */
+.lb-section .course-skin-grid {
+  display:grid;
+  grid-template-columns:repeat(auto-fill,minmax(220px,1fr));
+  align-items:stretch;
+  gap:26px;
+  width:100%;
+  min-width:0;
+}
+.lb-section .course-design-card.card {
+  --course-accent:#01c3a8;
+  position:relative;
+  z-index:1;
+  display:block;
+  width:100%;
+  min-width:0;
+  min-height:326px;
+  padding:0;
+  overflow:hidden;
+  border:0;
+  border-radius:2rem;
+  color:#fff;
+  background:radial-gradient(ellipse at right top,#107667ed 0%,#151419 47%,#151419 100%);
+  box-shadow:0.063em 0.75em 1.563em rgb(0 0 0 / 78%);
+  text-align:center;
+  cursor:pointer;
+  appearance:none;
+  -webkit-appearance:none;
+  transition:transform .2s,box-shadow .2s;
+}
+.lb-section .course-design-card.card:before {
+  position:absolute;
+  content:"";
+  inset:0;
+  width:100%;
+  height:100%;
+  z-index:2;
+  border:0.155rem solid transparent;
+  border-radius:2rem;
+  background:linear-gradient(45deg,#232228,#232228,#232228,#232228,var(--course-accent)) border-box;
+  -webkit-mask:linear-gradient(#fff 0 0) padding-box,linear-gradient(#fff 0 0);
+  -webkit-mask-composite:destination-out;
+  mask-composite:exclude;
+  pointer-events:none;
+}
+.lb-section .course-design-card.card:hover {
+  transform:translateY(-3px);
+  box-shadow:0.063em 0.9em 1.8em rgb(0 0 0 / 86%);
+}
+.lb-section .course-design-card.card:focus-visible {
+  outline:2px solid var(--course-accent);
+  outline-offset:4px;
+}
+.lb-section .course-design-card.card.green { --course-accent:#01c3a8; background:radial-gradient(ellipse at right top,#107667ed 0%,#151419 47%,#151419 100%); }
+.lb-section .course-design-card.card.blue { --course-accent:#1890ff; background:radial-gradient(ellipse at right top,#00458f8f 0%,#151419 45%,#151419 100%); }
+.lb-section .course-design-card.card.orange { --course-accent:#ffb741; background:radial-gradient(ellipse at right top,#ffb74194 0%,#151419 47%,#151419 100%); }
+.lb-section .course-design-card.card.red { --course-accent:#a63d2a; background:radial-gradient(ellipse at right top,#a63d2a82 0%,#151419 47%,#151419 100%); }
+.lb-section .course-design-card .card-header {
+  position:absolute;
+  inset:0 0 auto;
+  z-index:3;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:8px;
+  width:100%;
+  min-width:0;
+  padding:15px 15px 0 22px;
+  color:#ddd;
+  text-align:left;
+}
+.lb-section .course-card-weapon {
+  min-width:0;
+  overflow:hidden;
+  color:#ddd;
+  font:700 12px/1.3 "Nunito",sans-serif;
+  text-overflow:ellipsis;
+  white-space:nowrap;
+}
+.lb-section .course-card-header-actions { display:flex; flex:none; align-items:center; gap:7px; }
+.lb-section .course-card-rarity {
+  max-width:105px;
+  overflow:hidden;
+  color:#bfc5c2;
+  font:8px "DM Mono",monospace;
+  text-overflow:ellipsis;
+  text-transform:uppercase;
+  white-space:nowrap;
+}
+.lb-section .course-card-remove {
+  display:grid;
+  flex:none;
+  width:25px;
+  height:25px;
+  padding:0;
+  place-items:center;
+  border:0;
+  border-radius:50%;
+  color:#ddd;
+  background:#ffffff12;
+  box-shadow:none;
+  font:16px/1 "Nunito",sans-serif;
+  opacity:.72;
+  cursor:pointer;
+}
+.lb-section .course-card-remove:hover { color:#fff; background:#ffffff2b; opacity:1; }
+.lb-section .course-design-card .card-body {
+  position:absolute;
+  top:49%;
+  left:50%;
+  display:block;
+  width:100%;
+  min-width:0;
+  padding:10px 22px 0;
+  transform:translate(-50%,-50%);
+  text-align:center;
+}
+.lb-section .course-card-art {
+  display:grid;
+  width:100%;
+  height:126px;
+  margin:0 auto 3px;
+  place-items:center;
+  overflow:hidden;
+}
+.lb-section .course-card-art img {
+  display:block;
+  width:100%;
+  height:100%;
+  object-fit:contain;
+  filter:drop-shadow(0 10px 13px #000b);
+  transition:transform .25s;
+}
+.lb-section .course-design-card:hover .course-card-art img { transform:scale(1.055); }
+.lb-section .course-card-art>span { color:#747b78; font:9px "DM Mono",monospace; }
+.lb-section .course-design-card .card-body h3 {
+  display:block;
+  max-height:42px;
+  margin:7px 0 3px;
+  overflow:hidden;
+  color:#fff;
+  font:700 18px/1.2 "Nunito",sans-serif;
+  text-overflow:ellipsis;
+  text-transform:capitalize;
+}
+.lb-section .course-design-card .card-body p {
+  min-height:16px;
+  margin:0;
+  overflow:hidden;
+  color:#ddd;
+  font:10px/1.4 "Nunito",sans-serif;
+  letter-spacing:.03rem;
+  text-overflow:ellipsis;
+  white-space:nowrap;
+}
+.lb-section .course-design-card .progress { margin-top:13px; text-align:left; }
+.lb-section .course-design-card .progress>span:first-child {
+  display:block;
+  width:100%;
+  margin-bottom:5px;
+  color:#fff;
+  font:700 8px "Nunito",sans-serif;
+  text-align:left;
+}
+.lb-section .course-design-card .progress-bar {
+  position:relative;
+  display:block;
+  width:100%;
+  height:5px;
+  overflow:hidden;
+  border-radius:3.125rem;
+  background:#363636;
+}
+.lb-section .course-design-card .progress-bar>span {
+  display:block;
+  height:100%;
+  border-radius:inherit;
+  background:var(--course-accent);
+}
+.lb-section .course-design-card .progress>span:last-child {
+  display:block;
+  margin-top:5px;
+  color:#fff;
+  font:8px "DM Mono",monospace;
+  text-align:right;
+}
+.lb-section .course-design-card .card-footer {
+  position:absolute;
+  inset:auto 0 0;
+  z-index:3;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:10px;
+  width:100%;
+  min-width:0;
+  min-height:51px;
+  padding:9px 19px 10px 22px;
+  border-top:1px solid #292929;
+  border-radius:0 0 2rem 2rem;
+  color:#ddd;
+  background:#151419;
+  font:9px "DM Mono",monospace;
+  text-align:left;
+}
+.lb-section .course-card-footer { cursor:pointer; }
+.lb-section .course-card-footer>span { overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.lb-section .course-card-footer b { color:var(--course-accent); font-weight:700; }
+.lb-section .course-card-wear { color:#aaa; }
+@media(max-width:1180px) {
+  .lb-section .course-skin-grid { grid-template-columns:repeat(auto-fill,minmax(205px,1fr)); gap:19px; }
+}
+@media(max-width:680px) {
+  .lb-section .course-skin-grid { grid-template-columns:repeat(2,minmax(0,1fr)); gap:12px; }
+  .lb-section .course-design-card.card { min-height:292px; border-radius:1.5rem; }
+  .lb-section .course-design-card.card:before { border-radius:1.5rem; }
+  .lb-section .course-design-card .card-header { padding:12px 10px 0 14px; }
+  .lb-section .course-card-weapon { font-size:10px; }
+  .lb-section .course-card-rarity { max-width:70px; font-size:7px; }
+  .lb-section .course-card-remove { width:22px; height:22px; }
+  .lb-section .course-design-card .card-body { padding-inline:12px; }
+  .lb-section .course-card-art { height:105px; }
+  .lb-section .course-design-card .card-body h3 { font-size:14px; }
+  .lb-section .course-design-card .card-footer { min-height:45px; padding:8px 12px; border-radius:0 0 1.5rem 1.5rem; font-size:8px; }
+}
