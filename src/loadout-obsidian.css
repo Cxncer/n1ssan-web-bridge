@@ -3164,3 +3164,41 @@ button.lb-loadout-item-foot:hover {
     font-size: 7px !important;
   }
 }
+
+
+/* Loadout skin cards now use Obsidian's native .ob-item-card DOM and design rules. */
+.lb-section .ob-item-card { cursor: pointer; }
+.lb-section .ob-item-card:focus-visible { outline: 2px solid #9caf9f; outline-offset: 3px; }
+.lb-section .ob-item-card .lb-card-hover-action {
+  position: absolute;
+  z-index: 4;
+  right: 10px;
+  bottom: 10px;
+  opacity: 0;
+  transition: opacity .2s;
+}
+.lb-section .ob-item-card:hover .lb-card-hover-action,
+.lb-section .ob-item-card:focus-visible .lb-card-hover-action { opacity: 1; }
+.lb-section .ob-item-card .ob-item-foot {
+  width: 100%;
+  margin: 0;
+  background: transparent;
+  text-align: left;
+  cursor: pointer;
+}
+.lb-section .ob-item-card .ob-item-foot:hover { color: #e4e9e4; }
+.lb-section .ob-item-card .item-remove-x {
+  position: absolute;
+  z-index: 5;
+  top: 9px;
+  right: 9px;
+  opacity: 0;
+}
+.lb-section .ob-item-card:hover .item-remove-x,
+.lb-section .ob-item-card .item-remove-x:focus-visible { opacity: 1; }
+.lb-section .ob-item-card .ob-item-copy > small {
+  display: block;
+  margin-top: 5px;
+  color: #829087;
+  font: 9px 'DM Mono',monospace;
+}
