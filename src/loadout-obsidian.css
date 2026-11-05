@@ -1782,3 +1782,102 @@ button.lb-loadout-item-foot:hover { color: #fff; background: #242424; }
   .lb-loadout-item-foot > span:nth-child(-n+2) { font-size: 6px; }
   .lb-loadout-item-foot b { font-size: 7px; }
 }
+
+/* Final Loadout sizing pass: consistent full-width cards and compact controls. */
+.lb-column-cards {
+  grid-template-columns: minmax(0, 1fr) !important;
+  grid-auto-rows: auto;
+  gap: 10px;
+}
+.lb-weapon-card-wrap.lb-inventory-card {
+  width: 100%;
+  height: 210px;
+  min-height: 210px;
+}
+.lb-loadout-item-foot {
+  flex: 0 0 34px;
+  min-height: 34px;
+  gap: 8px;
+  padding: 5px 11px;
+  font-size: 9px;
+}
+.lb-loadout-item-foot > span:nth-child(-n+2) {
+  gap: 4px;
+  font-size: 9px;
+  letter-spacing: 0;
+}
+.lb-loadout-item-foot b {
+  font-size: 10px;
+  font-weight: 600;
+}
+.lb-loadout-item-foot .float-wear {
+  padding: 2px 5px;
+  font-size: 8px;
+}
+
+/* Keep team selection and its action on one compact horizontal row. */
+.lb-team-save-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 12px;
+}
+.lb-team-switch {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+}
+.lb-team-button {
+  min-height: 48px;
+  padding: 6px 9px;
+  gap: 8px;
+}
+.lb-team-symbol {
+  width: 30px;
+  height: 26px;
+  flex-basis: 30px;
+}
+.lb-team-button > span:last-child { gap: 2px; }
+.lb-team-button strong { font-size: 9px; }
+.lb-team-button small { font-size: 9px; }
+.lb-team-save-actions { justify-content: flex-end; }
+.lb-clear-button { min-height: 34px; padding: 7px 11px; }
+
+/* Reduce the profile panel's vertical footprint without changing its controls. */
+.lb-profiles {
+  min-height: 0;
+  padding: 10px 12px;
+  gap: 9px;
+}
+.lb-profile-select-wrap { gap: 5px; }
+.lb-profile-trigger {
+  min-height: 38px;
+  padding: 5px 9px;
+  gap: 8px;
+}
+.lb-profile-avatar {
+  width: 25px;
+  height: 25px;
+  flex-basis: 25px;
+}
+.lb-profile-actions { gap: 5px; }
+.lb-profile-actions button {
+  min-height: 32px;
+  padding: 6px 10px;
+}
+
+@media (max-width: 680px) {
+  .lb-team-save-row {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 8px;
+    padding: 9px;
+  }
+  .lb-team-switch { gap: 6px; }
+  .lb-team-button { min-height: 46px; padding: 5px 7px; }
+  .lb-team-button strong { font-size: 8px; }
+  .lb-team-button small { font-size: 8px; }
+  .lb-team-save-actions { justify-content: flex-end; }
+  .lb-loadout-item-foot { gap: 6px; padding-inline: 8px; }
+  .lb-loadout-item-foot > span:nth-child(-n+2) { font-size: 8px; }
+  .lb-loadout-item-foot b { font-size: 9px; }
+}
