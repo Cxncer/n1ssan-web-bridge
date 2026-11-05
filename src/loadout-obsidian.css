@@ -3054,3 +3054,113 @@ button.lb-loadout-item-foot:hover {
     padding-inline: 13px !important;
   }
 }
+
+
+/* ==========================================================================
+   LOADOUT CARD LAYOUT CORRECTION — restore full-width Obsidian inventory grid
+   The old board placed each weapon family in a narrow side-by-side column.
+   Stack families vertically, then let their cards use the available workspace.
+   ========================================================================== */
+.lb-section .lb-board {
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: stretch !important;
+  gap: 28px !important;
+  width: 100% !important;
+  min-width: 0 !important;
+}
+.lb-section .lb-column,
+.lb-section .lb-equipment-section {
+  width: 100% !important;
+  min-width: 0 !important;
+  max-width: none !important;
+}
+.lb-section .lb-column-cards {
+  display: grid !important;
+  grid-template-columns: repeat(auto-fill, minmax(164px, 1fr)) !important;
+  grid-auto-rows: auto !important;
+  align-items: stretch !important;
+  gap: 14px !important;
+  width: 100% !important;
+  min-width: 0 !important;
+}
+.lb-section .lb-weapon-card-wrap.lb-inventory-card {
+  width: 100% !important;
+  min-width: 0 !important;
+  min-height: 0 !important;
+  height: auto !important;
+  align-self: stretch !important;
+}
+.lb-section .lb-weapon-card-wrap .lb-loadout-item-art {
+  flex: 0 0 190px !important;
+  height: 190px !important;
+  min-height: 190px !important;
+}
+.lb-section .lb-weapon-card-wrap .lb-loadout-item-copy {
+  min-width: 0 !important;
+  overflow: hidden !important;
+  overflow-wrap: anywhere !important;
+}
+.lb-section .lb-weapon-card-wrap .lb-loadout-item-copy > strong {
+  overflow-wrap: anywhere !important;
+  word-break: normal !important;
+}
+.lb-section .lb-weapon-card-wrap .lb-loadout-item-foot {
+  flex-wrap: nowrap !important;
+  justify-content: flex-start !important;
+  gap: clamp(8px, 1.1vw, 18px) !important;
+  min-width: 0 !important;
+  white-space: nowrap !important;
+}
+.lb-section .lb-equipment-cards {
+  display: grid !important;
+  grid-template-columns: repeat(auto-fill, minmax(164px, 1fr)) !important;
+  gap: 14px !important;
+  width: 100% !important;
+}
+.lb-section .lb-equipment-card-wrap {
+  width: 100% !important;
+  min-width: 0 !important;
+  height: auto !important;
+  min-height: 0 !important;
+}
+.lb-section .lb-equipment-card-wrap > .lb-equipment-card {
+  width: 100% !important;
+  height: auto !important;
+  min-height: 0 !important;
+  border-radius: 7px !important;
+}
+.lb-section .lb-equipment-card-wrap .lb-card-top {
+  flex: 0 0 34px !important;
+  min-height: 34px !important;
+}
+.lb-section .lb-equipment-card-wrap .lb-equipment-art {
+  flex: 0 0 190px !important;
+  height: 190px !important;
+  min-height: 190px !important;
+}
+.lb-section .lb-equipment-card-wrap .lb-equipment-card-bottom {
+  flex: 1 1 auto !important;
+  min-height: 66px !important;
+}
+@media (max-width: 680px) {
+  .lb-section .lb-column-cards,
+  .lb-section .lb-equipment-cards {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    gap: 9px !important;
+  }
+  .lb-section .lb-weapon-card-wrap .lb-loadout-item-art,
+  .lb-section .lb-equipment-card-wrap .lb-equipment-art {
+    flex-basis: 145px !important;
+    height: 145px !important;
+    min-height: 145px !important;
+  }
+  .lb-section .lb-weapon-card-wrap .lb-loadout-item-copy {
+    padding: 10px 11px !important;
+  }
+  .lb-section .lb-weapon-card-wrap .lb-loadout-item-foot {
+    gap: 6px !important;
+    padding: 8px 9px !important;
+    font-size: 7px !important;
+  }
+}
