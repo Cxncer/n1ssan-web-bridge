@@ -2798,3 +2798,259 @@ button.lb-loadout-item-foot:hover {
     transition-duration: .01ms !important;
   }
 }
+
+
+/* ==========================================================================
+   EXACT OBSIDIAN INVENTORY CARD PORT — Loadout weapon skin cards
+   Deliberately overrides the former compact/horizontal Loadout card layout.
+   The existing selection and Float/Seed controls remain functional.
+   ========================================================================== */
+.lb-section .lb-column-cards {
+  display: grid !important;
+  grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  grid-auto-rows: auto !important;
+  align-items: stretch !important;
+  gap: 14px !important;
+}
+.lb-section .lb-weapon-card-wrap.lb-inventory-card {
+  position: relative !important;
+  display: flex !important;
+  flex-direction: column !important;
+  width: 100% !important;
+  height: auto !important;
+  min-height: 0 !important;
+  padding: 0 !important;
+  overflow: hidden !important;
+  border: 1px solid #2b322e !important;
+  border-radius: 7px !important;
+  background: #181d1b !important;
+  color: #e5e9e5 !important;
+  box-shadow: none !important;
+  isolation: isolate;
+  transition: border-color .2s, transform .2s !important;
+}
+.lb-section .lb-weapon-card-wrap.lb-inventory-card:hover {
+  border-color: #63776a !important;
+  transform: translateY(-2px) !important;
+  box-shadow: none !important;
+}
+.lb-section .lb-weapon-card-wrap.lb-inventory-card::before {
+  content: none !important;
+  display: none !important;
+}
+.lb-section .lb-weapon-card-wrap .lb-inventory-card-main {
+  display: flex !important;
+  flex: 1 1 auto !important;
+  flex-direction: column !important;
+  align-items: stretch !important;
+  width: 100% !important;
+  min-width: 0 !important;
+  min-height: 0 !important;
+  padding: 0 !important;
+  overflow: hidden !important;
+  border: 0 !important;
+  border-radius: 0 !important;
+  color: #e5e9e5 !important;
+  background: transparent !important;
+  box-shadow: none !important;
+  text-align: left !important;
+}
+.lb-section .lb-weapon-card-wrap .lb-inventory-card-main:hover {
+  border: 0 !important;
+  background: transparent !important;
+  box-shadow: none !important;
+  transform: none !important;
+}
+.lb-section .lb-weapon-card-wrap .lb-loadout-item-art {
+  position: relative !important;
+  display: grid !important;
+  flex: 0 0 190px !important;
+  width: 100% !important;
+  height: 190px !important;
+  min-height: 190px !important;
+  place-items: center !important;
+  overflow: hidden !important;
+  border: 0 !important;
+  border-bottom: 1px solid #2c342f !important;
+  border-radius: 0 !important;
+  background: radial-gradient(ellipse at 50% 54%,#343d37 0,#202722 38%,#191e1c 75%) !important;
+}
+.lb-section .lb-weapon-card-wrap .lb-loadout-item-art::before {
+  content: none !important;
+}
+.lb-section .lb-weapon-card-wrap .lb-loadout-item-art::after {
+  position: absolute !important;
+  z-index: 2 !important;
+  inset: 0 !important;
+  background: linear-gradient(135deg,transparent 40%,#ffffff05 50%,transparent 60%) !important;
+  content: '' !important;
+  pointer-events: none !important;
+}
+.lb-section .lb-weapon-card-wrap .lb-loadout-item-art img {
+  position: relative !important;
+  z-index: 1 !important;
+  display: block !important;
+  width: 85% !important;
+  height: 78% !important;
+  max-width: none !important;
+  max-height: none !important;
+  object-fit: contain !important;
+  filter: drop-shadow(0 12px 16px #0009) !important;
+  transition: transform .3s !important;
+}
+.lb-section .lb-weapon-card-wrap:hover .lb-loadout-item-art img {
+  transform: scale(1.06) !important;
+}
+.lb-section .lb-weapon-card-wrap .lb-loadout-item-art .item-rarity {
+  position: absolute !important;
+  z-index: 3 !important;
+  top: 12px !important;
+  right: 12px !important;
+  bottom: auto !important;
+  left: auto !important;
+  color: #a2afa5 !important;
+  font: 8px 'DM Mono',monospace !important;
+  letter-spacing: .8px !important;
+  text-transform: uppercase !important;
+  text-shadow: none !important;
+}
+.lb-section .lb-weapon-card-wrap .lb-card-hover-action {
+  position: absolute !important;
+  z-index: 4 !important;
+  right: 12px !important;
+  bottom: 12px !important;
+  left: auto !important;
+  padding: 6px 10px !important;
+  border: 1px solid #526257 !important;
+  border-radius: 4px !important;
+  color: #dce5de !important;
+  background: #171d1ad9 !important;
+  box-shadow: none !important;
+  font: 8px 'DM Mono',monospace !important;
+  letter-spacing: .7px !important;
+  opacity: 0 !important;
+  transform: translateY(4px) !important;
+  transition: opacity .2s,transform .2s !important;
+}
+.lb-section .lb-weapon-card-wrap:hover .lb-card-hover-action,
+.lb-section .lb-weapon-card-wrap .lb-inventory-card-main:focus-visible .lb-card-hover-action {
+  opacity: 1 !important;
+  transform: translateY(0) !important;
+}
+.lb-section .lb-weapon-card-wrap .lb-loadout-item-copy {
+  display: block !important;
+  flex: 1 1 auto !important;
+  width: 100% !important;
+  min-height: 0 !important;
+  padding: 13px 15px 14px !important;
+  border: 0 !important;
+  background: transparent !important;
+  gap: 0 !important;
+  text-align: left !important;
+}
+.lb-section .lb-weapon-card-wrap .lb-loadout-item-copy .ob-item-weapon {
+  display: flex !important;
+  align-items: center !important;
+  gap: 7px !important;
+  color: #829087 !important;
+  font: 9px 'DM Mono',monospace !important;
+  letter-spacing: .8px !important;
+  text-transform: uppercase !important;
+}
+.lb-section .lb-weapon-card-wrap .lb-loadout-item-copy > strong {
+  display: block !important;
+  min-height: 0 !important;
+  margin: 5px 0 0 !important;
+  color: #e5e9e5 !important;
+  font: 600 14px/1.3 Barlow,sans-serif !important;
+  letter-spacing: 0 !important;
+}
+.lb-section .lb-weapon-card-wrap .lb-loadout-item-copy > small {
+  display: block !important;
+  margin-top: 5px !important;
+  color: #829087 !important;
+  font: 9px 'DM Mono',monospace !important;
+}
+.lb-section .lb-weapon-card-wrap .lb-loadout-item-foot {
+  position: relative !important;
+  display: flex !important;
+  flex: 0 0 auto !important;
+  align-items: center !important;
+  gap: 18px !important;
+  width: 100% !important;
+  min-height: 0 !important;
+  height: auto !important;
+  margin: 0 !important;
+  padding: 10px 15px 12px !important;
+  border: 0 !important;
+  border-top: 1px solid #2b322e !important;
+  border-radius: 0 !important;
+  color: #69766d !important;
+  background: transparent !important;
+  font: 8px 'DM Mono',monospace !important;
+  letter-spacing: .5px !important;
+  text-align: left !important;
+  box-shadow: none !important;
+}
+.lb-section .lb-weapon-card-wrap button.lb-loadout-item-foot {
+  cursor: pointer;
+}
+.lb-section .lb-weapon-card-wrap .lb-loadout-item-foot:hover {
+  color: #aab4ac !important;
+  background: #1c231f !important;
+}
+.lb-section .lb-weapon-card-wrap .lb-loadout-item-foot b {
+  margin-left: 4px !important;
+  color: #aab4ac !important;
+  font: 400 9px 'DM Mono',monospace !important;
+}
+.lb-section .lb-weapon-card-wrap .lb-loadout-item-foot .float-wear {
+  margin-left: auto !important;
+  padding: 2px 5px !important;
+  border: 1px solid #39443d !important;
+  border-radius: 3px !important;
+  color: #a2afa5 !important;
+  background: transparent !important;
+  font: 8px 'DM Mono',monospace !important;
+}
+.lb-section .lb-weapon-card-wrap .lb-loadout-item-foot-empty {
+  color: #69766d !important;
+}
+.lb-section .lb-weapon-card-wrap .item-remove-x {
+  position: absolute !important;
+  z-index: 8 !important;
+  top: 9px !important;
+  right: 9px !important;
+  display: grid !important;
+  width: 24px !important;
+  height: 24px !important;
+  place-items: center !important;
+  padding: 0 !important;
+  border: 1px solid #39433d !important;
+  border-radius: 4px !important;
+  color: #aab4ac !important;
+  background: #171d1acc !important;
+  opacity: 0 !important;
+  transition: opacity .2s,border-color .2s,color .2s !important;
+}
+.lb-section .lb-weapon-card-wrap:hover .item-remove-x,
+.lb-section .lb-weapon-card-wrap .item-remove-x:focus-visible {
+  opacity: 1 !important;
+}
+.lb-section .lb-weapon-card-wrap .item-remove-x:hover {
+  border-color: #9a625b !important;
+  color: #f1c1b9 !important;
+  background: #35211f !important;
+}
+@media (max-width: 680px) {
+  .lb-section .lb-column-cards { grid-template-columns: minmax(0,1fr) !important; }
+  .lb-section .lb-weapon-card-wrap .lb-loadout-item-art {
+    flex-basis: 190px !important;
+    height: 190px !important;
+    min-height: 190px !important;
+  }
+  .lb-section .lb-weapon-card-wrap .lb-loadout-item-foot {
+    gap: 12px !important;
+    padding-inline: 13px !important;
+  }
+}
