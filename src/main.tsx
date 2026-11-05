@@ -6,7 +6,7 @@ import App from './App.tsx'
 import LoadoutBuilder, { type Skin } from './LoadoutBuilder'
 import skinData from './skins.json'
 
-const normalizedPath = window.location.pathname.replace(/\\/+$/, '') || '/'
+const normalizedPath = window.location.pathname.replace(/\/+$/, '') || '/'
 const isLoadoutRoute = normalizedPath === '/loadout' || new URLSearchParams(window.location.search).get('page') === 'loadout'
 
 createRoot(document.getElementById('root')!).render(
