@@ -3260,3 +3260,12 @@ button.lb-loadout-item-foot:hover {
   justify-content: center;
   cursor: default;
 }
+
+/* Preserve the established empty-slot treatment and compact skin-name hierarchy. */
+.lb-section .lb-board .course-design-card.is-empty .course-card-art img {
+  opacity: .15;
+}
+.lb-section .lb-board .course-design-card .card-body h3 {
+  font-size: 15px;
+  line-height: 1.2;
+}
