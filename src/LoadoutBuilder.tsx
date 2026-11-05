@@ -515,48 +515,58 @@ export default function LoadoutBuilder({ skins }: LoadoutBuilderProps) {
         if (!visible.length) return null
         return <section className={`lb-column lb-column-${col.title.toLowerCase().replace(/\s+/g, '-')}`} key={col.title}>
           <header className="lb-column-heading"><div className="lb-column-title-row"><span className="lb-column-mark">{col.title === 'PISTOLS' ? '⌁' : col.title === 'MID-TIER' ? '⌖' : col.title === 'RIFLES' ? '⌁' : '⌕'}</span><h3>{col.title}</h3></div><p>{col.subtitle}</p></header>
-          <div className={`course-skin-grid ${visible.length ? '' : 'is-empty'}`}>{visible.map(weapon => {
+          <div className="course-skin-grid">{visible.map(weapon => {
             const s = selectedSkin(weapon)
             const img = s ? imageOf(s) : placeholder(weapon)
             const st = s ? skinSettings[team][settingsKey(weapon, s.id)] ?? defaults(s) : null
-            const grade = s ? rarityClass(s.rarity) : 'base-grade'
-            const category = col.title.toLowerCase().replace(/\\s+/g, '-')
-            return <div
+            const tone = team === 'T' ? 'green' : 'blue'
+            const floatPercent = st ? Math.max(0, Math.min(100, st.float * 100)) : 0
+            return <article
+              key={weapon}
               role="button"
               tabIndex={0}
-              key={weapon}
-              className={`course-skin-card rarity-card-${grade} item-category-${category} ${s ? 'is-equipped' : 'is-empty'}`}
+              className={`course-design-card card ${tone} ${s ? 'is-equipped' : 'is-empty'}`}
               aria-label={`${weapon}: ${s ? s.name : 'No skin equipped'}. Choose skin.`}
               onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); openPicker(weapon) } }}
               onClick={() => openPicker(weapon)}
             >
-              <button
-                type="button"
-                className="course-skin-remove"
-                aria-label={`Remove ${weapon} skin`}
-                title="Remove item"
-                onClick={e => { e.stopPropagation(); equipSkin(weapon, null) }}
-              >×</button>
-              <div className={`course-skin-art rarity-${grade}`}>
-                <span className="course-skin-glow" />
-                {img
-                  ? <img src={img} alt="" loading="lazy" />
-                  : <span className="item-fallback">NO IMAGE</span>}
-                <span className="course-skin-rarity">{s?.rarity ?? 'EMPTY SLOT'}</span>
-              </div>
-              <div className="course-skin-body">
-                <div className="course-skin-weapon">{weapon}</div>
-                <strong>{s ? s.name : 'No skin equipped'}</strong>
-                <div className="course-skin-footer">
-                  {s && st ? <>
-                    <span>FLOAT <b>{st.float.toFixed(5)}</b></span>
-                    <span>SEED <b>{st.seed}</b></span>
-                    <span className="float-wear">{wearCode(st.float)}</span>
-                  </> : null}
+              <div className="card-header">
+                <div className="date course-card-weapon">{weapon}</div>
+                <div className="course-card-header-actions">
+                  <span className="course-card-rarity">{s?.rarity ?? 'EMPTY SLOT'}</span>
+                  <button
+                    type="button"
+                    className="course-card-remove"
+                    aria-label={`Remove ${weapon} skin`}
+                    title="Remove item"
+                    onClick={e => { e.stopPropagation(); equipSkin(weapon, null) }}
+                  >×</button>
                 </div>
               </div>
-              <span className="course-skin-open">↗</span>
-            </div>
+              <div className="card-body">
+                <div className="course-card-art">
+                  {img ? <img src={img} alt={s?.name ?? weapon} loading="lazy" /> : <span>NO IMAGE</span>}
+                </div>
+                <h3>{s ? s.name : 'Choose a skin'}</h3>
+                <p>{s ? (s.description || s.rarity) : 'Select a finish from your catalogue'}</p>
+                {s && st && <div className="progress">
+                  <span>FLOAT</span>
+                  <div className="progress-bar"><span style={{ width: `${floatPercent}%` }} /></div>
+                  <span>{st.float.toFixed(5)}</span>
+                </div>}
+              </div>
+              <div
+                className="card-footer course-card-footer"
+                role={s ? 'button' : undefined}
+                tabIndex={s ? 0 : undefined}
+                aria-label={s ? `Edit float and seed for ${weapon}` : undefined}
+                onClick={e => { if (s) { e.stopPropagation(); openSettings(weapon) } }}
+                onKeyDown={e => { if (s && (e.key === 'Enter' || e.key === ' ')) { e.preventDefault(); e.stopPropagation(); openSettings(weapon) } }}
+              >
+                <span>SEED <b>{st ? st.seed : '—'}</b></span>
+                <span className="course-card-wear">{st ? wearCode(st.float) : 'NOT EQUIPPED'}</span>
+              </div>
+            </article>
           })}</div>
         </section>
       })}
