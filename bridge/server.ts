@@ -670,7 +670,9 @@ app.post('/armory/apply', async (_req: Request, res: Response) => {
         error: {
           code: 'EMPTY_ARMORY',
           message: 'The active Armory profile could not be projected safely.',
-          details: ['Check that its items are supported and resolve against the current catalogue/schema.'],
+          details: runtime.skippedItems.length > 0
+            ? runtime.skippedItems.map(item => `${item.definitionId}: ${item.reason}`)
+            : ['Check that its items are supported and resolve against the current catalogue/schema.'],
         },
         runtime,
       })
