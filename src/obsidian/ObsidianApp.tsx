@@ -6,7 +6,7 @@ import {
   type ObsidianInventoryProfile,
 } from '../armory/obsidian-adapter'
 import { migrateLegacyInventory } from '../armory/migrate-legacy'
-import { ArmoryBridgeError, readArmoryDocument, writeArmoryDocument } from '../armory/bridge-client'
+import { ArmoryBridgeError, applyArmoryToGame, readArmoryDocument, writeArmoryDocument } from '../armory/bridge-client'
 import { catalogueDefinitionId, toCatalogueDefinition } from '../armory/catalogue-identity'
 import skinData from '../skins.json'
 import knifeData from './knife-skins.json'
@@ -50,6 +50,7 @@ export default function ObsidianApp() {
   const [armoryError, setArmoryError] = useState('')
   const [armorySaveError, setArmorySaveError] = useState<{ message: string; conflict: boolean } | null>(null)
   const [armoryStatus, setArmoryStatus] = useState<'connecting' | 'connected'>('connecting')
+  const [armoryApplying, setArmoryApplying] = useState(false)
   const revisionRef = useRef(0)
   const saveQueueRef = useRef<Promise<void>>(Promise.resolve())
   const saveTimerRef = useRef<number | null>(null)
@@ -127,6 +128,58 @@ export default function ObsidianApp() {
         })
       })
     }, 250)
+  }
+
+  const flushArmorySave = async () => {
+    if (saveTimerRef.current !== null) {
+      window.clearTimeout(saveTimerRef.current)
+      saveTimerRef.current = null
+
+      const snapshot = profiles.map(profile => ({
+        ...profile,
+        items: profile.items.map(item => ({ ...item })),
+      }))
+
+      saveQueueRef.current = saveQueueRef.current.then(async () => {
+        if (writeBlockedRef.current) return
+        const document = toArmoryDocument(snapshot, activeId, revisionRef.current)
+        const saved = await writeArmoryDocument(document, revisionRef.current)
+        revisionRef.current = saved.revision
+        setArmorySaveError(null)
+      }).catch(error => {
+        writeBlockedRef.current = true
+        setArmorySaveError({
+          message: error instanceof Error ? error.message : 'Armory could not save your changes.',
+          conflict: error instanceof ArmoryBridgeError && error.status === 409,
+        })
+      })
+    }
+
+    await saveQueueRef.current
+    if (writeBlockedRef.current) {
+      throw new Error('Armory changes could not be saved. Resolve the save warning before applying.')
+    }
+  }
+
+  const applyArmory = async () => {
+    if (armoryApplying || armorySaveError) return
+    setArmoryApplying(true)
+    try {
+      // Flush the debounce queue first so the DLL receives the latest profile,
+      // not the last snapshot that happened to finish saving.
+      await flushArmorySave()
+      const result = await applyArmoryToGame()
+      const skipped = result.runtime.skipped
+      setNotice(
+        skipped > 0
+          ? `Applied ${result.runtime.itemCount} Armory items to CS2; ${skipped} unsupported items were skipped.`
+          : `Applied ${result.runtime.itemCount} Armory items to CS2.`,
+      )
+    } catch (error) {
+      setNotice(error instanceof Error ? error.message : 'Armory could not be applied to CS2.')
+    } finally {
+      setArmoryApplying(false)
+    }
   }
 
   const updateItems = (next: InventoryItem[]) => {
@@ -330,7 +383,7 @@ export default function ObsidianApp() {
       <div className="ob-breadcrumb"><span>WORKSPACE</span><b>/</b><strong>INVENTORY</strong></div>
       <section className="ob-heading">
         <div><h1>Your Armory<span>.</span></h1><p>Every finish, in its place. Curate your collection and keep each version close.</p></div>
-        <div className="ob-heading-actions"><label className="profile-select-label">ACTIVE INVENTORY PROFILE<select value={activeId} onChange={e => switchProfile(e.target.value)}>{profiles.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}</select></label><button className="ob-button shimmer-button" onClick={() => setDialog('profiles')}>Manage profiles <span>↗</span></button></div>
+        <div className="ob-heading-actions"><label className="profile-select-label">ACTIVE INVENTORY PROFILE<select value={activeId} onChange={e => switchProfile(e.target.value)}>{profiles.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}</select></label><button className="ob-button shimmer-button" onClick={() => setDialog('profiles')}>Manage profiles <span>↗</span></button><button className="ob-button shimmer-button" onClick={applyArmory} disabled={armoryApplying || !!armorySaveError || totalUnits === 0}>{armoryApplying ? 'Applying…' : 'Apply to CS2'} <span>↗</span></button></div>
       </section>
 
       <section className="ob-overview">
