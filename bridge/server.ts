@@ -682,6 +682,24 @@ app.post('/armory/apply', async (_req: Request, res: Response) => {
   }
 })
 
+app.post('/runtime-mode/reset', async (_req: Request, res: Response) => {
+  try {
+    const temporaryPath = `${MODE_FILE}.tmp`
+    await writeFile(
+      temporaryPath,
+      `${JSON.stringify({ mode: 'unknown', updatedAt: new Date().toISOString() }, null, 2)}\\n`,
+      'utf8',
+    )
+    await rename(temporaryPath, MODE_FILE)
+    res.status(200).json({ mode: 'unknown' })
+  } catch (error) {
+    console.error('Failed to reset runtime mode:', error)
+    res.status(500).json({
+      error: { code: 'STORAGE_FAILURE', message: 'Runtime mode could not be reset', details: [] },
+    })
+  }
+})
+
 app.post('/runtime-mode', async (req: Request, res: Response) => {
   const mode = isObject(req.body) ? req.body.mode : null
 
