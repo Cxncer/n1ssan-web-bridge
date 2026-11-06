@@ -117,3 +117,46 @@ export async function writeArmoryDocument(
   if (!response.ok) throw responseError(payload, response.status)
   return extractDocument(payload, response.status)
 }
+
+export type ArmoryApplyResult = {
+  mode: 'armory'
+  runtime: {
+    written: boolean
+    itemCount: number
+    skipped: number
+    path: string
+    reason: string
+  }
+}
+
+export async function applyArmoryToGame(
+  fetcher: ArmoryFetcher = fetch,
+): Promise<ArmoryApplyResult> {
+  let response: Response
+  try {
+    response = await fetcher(`${ARMORY_BRIDGE_URL}/armory/apply`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({}),
+    })
+  } catch {
+    throw new ArmoryBridgeError(
+      'Could not connect to the n1ssan Bridge while applying Armory.',
+      0,
+      'CONNECTION_FAILED',
+    )
+  }
+
+  const payload = await readJson(response)
+  if (!response.ok) throw responseError(payload, response.status)
+
+  if (!isRecord(payload) || payload.mode !== 'armory' || !isRecord(payload.runtime)) {
+    throw new ArmoryBridgeError(
+      'The n1ssan Bridge returned an invalid Armory apply response.',
+      response.status,
+      'INVALID_RESPONSE',
+    )
+  }
+
+  return payload as unknown as ArmoryApplyResult
+}
