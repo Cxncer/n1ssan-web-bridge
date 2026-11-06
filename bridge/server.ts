@@ -11,6 +11,18 @@ import { createLocalIntegrationSnapshot } from '../src/integration/local-snapsho
 import { ArmoryEquipmentStore, EquipmentRevisionConflictError, EquipmentValidationError } from './armory-equipment-store.ts'
 import { validateArmoryEquipmentDocument } from '../src/armory/equipment.ts'
 import { simulateLocalIntegration } from '../src/integration/simulator.ts'
+import skinCatalogueData from '../src/skins.json' with { type: 'json' }
+import knifeCatalogueData from '../src/obsidian/knife-skins.json' with { type: 'json' }
+import liveSchemaData from '../src/armory/n1ssan-cs2-schema.json' with { type: 'json' }
+import { LoadoutProfilesStore, LoadoutValidationError } from './loadout-profiles-store.ts'
+import { buildArmoryCatalogue, projectArmoryInventory } from '../src/armory/armory-inventory.ts'
+import {
+  buildLoadoutRuntimeCatalogue,
+  projectLoadoutRuntime,
+  type LiveSchemaSnapshot,
+  type LoadoutSelectionSnapshot,
+} from '../src/armory/runtime-config.ts'
+import type { CatalogueSourceRecord } from '../src/armory/catalogue-identity.ts'
 
 const app = express()
 
@@ -28,6 +40,179 @@ const EQUIPMENT_FILE = process.env.N1SSAN_EQUIPMENT_FILE
   ? path.resolve(process.env.N1SSAN_EQUIPMENT_FILE)
   : path.join(path.dirname(ARMORY_FILE), 'armory-equipment.json')
 const equipmentStore = new ArmoryEquipmentStore(EQUIPMENT_FILE)
+const ARMORY_INVENTORY_FILE = process.env.N1SSAN_ARMORY_INVENTORY_FILE
+  ? path.resolve(process.env.N1SSAN_ARMORY_INVENTORY_FILE)
+  : path.join(path.dirname(ARMORY_FILE), 'armory-inventory.json')
+const MODE_FILE = process.env.N1SSAN_MODE_FILE
+  ? path.resolve(process.env.N1SSAN_MODE_FILE)
+  : path.join(path.dirname(ARMORY_FILE), 'runtime-mode.json')
+const LOADOUT_FILE = process.env.N1SSAN_LOADOUT_FILE
+  ? path.resolve(process.env.N1SSAN_LOADOUT_FILE)
+  : path.join(path.dirname(ARMORY_FILE), 'loadout-profiles.json')
+const loadoutStore = new LoadoutProfilesStore(LOADOUT_FILE)
+
+// Shared skin metadata. Loadout resolves catalogue IDs directly; Armory
+// inventory is a separate feature and is never consulted here.
+const runtimeCatalogue = buildLoadoutRuntimeCatalogue([
+  ...(skinCatalogueData as unknown as CatalogueSourceRecord[]),
+  ...(knifeCatalogueData as unknown as CatalogueSourceRecord[]),
+])
+const liveSchema = liveSchemaData as unknown as LiveSchemaSnapshot
+const armoryCatalogue = buildArmoryCatalogue([
+  ...(skinCatalogueData as unknown as CatalogueSourceRecord[]),
+  ...(knifeCatalogueData as unknown as CatalogueSourceRecord[]),
+])
+
+type RuntimeWriteResult = {
+  written: boolean
+  targetCount: number
+  skipped: number
+  activeLoadoutProfileId: string | null
+  path: string
+  reason: string
+}
+
+/**
+ * Resolves the active Loadout profile into the document n1ssan-dll.dll reads.
+ * An empty projection deliberately leaves the previous file untouched: writing
+ * an empty loadout would make the native runtime fail its preflight.
+ */
+async function writeRuntimeConfig(): Promise<RuntimeWriteResult> {
+  const profile = loadoutStore.active()
+
+  if (!profile) {
+    return {
+      written: false,
+      targetCount: 0,
+      skipped: 0,
+      activeLoadoutProfileId: null,
+      path: DATA_FILE,
+      reason: 'no saved Loadout profile; previous runtime config kept',
+    }
+  }
+
+  const projection = projectLoadoutRuntime(profile, runtimeCatalogue, liveSchema, profile.id)
+
+  if (projection.document.skins.length === 0) {
+    return {
+      written: false,
+      targetCount: 0,
+      skipped: projection.skipped.length,
+      activeLoadoutProfileId: profile.id,
+      path: DATA_FILE,
+      reason: 'no resolvable targets; previous runtime config kept',
+    }
+  }
+
+  const temporaryPath = `${DATA_FILE}.tmp`
+  await writeFile(temporaryPath, `${JSON.stringify(projection.document, null, 2)}\n`, 'utf8')
+  await rename(temporaryPath, DATA_FILE)
+
+  return {
+    written: true,
+    targetCount: projection.document.skins.length,
+    skipped: projection.skipped.length,
+    activeLoadoutProfileId: profile.id,
+    path: DATA_FILE,
+    reason: 'written',
+  }
+}
+
+async function projectRuntimeOrReport(): Promise<RuntimeWriteResult | null> {
+  try {
+    return await writeRuntimeConfig()
+  } catch (error) {
+    console.error('Runtime config projection failed:', error)
+    return null
+  }
+}
+
+type InventoryWriteResult = {
+  written: boolean
+  itemCount: number
+  skipped: number
+  path: string
+  reason: string
+}
+
+/**
+ * Writes the active Armory profile as an inventory document for the native
+ * runtime. Separate from Loadout; an empty projection keeps the previous file.
+ */
+async function writeArmoryInventory(): Promise<InventoryWriteResult> {
+  const armory = armoryStore.read()
+  const projection = projectArmoryInventory(
+    armory,
+    armoryCatalogue,
+    liveSchema.itemDefinitions ?? null,
+  )
+
+  if (projection.document.items.length === 0) {
+    return {
+      written: false,
+      itemCount: 0,
+      skipped: projection.skipped.length,
+      path: ARMORY_INVENTORY_FILE,
+      reason: 'no resolvable items; previous inventory kept',
+    }
+  }
+
+  const temporaryPath = `${ARMORY_INVENTORY_FILE}.tmp`
+  await writeFile(temporaryPath, `${JSON.stringify(projection.document, null, 2)}\n`, 'utf8')
+  await rename(temporaryPath, ARMORY_INVENTORY_FILE)
+
+  return {
+    written: true,
+    itemCount: projection.document.items.length,
+    skipped: projection.skipped.length,
+    path: ARMORY_INVENTORY_FILE,
+    reason: 'written',
+  }
+}
+
+async function projectInventoryOrReport(): Promise<InventoryWriteResult | null> {
+  try {
+    return await writeArmoryInventory()
+  } catch (error) {
+    console.error('Armory inventory projection failed:', error)
+    return null
+  }
+}
+
+type RuntimeMode = 'loadout' | 'armory'
+
+async function writeRuntimeMode(mode: RuntimeMode): Promise<void> {
+  const temporaryPath = `${MODE_FILE}.tmp`
+  await writeFile(temporaryPath, `${JSON.stringify({ mode, updatedAt: new Date().toISOString() }, null, 2)}\n`, 'utf8')
+  await rename(temporaryPath, MODE_FILE)
+}
+
+async function readRuntimeMode(): Promise<RuntimeMode | null> {
+  try {
+    const parsed: unknown = JSON.parse(await readFile(MODE_FILE, 'utf8'))
+
+    if (parsed && typeof parsed === 'object' &&
+        ((parsed as Record<string, unknown>).mode === 'loadout' ||
+         (parsed as Record<string, unknown>).mode === 'armory')) {
+      return (parsed as Record<string, unknown>).mode as RuntimeMode
+    }
+  } catch {
+    // No mode selected yet.
+  }
+
+  return null
+}
+
+/**
+ * Loadout and Armory are mutually exclusive runtime sources. The mode file
+ * tells the DLL which single dataset to consume.
+ */
+async function projectActiveMode(mode: RuntimeMode | null): Promise<RuntimeWriteResult | InventoryWriteResult | null> {
+  if (mode === 'armory')
+    return projectInventoryOrReport()
+
+  return projectRuntimeOrReport()
+}
 
 const allowedOrigins = new Set([
   'http://localhost:5173',
@@ -416,6 +601,70 @@ app.put('/armory/equipment', async (req: Request, res: Response) => {
 })
 
 
+app.get('/loadout/profiles', (_req: Request, res: Response) => {
+  res.setHeader('Cache-Control', 'no-store')
+  res.json({ data: loadoutStore.read() })
+})
+
+app.post('/loadout/apply', async (req: Request, res: Response) => {
+  if (!isObject(req.body)) {
+    res.status(400).json({ error: { code: 'VALIDATION_FAILED', message: 'Invalid Loadout apply request', details: ['Expected a JSON object'] } })
+    return
+  }
+
+  const profileId = typeof req.body.profileId === 'string' ? req.body.profileId.trim() : ''
+  const name = typeof req.body.name === 'string' ? req.body.name.trim() : ''
+
+  if (!profileId) {
+    res.status(400).json({ error: { code: 'VALIDATION_FAILED', message: 'profileId is required', details: [] } })
+    return
+  }
+
+  try {
+    // Loadout stores its own selection of catalogue IDs. Armory inventory is
+    // a separate feature and is not consulted, so any catalogue skin may be
+    // equipped without an ownership check.
+    const saved = await loadoutStore.saveProfile({
+      id: profileId,
+      name: name || 'Loadout',
+      loadouts: req.body.loadouts as LoadoutSelectionSnapshot['loadouts'],
+      equipment: req.body.equipment as LoadoutSelectionSnapshot['equipment'],
+      skinSettings: req.body.skinSettings as LoadoutSelectionSnapshot['skinSettings'],
+    })
+
+    const runtime = await projectRuntimeOrReport()
+
+    res.status(200).json({ data: saved, runtime })
+  } catch (error) {
+    if (error instanceof LoadoutValidationError) {
+      res.status(400).json({ error: { code: 'VALIDATION_FAILED', message: error.message, details: error.details } })
+      return
+    }
+
+    console.error('Failed to apply Loadout:', error)
+    res.status(500).json({ error: { code: 'STORAGE_FAILURE', message: 'Loadout could not be applied' } })
+  }
+})
+
+
+app.post('/runtime-mode', async (req: Request, res: Response) => {
+  const mode = isObject(req.body) ? req.body.mode : null
+
+  if (mode !== 'loadout' && mode !== 'armory') {
+    res.status(400).json({ error: { code: 'VALIDATION_FAILED', message: "mode must be 'loadout' or 'armory'", details: [] } })
+    return
+  }
+
+  try {
+    await writeRuntimeMode(mode)
+    const runtime = await projectActiveMode(mode)
+    res.status(200).json({ mode, runtime })
+  } catch (error) {
+    console.error('Failed to select runtime mode:', error)
+    res.status(500).json({ error: { code: 'STORAGE_FAILURE', message: 'Runtime mode could not be saved' } })
+  }
+})
+
 app.put('/armory', async (req: Request, res: Response) => {
   if (!isObject(req.body)) {
     res.status(400).json({
@@ -436,7 +685,9 @@ app.put('/armory', async (req: Request, res: Response) => {
       data,
     )
 
-    res.status(200).json({ data: saved })
+    const inventory = await projectInventoryOrReport()
+
+    res.status(200).json({ data: saved, inventory })
   } catch (error) {
     if (error instanceof ArmoryRevisionConflictError) {
       res.status(409).json({
@@ -682,6 +933,8 @@ async function start(): Promise<void> {
   await restoreState()
   await armoryStore.initialize()
   await equipmentStore.initialize(armoryStore.read())
+  await loadoutStore.initialize()
+  await projectActiveMode(await readRuntimeMode())
 
   bridgeHttpServer = app.listen(PORT, HOST, () => {
     console.log(`n1ssan Bridge running at http://${HOST}:${PORT}`)

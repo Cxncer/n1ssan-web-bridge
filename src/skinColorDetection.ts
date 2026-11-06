@@ -52,7 +52,7 @@ export async function imageMatchesColor(idOrUrl: number | string, target: string
   return histogramMatches(histogram, target)
 }
 
-export async function findImageColorMatches<T extends { id: number; image?: string; art?: string }>(
+export async function findImageColorMatches<T extends { id: number | string; image?: string; art?: string }>(
   items: T[],
   target: string,
   // Kept for API compatibility. The implementation reads the precomputed
@@ -60,8 +60,8 @@ export async function findImageColorMatches<T extends { id: number; image?: stri
   // parameter is still part of the public signature and must remain.
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   _imageFor?: (item: T) => string,
-): Promise<Set<number>> {
-  const result = new Set<number>()
+): Promise<Set<T['id']>> {
+  const result = new Set<T['id']>()
   for (const item of items) {
     if (histogramMatches(index.colors?.[String(item.id)], target)) result.add(item.id)
   }

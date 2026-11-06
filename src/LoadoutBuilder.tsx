@@ -4,16 +4,17 @@ import './loadout-obsidian.css' // Loadout-specific visual layer
 import { findImageColorMatches } from './skinColorDetection'
 
 export type Skin = {
-  id: number; weapon: string; name: string; type: string; rarity: string
+  id: number | string; weapon: string; name: string; type: string; rarity: string
   color: string; art: string; description: string; image?: string
   minFloat?: number | null; maxFloat?: number | null
 }
+type SkinId = number | string
 type Team = 'T' | 'CT'
-type SavedLoadouts = Record<Team, Record<string, number | null>>
+type SavedLoadouts = Record<Team, Record<string, SkinId | null>>
 type SkinSettings = { seed: number; float: number }
 type SavedSkinSettings = Record<Team, Record<string, SkinSettings>>
 type EquipmentSlot = 'agent' | 'knife' | 'gloves' | 'zeus'
-type TeamEquipment = Record<EquipmentSlot, number | null>
+type TeamEquipment = Record<EquipmentSlot, SkinId | null>
 type SavedEquipment = Record<Team, TeamEquipment>
 type LoadoutBuilderProps = { skins: Skin[] }
 type WeaponColumn = { title: string; weapons: string[] }
@@ -21,6 +22,7 @@ type LoadoutProfile = { id: string; name: string; loadouts: SavedLoadouts; skinS
 type DialogState = { mode: 'create' | 'duplicate' | 'rename' | 'delete' | 'clear'; value: string } | null
 
 const STORAGE_KEY = 'n1ssan-loadouts-v1'
+const BRIDGE_URL = 'http://127.0.0.1:3210'
 const SETTINGS_STORAGE_KEY = 'n1ssan-skin-settings-v1'
 const EQUIPMENT_STORAGE_KEY = 'n1ssan-equipment-v1'
 const PROFILES_STORAGE_KEY = 'n1ssan-loadout-profiles-v1'
@@ -128,7 +130,7 @@ function defaults(s?: Skin): SkinSettings {
   const l = limits(s)
   return { seed: 0, float: Number(((l.min + l.max) / 2).toFixed(6)) }
 }
-function settingsKey(w: string, id: number) { return `${w}:${id}` }
+function settingsKey(w: string, id: SkinId) { return `${w}:${id}` }
 function equipmentCategory(s: Skin): EquipmentSlot | null {
   const t = (s.type || '').toLowerCase(), w = (s.weapon || '').toLowerCase()
   if (t.includes('agent')) return 'agent'
@@ -154,8 +156,8 @@ export default function LoadoutBuilder({ skins }: LoadoutBuilderProps) {
   const [equipmentSearch, setEquipmentSearch] = useState('')
   const [equipmentColor, setEquipmentColor] = useState('')
   const [equipmentSort, setEquipmentSort] = useState<'rarity' | 'az' | 'popular'>('popular')
-  const [pickerColorMatchIds, setPickerColorMatchIds] = useState<Set<number> | null>(null)
-  const [equipmentColorMatchIds, setEquipmentColorMatchIds] = useState<Set<number> | null>(null)
+  const [pickerColorMatchIds, setPickerColorMatchIds] = useState<Set<SkinId> | null>(null)
+  const [equipmentColorMatchIds, setEquipmentColorMatchIds] = useState<Set<SkinId> | null>(null)
   const [pickerColorBusy, setPickerColorBusy] = useState(false)
   const [equipmentColorBusy, setEquipmentColorBusy] = useState(false)
   const [skinSort, setSkinSort] = useState<'rarity' | 'az' | 'popular'>('popular')
@@ -171,6 +173,8 @@ export default function LoadoutBuilder({ skins }: LoadoutBuilderProps) {
   const [profileMenuOpen, setProfileMenuOpen] = useState(false)
   const [dialog, setDialog] = useState<DialogState>(null)
   const [activeTab, setActiveTab] = useState<'loadout' | 'diagnostics'>('loadout')
+  const [runtimeStatus, setRuntimeStatus] = useState<{ tone: 'idle' | 'ok' | 'error'; text: string }>({ tone: 'idle', text: '' })
+  const [applying, setApplying] = useState(false)
 
   // --- Color scan: weapon picker ---
   useEffect(() => {
@@ -230,6 +234,51 @@ export default function LoadoutBuilder({ skins }: LoadoutBuilderProps) {
     window.addEventListener('keydown', onKey)
     return () => window.removeEventListener('keydown', onKey)
   }, [])
+
+  // Explicitly send the current Loadout profile to the game. Editing a loadout
+  // never writes the runtime file by itself; the DLL adopts the last sent
+  // profile once the player is outside an active match.
+  async function applyLoadout() {
+    if (applying) return
+
+    setApplying(true)
+    setRuntimeStatus({ tone: 'idle', text: 'Sending loadout to the game…' })
+
+    try {
+      const response = await fetch(`${BRIDGE_URL}/loadout/apply`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          profileId: activeProfileId,
+          name: activeProfile.name,
+          loadouts,
+          equipment,
+          skinSettings,
+        }),
+      })
+      const body = await response.json().catch(() => null) as {
+        error?: { message?: string }
+        runtime?: { written?: boolean; targetCount?: number; skipped?: number; reason?: string }
+      } | null
+
+      if (!response.ok) throw new Error(body?.error?.message ?? `Bridge returned HTTP ${response.status}`)
+
+      const runtime = body?.runtime
+      setRuntimeStatus({
+        tone: 'ok',
+        text: runtime?.written
+          ? `SENT · ${runtime.targetCount} item${runtime.targetCount === 1 ? '' : 's'} · applies outside an active match${runtime.skipped ? ` · ${runtime.skipped} skipped` : ''}`
+          : `NOT SENT · ${runtime?.reason ?? 'no change'}`,
+      })
+    } catch (error) {
+      setRuntimeStatus({
+        tone: 'error',
+        text: `SEND FAILED · ${error instanceof Error ? error.message : 'apply failed'}`,
+      })
+    } finally {
+      setApplying(false)
+    }
+  }
 
   // Keep the active profile snapshot current whenever a loadout field changes.
   // Called by mutation helpers, not on every keystroke.
@@ -359,7 +408,7 @@ export default function LoadoutBuilder({ skins }: LoadoutBuilderProps) {
     })
   }, [skins, activeEquipment, team, equipmentSearch, equipmentColor, equipmentColorMatchIds, equipmentSort])
 
-  function equipSkin(weapon: string, id: number | null) {
+  function equipSkin(weapon: string, id: SkinId | null) {
     const nextLoadouts = { ...loadouts, [team]: { ...loadouts[team], [weapon]: id } }
     let nextSkinSettings = skinSettings
     if (id !== null) {
@@ -371,7 +420,7 @@ export default function LoadoutBuilder({ skins }: LoadoutBuilderProps) {
     syncActiveProfile({ loadouts: nextLoadouts, skinSettings: nextSkinSettings, equipment })
     setPickerOpen(false); setPickerSearch(''); setActiveWeapon(null)
   }
-  function equipItem(slot: EquipmentSlot, id: number | null) {
+  function equipItem(slot: EquipmentSlot, id: SkinId | null) {
     const nextEquipment = { ...equipment, [team]: { ...equipment[team], [slot]: id } }
     setEquipment(nextEquipment)
     syncActiveProfile({ loadouts, skinSettings, equipment: nextEquipment })
@@ -418,7 +467,12 @@ export default function LoadoutBuilder({ skins }: LoadoutBuilderProps) {
         <button type="button" className={activeTab === 'loadout' ? 'active' : ''} aria-current={activeTab === 'loadout' ? 'page' : undefined} onClick={() => setActiveTab('loadout')}>Loadout</button>
         <button type="button" className={activeTab === 'diagnostics' ? 'active' : ''} aria-current={activeTab === 'diagnostics' ? 'page' : undefined} onClick={() => setActiveTab('diagnostics')}>Diagnostics</button>
       </nav>
-      <div className="lb-top-status"><span className="lb-status-indicator" />LOCAL PROFILE · {activeProfile.name}</div>
+      <div className={`lb-top-status ${runtimeStatus.tone === 'error' ? 'is-error' : ''}`} title={runtimeStatus.text}>
+        <span className="lb-status-indicator" />
+        {runtimeStatus.tone === 'idle' && !runtimeStatus.text
+          ? `LOCAL PROFILE · ${activeProfile.name}`
+          : runtimeStatus.text}
+      </div>
     </header>
     {activeTab === 'loadout' ? (
     <section className="lb-section ob-main" data-team={team}>
@@ -475,7 +529,12 @@ export default function LoadoutBuilder({ skins }: LoadoutBuilderProps) {
           <span><strong>{t === 'T' ? 'TERRORIST' : 'COUNTER-TERRORIST'}</strong><small>{t === 'T' ? 'Attacker loadout' : 'Defender loadout'}</small></span>
         </button>)}
       </div>
-      <div className="lb-team-save-actions"><button className="lb-clear-button" type="button" onClick={() => openDialog('clear')}>Clear loadout</button></div>
+      <div className="lb-team-save-actions">
+        <button className="lb-apply-button" type="button" onClick={applyLoadout} disabled={applying}>
+          {applying ? 'Sending…' : 'Apply to game'}
+        </button>
+        <button className="lb-clear-button" type="button" onClick={() => openDialog('clear')}>Clear loadout</button>
+      </div>
     </div>
     </div>
 

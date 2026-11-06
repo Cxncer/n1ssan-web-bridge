@@ -41,6 +41,27 @@ test('maps catalogue IDs to actual owned instance IDs and keeps T/CT assignments
   assert.deepEqual(validateArmoryEquipmentDocument(document, armory), [])
 })
 
+test('uses the Bridge-supplied canonical definition ID for expanded knife identities', () => {
+  const knifeCatalogue = [
+    { id: 'skin-7', weapon: 'Knife', type: 'Knife', definitionId: 'cs2:skin:n1ssan-knives:7' },
+  ]
+  const assignments = buildProfileEquipmentAssignments({
+    loadoutProfileId: 'loadout-main',
+    loadouts: { T: {}, CT: {} },
+    equipment: { T: { agent: null, knife: 'skin-7', gloves: null, zeus: null }, CT: { agent: null, knife: null, gloves: null, zeus: null } },
+  }, knifeCatalogue, armory)
+
+  assert.deepEqual(assignments.map(item => [item.slot, item.itemInstanceId]), [['knife', 'knife-owned']])
+})
+
+test('rejects a weapon slot whose selected item belongs to a different weapon', () => {
+  assert.throws(() => buildProfileEquipmentAssignments({
+    loadoutProfileId: 'loadout-main',
+    loadouts: { T: { 'AK-47': 7 }, CT: {} },
+    equipment: { T: { agent: null, knife: null, gloves: null, zeus: null }, CT: { agent: null, knife: null, gloves: null, zeus: null } },
+  }, catalogue, armory), /the selected item is Knife, not AK-47/)
+})
+
 test('does not invent ownership when a selected catalogue item is absent from Armory', () => {
   assert.throws(() => buildProfileEquipmentAssignments({
     loadoutProfileId: 'loadout-main',

@@ -3,20 +3,23 @@ import type { ArmoryEquipmentDocument, EquippedItemAssignment, EquipmentSlot, Eq
 import { catalogueDefinitionId } from './catalogue-identity.ts'
 
 export type LoadoutCatalogueItem = {
-  id: number
+  id: number | string
   weapon: string
   type: string
+  /** Canonical Armory definition ID. Preferred over inferring one from id/type. */
+  definitionId?: string
 }
 
 export type LoadoutSelection = {
   loadoutProfileId: string
-  loadouts: Record<EquipmentTeam, Record<string, number | null>>
-  equipment: Record<EquipmentTeam, Record<Exclude<EquipmentSlot, 'weapon'>, number | null>>
+  loadouts: Record<EquipmentTeam, Record<string, number | string | null>>
+  equipment: Record<EquipmentTeam, Record<Exclude<EquipmentSlot, 'weapon'>, number | string | null>>
 }
 
 const equipmentSlots = ['agent', 'knife', 'gloves', 'zeus'] as const
 
 function definitionIdFor(item: LoadoutCatalogueItem): string {
+  if (item.definitionId) return item.definitionId
   const source = /knif|kniv/.test(item.type.toLowerCase()) ? 'n1ssan-knives' : 'n1ssan-skins'
   return catalogueDefinitionId('skin', item.id, source)
 }
@@ -42,9 +45,11 @@ export function buildProfileEquipmentAssignments(
   }
 
   const assignments: EquippedItemAssignment[] = []
+  // One owned instance is equipped at most once across both teams, so a
+  // second team assignment picks the next owned copy.
+  const usedInstances = new Set<string>()
   for (const team of ['T', 'CT'] as const) {
-    const usedInstances = new Set<string>()
-    const add = (slot: EquipmentSlot, target: string, catalogueId: number | null) => {
+    const add = (slot: EquipmentSlot, target: string, catalogueId: number | string | null) => {
       if (catalogueId === null) return
       const item = definitions.get(catalogueId)
       if (!item) throw new Error(`Selected catalogue item ${catalogueId} is no longer available.`)
@@ -52,6 +57,9 @@ export function buildProfileEquipmentAssignments(
       const instanceId = (byDefinition.get(definitionId) ?? []).find(id => !usedInstances.has(id))
       if (!instanceId) {
         throw new Error(`${team} · ${target}: ${item.weapon} | catalogue item #${catalogueId} is not owned in the active Armory inventory.`)
+      }
+      if (slot === 'weapon' && item.weapon.trim().toLowerCase() !== target.trim().toLowerCase()) {
+        throw new Error(`${team} · ${target}: the selected item is ${item.weapon}, not ${target}.`)
       }
       usedInstances.add(instanceId)
       assignments.push({
@@ -89,8 +97,8 @@ export function replaceProfileEquipmentAssignments(
 }
 
 export type ResolvedLoadoutSelections = {
-  loadouts: Record<EquipmentTeam, Record<string, number | null>>
-  equipment: Record<EquipmentTeam, Record<Exclude<EquipmentSlot, 'weapon'>, number | null>>
+  loadouts: Record<EquipmentTeam, Record<string, number | string | null>>
+  equipment: Record<EquipmentTeam, Record<Exclude<EquipmentSlot, 'weapon'>, number | string | null>>
 }
 
 /** Resolves saved Armory assignments back to catalogue IDs for the existing UI. */
