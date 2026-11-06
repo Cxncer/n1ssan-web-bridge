@@ -137,7 +137,7 @@ type InventoryWriteResult = {
 
 /**
  * Writes the active Armory profile as an inventory document for the native
- * runtime. Separate from Loadout; an empty projection keeps the previous file.
+ * runtime. Separate from Loadout; an intentionally empty active profile clears its managed set.
  */
 async function writeArmoryInventory(): Promise<InventoryWriteResult> {
   const armory = armoryStore.read()
@@ -147,13 +147,15 @@ async function writeArmoryInventory(): Promise<InventoryWriteResult> {
     liveSchema.itemDefinitions ?? null,
   )
 
-  if (projection.document.items.length === 0) {
+  // An empty profile is a valid clear operation. If source items existed but
+  // none could be resolved, keep the last good projection instead of clearing it.
+  if (projection.document.items.length === 0 && projection.skipped.length > 0) {
     return {
       written: false,
       itemCount: 0,
       skipped: projection.skipped.length,
       path: ARMORY_INVENTORY_FILE,
-      reason: 'no resolvable items; previous inventory kept',
+      reason: 'items could not be resolved; previous inventory kept',
     }
   }
 
@@ -660,12 +662,12 @@ app.post('/armory/apply', async (_req: Request, res: Response) => {
       return
     }
 
-    if (!runtime.written || runtime.itemCount === 0) {
+    if (!runtime.written) {
       res.status(422).json({
         error: {
           code: 'EMPTY_ARMORY',
-          message: 'The active Armory profile has no resolvable items to apply.',
-          details: ['Add at least one supported skin, sticker, or charm before applying.'],
+          message: 'The active Armory profile could not be projected safely.',
+          details: ['Check that its items are supported and resolve against the current catalogue/schema.'],
         },
         runtime,
       })
