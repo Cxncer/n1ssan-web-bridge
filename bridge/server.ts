@@ -687,7 +687,7 @@ app.post('/runtime-mode/reset', async (_req: Request, res: Response) => {
     const temporaryPath = `${MODE_FILE}.tmp`
     await writeFile(
       temporaryPath,
-      `${JSON.stringify({ mode: 'unknown', updatedAt: new Date().toISOString() }, null, 2)}\\n`,
+      `${JSON.stringify({ mode: 'unknown', updatedAt: new Date().toISOString() }, null, 2)}\n`,
       'utf8',
     )
     await rename(temporaryPath, MODE_FILE)
