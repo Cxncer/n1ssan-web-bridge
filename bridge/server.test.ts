@@ -117,6 +117,24 @@ test('browser session heartbeat keeps the Bridge alive while a workspace tab is 
   assert.equal(state.sessions, 1)
 })
 
+test('DOMINATE can reset a previous workspace selection to neutral', async () => {
+  const selected = await fetch(`${BASE_URL}/runtime-mode`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ mode: 'armory' }),
+  })
+  assert.equal(selected.status, 200)
+
+  const reset = await fetch(`${BASE_URL}/runtime-mode/reset`, { method: 'POST' })
+  assert.equal(reset.status, 200)
+  assert.deepEqual(await reset.json(), { mode: 'unknown' })
+
+  const persisted = JSON.parse(
+    await readFile(path.join(tempDir, 'runtime-mode.json'), 'utf8'),
+  ) as { mode: string }
+  assert.equal(persisted.mode, 'unknown')
+})
+
 test('Bridge validates submissions, backs up previous data, and restores saved data after restart', async () => {
   const validLoadout = {
     profile: 'Automated Test',
