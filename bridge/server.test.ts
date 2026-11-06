@@ -430,4 +430,34 @@ test('Armory API persists complete profiles and rejects stale or invalid writes'
   const staleSimulation = await staleSimulationResponse.json() as { data: { status: string; assignments: unknown[] } }
   assert.equal(staleSimulation.data.status, 'stale')
   assert.deepEqual(staleSimulation.data.assignments, [])
+
+  // An intentionally empty active profile is a clear operation, not a failed
+  // projection. The native DLL uses the empty document to remove managed items.
+  const clearedArmory = structuredClone(finalState.data)
+  clearedArmory.profiles[0].items = []
+  const clearSave = await fetch(`${BASE_URL}/armory`, {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      expectedRevision: finalState.data.revision,
+      data: clearedArmory,
+    }),
+  })
+  assert.equal(clearSave.status, 200)
+
+  const clearApply = await fetch(`${BASE_URL}/armory/apply`, { method: 'POST' })
+  assert.equal(clearApply.status, 200)
+  const clearResult = await clearApply.json() as {
+    mode: string
+    runtime: { written: boolean; itemCount: number; skipped: number }
+  }
+  assert.equal(clearResult.mode, 'armory')
+  assert.equal(clearResult.runtime.written, true)
+  assert.equal(clearResult.runtime.itemCount, 0)
+  assert.equal(clearResult.runtime.skipped, 0)
+
+  const clearedRuntime = JSON.parse(
+    await readFile(path.join(tempDir, 'armory-inventory.json'), 'utf8'),
+  ) as { items: unknown[] }
+  assert.deepEqual(clearedRuntime.items, [])
 })
