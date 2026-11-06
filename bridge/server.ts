@@ -131,6 +131,7 @@ type InventoryWriteResult = {
   written: boolean
   itemCount: number
   skipped: number
+  skippedItems: Array<{ instanceId: string; definitionId: string; reason: string }>
   path: string
   reason: string
 }
@@ -154,6 +155,7 @@ async function writeArmoryInventory(): Promise<InventoryWriteResult> {
       written: false,
       itemCount: 0,
       skipped: projection.skipped.length,
+      skippedItems: projection.skipped,
       path: ARMORY_INVENTORY_FILE,
       reason: 'items could not be resolved; previous inventory kept',
     }
@@ -167,6 +169,7 @@ async function writeArmoryInventory(): Promise<InventoryWriteResult> {
     written: true,
     itemCount: projection.document.items.length,
     skipped: projection.skipped.length,
+    skippedItems: projection.skipped,
     path: ARMORY_INVENTORY_FILE,
     reason: 'written',
   }
