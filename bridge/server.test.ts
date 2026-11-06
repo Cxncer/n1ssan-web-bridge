@@ -280,6 +280,29 @@ test('Armory API persists complete profiles and rejects stale or invalid writes'
   assert.equal(saved.data.revision, 1)
   assert.equal(saved.data.profiles[0].items.length, 1)
 
+  // Explicit Armory Apply writes the current profile projection before
+  // switching the native runtime mode.
+  const applyResponse = await fetch(`${BASE_URL}/armory/apply`, { method: 'POST' })
+  assert.equal(applyResponse.status, 200)
+  const applied = await applyResponse.json() as {
+    mode: string
+    runtime: { written: boolean; itemCount: number; skipped: number }
+  }
+  assert.equal(applied.mode, 'armory')
+  assert.equal(applied.runtime.written, true)
+  assert.equal(applied.runtime.itemCount, 1)
+
+  const armoryRuntime = JSON.parse(
+    await readFile(path.join(tempDir, 'armory-inventory.json'), 'utf8'),
+  ) as { source: string; items: unknown[] }
+  assert.equal(armoryRuntime.source, 'armory')
+  assert.equal(armoryRuntime.items.length, 1)
+
+  const selectedMode = JSON.parse(
+    await readFile(path.join(tempDir, 'runtime-mode.json'), 'utf8'),
+  ) as { mode: string }
+  assert.equal(selectedMode.mode, 'armory')
+
   // Canonical equipment references the unique owned instance, not a catalogue ID.
   const equipmentRead = await fetch(`${BASE_URL}/armory/equipment`)
   assert.equal(equipmentRead.status, 200)
