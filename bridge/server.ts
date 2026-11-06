@@ -647,6 +647,41 @@ app.post('/loadout/apply', async (req: Request, res: Response) => {
 })
 
 
+app.post('/armory/apply', async (_req: Request, res: Response) => {
+  try {
+    // Write the selected Armory profile before switching the DLL runtime mode,
+    // so the native watcher never observes Armory mode with an old document.
+    const runtime = await projectInventoryOrReport()
+
+    if (!runtime) {
+      res.status(500).json({
+        error: { code: 'PROJECTION_FAILED', message: 'Armory inventory could not be projected', details: [] },
+      })
+      return
+    }
+
+    if (!runtime.written || runtime.itemCount === 0) {
+      res.status(422).json({
+        error: {
+          code: 'EMPTY_ARMORY',
+          message: 'The active Armory profile has no resolvable items to apply.',
+          details: ['Add at least one supported skin, sticker, or charm before applying.'],
+        },
+        runtime,
+      })
+      return
+    }
+
+    await writeRuntimeMode('armory')
+    res.status(200).json({ mode: 'armory', runtime })
+  } catch (error) {
+    console.error('Failed to apply Armory inventory:', error)
+    res.status(500).json({
+      error: { code: 'STORAGE_FAILURE', message: 'Armory inventory could not be applied', details: [] },
+    })
+  }
+})
+
 app.post('/runtime-mode', async (req: Request, res: Response) => {
   const mode = isObject(req.body) ? req.body.mode : null
 
