@@ -268,7 +268,7 @@ test('Armory API persists complete profiles and rejects stale or invalid writes'
     ...initial.data.profiles[0],
     items: [{
       id: 'armory-test-item',
-      definitionId: 'skin:ak47-redline',
+      definitionId: 'cs2:skin:n1ssan-skins:1134884231',
       kind: 'skin',
       quantity: 1,
       customization: {
