@@ -291,3 +291,82 @@ test('decrements a stacked attachment tool quantity instead of deleting the stac
   assert.ok(written)
   assert.equal(written.profiles[0].items.find(item => item.id === 'sticker-a')?.quantity, 2)
 })
+
+
+test('consumes one unit when a stacked sticker source uses a unit-suffixed instance id', async () => {
+  const document = makeDocument()
+  const sticker = document.profiles[0].items.find(item => item.id === 'sticker-a')!
+  sticker.quantity = 3
+
+  const { result, replaced } = await run({
+    profileId: 'main',
+    inventoryRevision: 4,
+    seq: 10,
+    records: [stickerRecord({
+      seq: 10,
+      consumedToolInstanceId: 'sticker-a#1',
+      consumedToolKind: 'sticker',
+      attachments: {
+        stickers: [{
+          slot: 0,
+          kitId: 1234,
+          wear: 0.12,
+          scale: 1,
+          rotation: 0,
+          offsetX: 0.1,
+          offsetY: -0.05,
+          schema: 3,
+          sourceInstanceId: 'sticker-a#1',
+        }],
+        charm: null,
+      },
+    })],
+  }, document)
+
+  assert.equal(result.merged, 1)
+  const written = replaced as ArmoryDocument | null
+  assert.ok(written)
+  assert.equal(written.profiles[0].items.find(item => item.id === 'sticker-a')?.quantity, 2)
+})
+
+test('consumes one unit when a stacked charm source uses a unit-suffixed instance id', async () => {
+  const document = makeDocument()
+  document.profiles[0].items.push({
+    id: 'charm-a',
+    definitionId: 'cs2:charm:1234',
+    kind: 'charm',
+    quantity: 2,
+    customization: null,
+    createdAt: now,
+    updatedAt: now,
+  })
+
+  const { result, replaced } = await run({
+    profileId: 'main',
+    inventoryRevision: 4,
+    seq: 11,
+    records: [stickerRecord({
+      seq: 11,
+      consumedToolInstanceId: 'charm-a#1',
+      consumedToolKind: 'charm',
+      attachments: {
+        stickers: [],
+        charm: {
+          kitId: 5678,
+          seed: 42,
+          x: 0.1,
+          y: 0.2,
+          z: 0.3,
+          stickerKitId: null,
+          highlightId: null,
+          sourceInstanceId: 'charm-a#1',
+        },
+      },
+    })],
+  }, document)
+
+  assert.equal(result.merged, 1)
+  const written = replaced as ArmoryDocument | null
+  assert.ok(written)
+  assert.equal(written.profiles[0].items.find(item => item.id === 'charm-a')?.quantity, 1)
+})
