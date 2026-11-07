@@ -186,7 +186,7 @@ export class AttachmentsSync {
         let toolIndex = candidateProfile.items.findIndex(item => item.id === consumedToolId)
 
         if (toolIndex < 0) {
-          const unitMatch = /^(.*)#(\\d+)$/.exec(consumedToolId)
+          const unitMatch = /^(.*)#(\d+)$/.exec(consumedToolId)
           if (unitMatch) {
             const unitIndex = Number(unitMatch[2])
             const baseIndex = candidateProfile.items.findIndex(item => item.id === unitMatch[1])
