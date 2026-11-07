@@ -20,6 +20,8 @@ export type DetectedRecord = {
   stableForMs?: unknown
   observedAt?: unknown
   attachments?: unknown
+  consumedToolInstanceId?: unknown
+  consumedToolKind?: unknown
 }
 
 export type DetectionDocument = {
@@ -162,7 +164,41 @@ export class AttachmentsSync {
         continue
       }
 
+      const consumedToolId =
+        typeof record.consumedToolInstanceId === 'string' ? record.consumedToolInstanceId : ''
+      const consumedToolKind =
+        record.consumedToolKind === 'sticker' || record.consumedToolKind === 'charm'
+          ? record.consumedToolKind
+          : null
+
+      // The same detection record can be replayed if the Bridge stops after
+      // committing the profile but before writing its acknowledgement. The
+      // sourceInstanceId embedded in the attachment makes consumption idempotent.
+      const sourceAlreadyRecorded = consumedToolId !== '' && (
+        observed.stickers.some(sticker => sticker.sourceInstanceId === consumedToolId) ||
+        observed.charm?.sourceInstanceId === consumedToolId
+      )
+
+      if (consumedToolId && consumedToolKind && !sourceAlreadyRecorded) {
+        const toolIndex = candidateProfile.items.findIndex(item => item.id === consumedToolId)
+        const tool = toolIndex >= 0 ? candidateProfile.items[toolIndex] : undefined
+
+        if (tool && tool.kind === consumedToolKind && Number.isSafeInteger(tool.quantity) && tool.quantity > 0) {
+          if (tool.quantity === 1) {
+            candidateProfile.items.splice(toolIndex, 1)
+          } else {
+            tool.quantity -= 1
+            tool.updatedAt = new Date().toISOString()
+          }
+        } else {
+          // Keep the attachment observation even if its source item is already
+          // absent or inconsistent; never consume a different item by guess.
+          skipped += 1
+        }
+      }
+
       instance.attachments = observed
+      instance.updatedAt = new Date().toISOString()
       mergedInstanceIds.push(instanceId)
     }
 
