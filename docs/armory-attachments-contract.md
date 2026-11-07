@@ -256,8 +256,15 @@ bridge merges it.
       "instanceId": "…",
       "projectedItemId": "10375…",
       "complete": true,
-      "stableForMs": 1200,
-      "attachments": { "stickers": [ … ], "charm": null },
+      "stableForMs": 400,
+      "consumedToolInstanceId": "…",
+      "consumedToolKind": "sticker",
+      "attachments": {
+        "stickers": [
+          { "slot": 0, "kitId": 1234, "sourceInstanceId": "…" }
+        ],
+        "charm": null
+      },
       "observedAt": "2026-11-07T16:02:11.004Z"
     }
   ]
@@ -395,9 +402,11 @@ projection of skins, Loadout mode, `StableIdFor` inputs other than attachments.
 * **R7 — Loadout bleed.** Attachments are read only in Armory mode, and written
   to the in-match view only when `RuntimeModeState::Current() == Armory`. A
   Loadout-mode assertion test is part of I5.
-* **R8 — consumption semantics.** Applying a sticker consumes the sticker item
-  in-session; the next projection re-creates it (the profile still lists it).
-  Accepted for now; we do not model `scraped`/consumed state.
+* **R8 — consumption semantics.** A successful native apply reports the exact
+  source tool instance. The Bridge decrements its quantity or removes it from
+  the active profile in the same revision-safe write that saves the attachment.
+  Replayed records are idempotent because the saved attachment retains the
+  source instance id. We still do not model scraped sticker state.
 * **R9 — profile switching.** Detection is tagged with profileId+revision, so a
   switch mid-flight discards stale observations instead of cross-writing.
 
@@ -459,10 +468,11 @@ Behaviour notes:
   recreates the item, so CS2's own Loadout keeps pointing at it. They **are**
   part of `SameRenderable`: two AKs with different stickers are no longer
   treated as interchangeable.
-* Detection emits only when a read completed, the same snapshot was seen twice
-  400 ms apart, and the new state differs from what the item was created with.
-  A stale profile or inventory revision is dropped by the Bridge instead of
-  written.
+* Passive inventory-screen changes are emitted only after a complete read and
+  two identical snapshots 400 ms apart. A successful `UseTool` apply is
+  recorded immediately after its SOCache write, so it cannot be missed when
+  the observer has not yet captured a pre-apply baseline. A stale profile or
+  inventory revision is dropped by the Bridge instead of written.
 * Loadout mode never reads, writes or observes attachments: the call site is
   gated on `RuntimeMode::Armory` and the dispatch path passes `nullptr`.
 
@@ -473,7 +483,7 @@ Behaviour notes:
 | `src/armory/contracts.ts` | `StickerAttachment`, `CharmAttachment`, `ItemAttachments`, `validateAttachments`, instance field |
 | `src/armory/armory-inventory.ts` | `version: 2`, `attachmentsVersion`, `inventoryRevision`, flat attachment keys, kit resolution from canonical ids, stacked sticker/charm projection |
 | `src/armory/obsidian-adapter.ts` | carries `attachments` through both directions so a UI save cannot drop them |
-| `bridge/attachments-sync.ts` (new) | 2 s merge of the detection file with revision-safe `ArmoryStore.replace`, ack file, provenance stamping |
+| `bridge/attachments-sync.ts` (new) | 2 s merge of the detection file with revision-safe `ArmoryStore.replace`, ack file, provenance stamping, exact source-tool consumption |
 | `bridge/server.ts` | sweep + `armory-detected-attachments.json` / `armory-attachments-ack.json` paths, re-projection after a merge |
 | `src/obsidian/ObsidianApp.tsx`, `obsidian.css` | chips on the card and a detail list (slot, kit, wear, rotation, offsets, schema, observed time). |
 
