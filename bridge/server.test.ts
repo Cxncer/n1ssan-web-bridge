@@ -301,8 +301,10 @@ test('Armory API persists complete profiles and rejects stale or invalid writes'
   // Explicit Armory Apply writes the current profile projection before
   // switching the native runtime mode.
   const applyResponse = await fetch(`${BASE_URL}/armory/apply`, { method: 'POST' })
-  assert.equal(applyResponse.status, 200)
-  const applied = await applyResponse.json() as {
+  const applyBody = await applyResponse.json()
+console.log('ARMORY APPLY DEBUG:', JSON.stringify(applyBody, null, 2))
+assert.equal(applyResponse.status, 200)
+  const applied = applyBody as {
     mode: string
     runtime: { written: boolean; itemCount: number; skipped: number }
   }
