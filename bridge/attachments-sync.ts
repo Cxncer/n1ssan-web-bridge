@@ -175,8 +175,8 @@ export class AttachmentsSync {
       // committing the profile but before writing its acknowledgement. The
       // sourceInstanceId embedded in the attachment makes consumption idempotent.
       const sourceAlreadyRecorded = consumedToolId !== '' && (
-        observed.stickers.some(sticker => sticker.sourceInstanceId === consumedToolId) ||
-        observed.charm?.sourceInstanceId === consumedToolId
+        instance.attachments?.stickers.some(sticker => sticker.sourceInstanceId === consumedToolId) ||
+        instance.attachments?.charm?.sourceInstanceId === consumedToolId
       )
 
       if (consumedToolId && consumedToolKind && !sourceAlreadyRecorded) {
