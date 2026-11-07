@@ -180,7 +180,32 @@ export class AttachmentsSync {
       )
 
       if (consumedToolId && consumedToolKind && !sourceAlreadyRecorded) {
-        const toolIndex = candidateProfile.items.findIndex(item => item.id === consumedToolId)
+        // Stacked tools are projected with a unit identity suffix (baseId#N),
+        // while the Armory profile stores the stack under baseId with quantity.
+        // Resolve only a numeric suffix whose unit falls within the current stack.
+        let toolIndex = candidateProfile.items.findIndex(item => item.id === consumedToolId)
+
+        if (toolIndex < 0) {
+          const unitMatch = /^(.*)#(\d+)$/.exec(consumedToolId)
+          if (unitMatch) {
+            const unitIndex = Number(unitMatch[2])
+            const baseIndex = candidateProfile.items.findIndex(item => item.id === unitMatch[1])
+            const baseItem = baseIndex >= 0 ? candidateProfile.items[baseIndex] : undefined
+
+            // Accept zero- or one-based unit numbering, but never an index
+            // greater than the number of units in the stack.
+            if (
+              baseItem &&
+              Number.isSafeInteger(unitIndex) &&
+              Number.isSafeInteger(baseItem.quantity) &&
+              baseItem.quantity > 0 &&
+              unitIndex <= baseItem.quantity
+            ) {
+              toolIndex = baseIndex
+            }
+          }
+        }
+
         const tool = toolIndex >= 0 ? candidateProfile.items[toolIndex] : undefined
 
         if (tool && tool.kind === consumedToolKind && Number.isSafeInteger(tool.quantity) && tool.quantity > 0) {
