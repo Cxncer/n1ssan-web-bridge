@@ -357,17 +357,6 @@ let latestLoadout: LoadoutInfo | null = null
 let nextLoadoutId = 1
 let saveQueue = Promise.resolve()
 
-// Browser tabs own the local Bridge session. The Bridge remains available
-// during refresh/navigation, then exits after the final tab disappears.
-const BROWSER_SESSION_TIMEOUT_MS = 30_000
-const browserSessions = new Map<string, number>()
-let browserSessionGraceUntil = 0
-let hasSeenBrowserSession = false
-let bridgeHttpServer: ReturnType<typeof app.listen> | undefined
-let browserSessionSweep: NodeJS.Timeout | undefined
-let attachmentsSweep: NodeJS.Timeout | undefined
-let bridgeShutdownStarted = false
-
 // Owns the only write path from the native runtime into the Armory profile.
 const attachmentsSync = new AttachmentsSync({
   detectionPath: ATTACHMENTS_FILE,
@@ -378,38 +367,6 @@ const attachmentsSync = new AttachmentsSync({
     await projectInventoryOrReport()
   },
 })
-
-function pruneBrowserSessions(): void {
-  const now = Date.now()
-  let latestExpiredAt = 0
-  for (const [sessionId, lastSeen] of browserSessions) {
-    if (now - lastSeen > BROWSER_SESSION_TIMEOUT_MS) {
-      browserSessions.delete(sessionId)
-      latestExpiredAt = Math.max(latestExpiredAt, lastSeen)
-    }
-  }
-  if (latestExpiredAt > 0 && browserSessions.size === 0) {
-        browserSessionGraceUntil = Math.max(
-      browserSessionGraceUntil,
-      now + BROWSER_SESSION_TIMEOUT_MS,
-    )
-  }
-}
-
-function hasActiveBrowserSession(): boolean {
-  pruneBrowserSessions()
-  return browserSessions.size > 0 || Date.now() < browserSessionGraceUntil
-}
-
-function stopBridgeAfterBrowserSession(): void {
-  if (bridgeShutdownStarted || !hasSeenBrowserSession || hasActiveBrowserSession()) return
-  bridgeShutdownStarted = true
-  if (browserSessionSweep) clearInterval(browserSessionSweep)
-  if (attachmentsSweep) clearInterval(attachmentsSweep)
-  console.log('No N1SSAN browser sessions remain. Shutting down Bridge.')
-  bridgeHttpServer?.close(() => process.exit(0))
-  setTimeout(() => process.exit(0), 5_000).unref()
-}
 
 function isObject(value: unknown): value is Record<string, unknown> {
   return typeof value === 'object' && value !== null && !Array.isArray(value)
@@ -933,25 +890,6 @@ app.get('/integration/simulator', (_req: Request, res: Response) => {
 })
 
 
-app.post('/session/heartbeat', (req: Request, res: Response) => {
-  const sessionId = isObject(req.body) ? req.body.sessionId : undefined
-  if (typeof sessionId !== 'string' || !/^[a-zA-Z0-9_-]{12,100}$/.test(sessionId)) {
-    res.status(400).json({ error: 'Invalid browser session ID' })
-    return
-  }
-  hasSeenBrowserSession = true
-  browserSessions.set(sessionId, Date.now())
-  browserSessionGraceUntil = 0
-  bridgeShutdownStarted = false
-  res.setHeader('Cache-Control', 'no-store')
-  res.status(204).end()
-})
-
-app.get('/session/active', (_req: Request, res: Response) => {
-  res.setHeader('Cache-Control', 'no-store')
-  res.json({ active: hasActiveBrowserSession(), sessions: browserSessions.size })
-})
-
 app.get('/health', (_req: Request, res: Response) => {
   res.json({
     app: 'n1ssan-bridge',
@@ -1117,19 +1055,16 @@ async function start(): Promise<void> {
   await loadoutStore.initialize()
   await projectActiveMode(await readRuntimeMode())
 
-  bridgeHttpServer = app.listen(PORT, HOST, () => {
+  app.listen(PORT, HOST, () => {
     console.log(`n1ssan Bridge running at http://${HOST}:${PORT}`)
     console.log(`Health check: http://${HOST}:${PORT}/health`)
     console.log(`Latest received skins: http://${HOST}:${PORT}/skins`)
     console.log(`Persistent loadout data file: ${DATA_FILE}`)
     console.log(`Persistent Armory data file: ${ARMORY_FILE}`)
   })
-  browserSessionSweep = setInterval(stopBridgeAfterBrowserSession, 2_000)
-  attachmentsSweep = setInterval(syncObservedAttachments, 2_000)
+  setInterval(syncObservedAttachments, 2_000)
 }
 
-// Stickers and charms are applied in CS2's own inventory; the DLL reports what
-// the game holds and the Bridge persists it into the active profile.
 async function syncObservedAttachments(): Promise<void> {
   try {
     const result = await attachmentsSync.poll()
