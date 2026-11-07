@@ -389,9 +389,9 @@ function pruneBrowserSessions(): void {
     }
   }
   if (latestExpiredAt > 0 && browserSessions.size === 0) {
-    browserSessionGraceUntil = Math.max(
+        browserSessionGraceUntil = Math.max(
       browserSessionGraceUntil,
-      latestExpiredAt + BROWSER_SESSION_TIMEOUT_MS,
+      now + BROWSER_SESSION_TIMEOUT_MS,
     )
   }
 }
