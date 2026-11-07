@@ -29,6 +29,15 @@ function makeDocument(): ArmoryDocument {
           updatedAt: now,
         },
         {
+          id: 'sticker-a',
+          definitionId: 'cs2:sticker:1234',
+          kind: 'sticker',
+          quantity: 1,
+          customization: null,
+          createdAt: now,
+          updatedAt: now,
+        },
+        {
           id: 'ak-manual',
           definitionId: 'cs2:skin:n1ssan-skins:1',
           kind: 'skin',
@@ -208,4 +217,77 @@ test('invalid attachment values are rejected by the contract validator', async (
 
   assert.equal(result.merged, 0)
   assert.equal(replaced, null)
+})
+
+
+test('consumes the exact source sticker item when its attachment is saved', async () => {
+  const { result, replaced } = await run({
+    profileId: 'main',
+    inventoryRevision: 4,
+    seq: 8,
+    records: [stickerRecord({
+      seq: 8,
+      consumedToolInstanceId: 'sticker-a',
+      consumedToolKind: 'sticker',
+      attachments: {
+        stickers: [{
+          slot: 0,
+          kitId: 1234,
+          wear: 0.12,
+          scale: 1,
+          rotation: 0,
+          offsetX: 0.1,
+          offsetY: -0.05,
+          schema: 3,
+          sourceInstanceId: 'sticker-a',
+        }],
+        charm: null,
+      },
+    })],
+  })
+
+  assert.equal(result.merged, 1)
+  const written = replaced as ArmoryDocument | null
+  assert.ok(written)
+  assert.equal(written.profiles[0].items.some(item => item.id === 'sticker-a'), false)
+  assert.equal(
+    written.profiles[0].items.find(item => item.id === 'ak-a')?.attachments?.stickers[0].sourceInstanceId,
+    'sticker-a',
+  )
+})
+
+test('decrements a stacked attachment tool quantity instead of deleting the stack', async () => {
+  const document = makeDocument()
+  const sticker = document.profiles[0].items.find(item => item.id === 'sticker-a')!
+  sticker.quantity = 3
+
+  const { result, replaced } = await run({
+    profileId: 'main',
+    inventoryRevision: 4,
+    seq: 9,
+    records: [stickerRecord({
+      seq: 9,
+      consumedToolInstanceId: 'sticker-a',
+      consumedToolKind: 'sticker',
+      attachments: {
+        stickers: [{
+          slot: 0,
+          kitId: 1234,
+          wear: 0.12,
+          scale: 1,
+          rotation: 0,
+          offsetX: 0.1,
+          offsetY: -0.05,
+          schema: 3,
+          sourceInstanceId: 'sticker-a',
+        }],
+        charm: null,
+      },
+    })],
+  }, document)
+
+  assert.equal(result.merged, 1)
+  const written = replaced as ArmoryDocument | null
+  assert.ok(written)
+  assert.equal(written.profiles[0].items.find(item => item.id === 'sticker-a')?.quantity, 2)
 })
