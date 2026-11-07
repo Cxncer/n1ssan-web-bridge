@@ -61,6 +61,52 @@ export type CatalogueDefinition = {
   paintIndex: string | null
 }
 
+/** One sticker applied to an item in CS2, exactly as the game holds it. */
+export type StickerAttachment = {
+  /** "sticker slot N", 0-5. */
+  slot: number
+  /** Sticker kit id ("sticker slot N id"). */
+  kitId: number
+  wear: number
+  scale: number
+  rotation: number
+  offsetX: number
+  offsetY: number
+  /** The position the offsets are relative to; null when the game holds none. */
+  schema: number | null
+  /** Armory sticker instance this consumed, when it could be resolved. */
+  sourceInstanceId: string | null
+}
+
+/** The charm hanging on an item. */
+export type CharmAttachment = {
+  /** Keychain id ("keychain slot 0 id"). */
+  kitId: number
+  seed: number
+  x: number
+  y: number
+  z: number
+  /** A Sticker Slab's sealed sticker. */
+  stickerKitId: number | null
+  /** A Major highlight clip. */
+  highlightId: number | null
+  sourceInstanceId: string | null
+}
+
+/**
+ * Attachment state observed in CS2, per item instance. Written by the native
+ * runtime when the player changes stickers or a charm in the game's own
+ * inventory screen; never applied by the Bridge.
+ */
+export type ItemAttachments = {
+  stickers: StickerAttachment[]
+  charm: CharmAttachment | null
+  /** Where the state came from; only `native` records may be replaced later. */
+  origin: 'native' | 'legacy' | 'manual'
+  observedAt: string | null
+  observedInventoryRevision: number | null
+}
+
 /** An inventory instance describes an owned item, not its catalogue definition. */
 export type InventoryItemInstance = {
   id: string
@@ -69,6 +115,8 @@ export type InventoryItemInstance = {
   /** Skins are individual instances. Stickers and charms may be quantity-stacked. */
   quantity: number
   customization: SkinCustomization | null
+  /** Stickers and charm on a weapon. Absent means never observed. */
+  attachments?: ItemAttachments | null
   createdAt: string
   updatedAt: string
 }
@@ -130,6 +178,106 @@ const isIsoDate = (value: unknown): value is string =>
 
 const isItemKind = (value: unknown): value is ArmoryItemKind =>
   value === 'skin' || value === 'sticker' || value === 'charm'
+
+const isFiniteNumber = (value: unknown): value is number =>
+  typeof value === 'number' && Number.isFinite(value)
+
+// Optional fields may be omitted entirely; null means "the game holds none".
+const isSafeIdOrNull = (value: unknown): boolean =>
+  value === undefined || value === null || (Number.isSafeInteger(value) && (value as number) >= 0)
+
+const isStringOrNull = (value: unknown): boolean =>
+  value === undefined || value === null || typeof value === 'string'
+
+const isUnitRange = (value: unknown): boolean =>
+  isFiniteNumber(value) && (value as number) >= 0 && (value as number) <= 1
+
+/** Validates the attachment block of one item instance. */
+export function validateAttachments(value: unknown, prefix: string): string[] {
+  const errors: string[] = []
+
+  if (!isRecord(value)) return [`${prefix}.attachments: expected an object`]
+
+  if (!Array.isArray(value.stickers)) {
+    errors.push(`${prefix}.attachments.stickers: expected an array`)
+  } else {
+    if (value.stickers.length > 6) {
+      errors.push(`${prefix}.attachments.stickers: at most six sticker slots`)
+    }
+
+    const slots = new Set<number>()
+    value.stickers.forEach((sticker, index) => {
+      const p = `${prefix}.attachments.stickers[${index}]`
+      if (!isRecord(sticker)) {
+        errors.push(`${p}: expected an object`)
+        return
+      }
+
+      if (!Number.isSafeInteger(sticker.slot) || (sticker.slot as number) < 0 || (sticker.slot as number) > 5) {
+        errors.push(`${p}.slot: expected an integer from 0 to 5`)
+      } else if (slots.has(sticker.slot as number)) {
+        errors.push(`${p}.slot: duplicate sticker slot`)
+      } else {
+        slots.add(sticker.slot as number)
+      }
+
+      if (!Number.isSafeInteger(sticker.kitId) || (sticker.kitId as number) <= 0) {
+        errors.push(`${p}.kitId: expected a positive sticker kit id`)
+      }
+      if (!isUnitRange(sticker.wear)) errors.push(`${p}.wear: expected a number from 0 to 1`)
+      if (!isFiniteNumber(sticker.scale) || (sticker.scale as number) <= 0) {
+        errors.push(`${p}.scale: expected a positive number`)
+      }
+      if (!isFiniteNumber(sticker.rotation)) errors.push(`${p}.rotation: expected a number`)
+      if (!isFiniteNumber(sticker.offsetX) || !isFiniteNumber(sticker.offsetY)) {
+        errors.push(`${p}: placement values must be finite`)
+      }
+      if (!isSafeIdOrNull(sticker.schema)) errors.push(`${p}.schema: expected null or a safe integer`)
+      if (!isStringOrNull(sticker.sourceInstanceId)) {
+        errors.push(`${p}.sourceInstanceId: expected a string or null`)
+      }
+    })
+  }
+
+  if (value.charm !== null) {
+    const charm = value.charm
+    if (!isRecord(charm)) {
+      errors.push(`${prefix}.attachments.charm: expected an object or null`)
+    } else {
+      if (!Number.isSafeInteger(charm.kitId) || (charm.kitId as number) <= 0) {
+        errors.push(`${prefix}.attachments.charm.kitId: expected a positive keychain id`)
+      }
+      if (!Number.isSafeInteger(charm.seed) || (charm.seed as number) < 0) {
+        errors.push(`${prefix}.attachments.charm.seed: expected a non-negative safe integer`)
+      }
+      if (!isFiniteNumber(charm.x) || !isFiniteNumber(charm.y) || !isFiniteNumber(charm.z)) {
+        errors.push(`${prefix}.attachments.charm: placement values must be finite`)
+      }
+      if (!isSafeIdOrNull(charm.stickerKitId)) {
+        errors.push(`${prefix}.attachments.charm.stickerKitId: expected null or a safe integer`)
+      }
+      if (!isSafeIdOrNull(charm.highlightId)) {
+        errors.push(`${prefix}.attachments.charm.highlightId: expected null or a safe integer`)
+      }
+      if (!isStringOrNull(charm.sourceInstanceId)) {
+        errors.push(`${prefix}.attachments.charm.sourceInstanceId: expected a string or null`)
+      }
+    }
+  }
+
+  if (value.origin !== 'native' && value.origin !== 'legacy' && value.origin !== 'manual') {
+    errors.push(`${prefix}.attachments.origin: expected native, legacy or manual`)
+  }
+  if (value.observedAt !== null && value.observedAt !== undefined && !isIsoDate(value.observedAt)) {
+    errors.push(`${prefix}.attachments.observedAt: expected an ISO date or null`)
+  }
+  if (value.observedInventoryRevision !== null && value.observedInventoryRevision !== undefined &&
+      (!Number.isSafeInteger(value.observedInventoryRevision) || (value.observedInventoryRevision as number) < 0)) {
+    errors.push(`${prefix}.attachments.observedInventoryRevision: expected null or a non-negative safe integer`)
+  }
+
+  return errors
+}
 
 /**
  * Runtime validation is shared by the Bridge and tests. It accepts unknown
@@ -217,6 +365,10 @@ export function validateArmoryDocument(value: unknown): string[] {
 
       if (item.kind !== 'skin' && item.customization !== null) {
         errors.push(`${itemPrefix}.customization: only skins may have skin customization`)
+      }
+
+      if (item.attachments !== undefined && item.attachments !== null) {
+        errors.push(...validateAttachments(item.attachments, itemPrefix))
       }
 
       if (item.kind === 'skin' && item.customization !== null) {

@@ -2,7 +2,7 @@ import assert from 'node:assert/strict'
 import { test } from 'node:test'
 import type { ArmoryDocument } from '../src/armory/contracts.ts'
 import { createEmptyEquipmentDocument, validateArmoryEquipmentDocument } from '../src/armory/equipment.ts'
-import { buildProfileEquipmentAssignments, replaceProfileEquipmentAssignments, resolveProfileEquipmentSelections } from '../src/armory/loadout-adapter.ts'
+import { buildEquipmentAssignments, buildProfileEquipmentAssignments, replaceProfileEquipmentAssignments, resolveProfileEquipmentSelections } from '../src/armory/loadout-adapter.ts'
 
 const timestamp = '2026-11-04T06:00:00.000Z'
 const armory: ArmoryDocument = {
@@ -68,6 +68,24 @@ test('does not invent ownership when a selected catalogue item is absent from Ar
     loadouts: { T: { 'AK-47': 999 }, CT: {} },
     equipment: { T: { agent: null, knife: null, gloves: null, zeus: null }, CT: { agent: null, knife: null, gloves: null, zeus: null } },
   }, catalogue, armory), /not owned in the active Armory inventory/)
+})
+
+test('keeps owned slots when another selection is not owned', () => {
+  const { assignments, skipped } = buildEquipmentAssignments({
+    loadoutProfileId: 'loadout-main',
+    loadouts: { T: { 'AK-47': 999 }, CT: { 'AK-47': 10 } },
+    equipment: { T: { agent: null, knife: 7, gloves: null, zeus: null }, CT: { agent: null, knife: null, gloves: null, zeus: null } },
+  }, catalogue, armory, { skipUnresolved: true })
+
+  assert.deepEqual(assignments.map(item => [item.team, item.slot, item.itemInstanceId]), [
+    ['T', 'knife', 'knife-owned'],
+    ['CT', 'weapon', 'ak-owned-1'],
+  ])
+  assert.equal(skipped.length, 1)
+  assert.match(skipped[0], /not owned in the active Armory inventory/)
+  const document = createEmptyEquipmentDocument(armory)
+  document.assignments = assignments
+  assert.deepEqual(validateArmoryEquipmentDocument(document, armory), [])
 })
 
 test('replaces only the requested Loadout Builder profile assignments', () => {

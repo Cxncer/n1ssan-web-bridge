@@ -998,3 +998,21 @@ body,button,input,select{font-family:'Barlow',sans-serif}
     gap: 10px;
   }
 }
+
+/* Armory equipment slots (gloves, knife, agent) */
+.ob-equip-dialog { width: min(620px, 100%); }
+.equip-slot { padding: 14px 0 4px; border-top: 1px solid #2b342e; }
+.equip-slot-head { display: flex; align-items: baseline; gap: 12px; padding: 0 20px 8px; }
+.equip-slot-head strong { font: 500 10px 'DM Mono', monospace; letter-spacing: 1.4px; color: #9db0a1; }
+.equip-slot-head span { font-size: 11px; color: #839087; }
+.ob-equip-dialog .ob-catalogue-list { max-height: 210px; }
+
+/* Stickers / charm observed in CS2: read-only, applied by the game itself. */
+.attach-chip { display: inline-flex; align-items: center; gap: 4px; padding: 1px 6px; border: 1px solid #3b4a40; border-radius: 3px; font: 500 9px 'DM Mono', monospace; letter-spacing: .6px; color: #9fd0b0; background: #1c2620; }
+.attach-panel { margin-top: 14px; padding: 12px 14px; border: 1px solid #2f3d35; border-radius: 4px; background: #161d19; text-align: left; }
+.attach-panel ul { margin: 8px 0 0; padding: 0; list-style: none; display: grid; gap: 6px; }
+.attach-panel li, .attach-charm { font: 400 10px 'DM Mono', monospace; letter-spacing: .2px; color: #a7b6ac; }
+.attach-panel li span, .attach-charm span { color: #6f8a79; margin-right: 6px; }
+.attach-charm { margin-top: 8px; }
+.attach-panel small { display: block; margin-top: 10px; font-size: 9px; color: #64726a; }
+

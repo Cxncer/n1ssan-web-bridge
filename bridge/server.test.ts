@@ -417,6 +417,7 @@ assert.equal(applyResponse.status, 200)
     body: JSON.stringify({ expectedRevision: finalState.data.revision, data: changedArmory }),
   })
   assert.equal(changedArmoryResponse.status, 200)
+  const changedArmoryState = await changedArmoryResponse.json() as ArmoryReadResponse
 
   const staleEquipmentRead = await fetch(`${BASE_URL}/armory/equipment`)
   const staleEquipmentBody = await staleEquipmentRead.json() as { validationErrors: string[] }
@@ -435,13 +436,13 @@ assert.equal(applyResponse.status, 200)
 
   // An intentionally empty active profile is a clear operation, not a failed
   // projection. The native DLL uses the empty document to remove managed items.
-  const clearedArmory = structuredClone(finalState.data)
+  const clearedArmory = structuredClone(changedArmoryState.data)
   clearedArmory.profiles[0].items = []
   const clearSave = await fetch(`${BASE_URL}/armory`, {
     method: 'PUT',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({
-      expectedRevision: finalState.data.revision,
+      expectedRevision: changedArmoryState.data.revision,
       data: clearedArmory,
     }),
   })

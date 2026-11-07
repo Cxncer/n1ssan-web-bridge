@@ -94,7 +94,7 @@ test('marks StatTrak instances with quality 9 and unusual knives with quality 3'
   assert.equal(knife?.quality, 3)
 })
 
-test('skips non-skin entries and stacked items', () => {
+test('projects a sticker entry and skips a stacked skin', () => {
   const result = projectArmoryInventory(
     armoryWith([
       instance({ id: 'sticker-1', kind: 'sticker', definitionId: 'cs2:sticker:bymykel-stickers:sticker-1' }),
@@ -104,8 +104,13 @@ test('skips non-skin entries and stacked items', () => {
     schema,
   )
 
-  assert.equal(result.document.items.length, 0)
-  assert.equal(result.skipped.length, 2)
+  // The sticker becomes a real inventory item (CS2 consumes one per apply);
+  // a stacked skin is still invalid.
+  assert.equal(result.document.items.length, 1)
+  assert.equal(result.document.items[0].instanceId, 'sticker-1')
+  assert.equal(result.document.items[0].stickerKit, 1)
+  assert.equal(result.skipped.length, 1)
+  assert.equal(result.skipped[0].instanceId, 'stack-1')
 })
 
 test('skips paint kits the live schema marks incompatible', () => {
@@ -123,4 +128,63 @@ test('includes items when no live schema is available', () => {
   const result = projectArmoryInventory(armoryWith([instance()]), catalogue, null)
 
   assert.equal(result.document.items.length, 1)
+})
+
+test('projects stickers and a charm as flat runtime keys on the owning instance', () => {
+  const document = armoryWith([
+    instance({
+      id: 'ak-stickered',
+      attachments: {
+        stickers: [
+          { slot: 0, kitId: 1234, wear: 0.12, scale: 1, rotation: 15, offsetX: 0.25, offsetY: -0.1, schema: 3, sourceInstanceId: null },
+          { slot: 3, kitId: 5678, wear: 0, scale: 1, rotation: 0, offsetX: 0, offsetY: 0, schema: null, sourceInstanceId: null },
+        ],
+        charm: { kitId: 5613, seed: 7, x: 0.01, y: -0.02, z: 0.03, stickerKitId: null, highlightId: 42, sourceInstanceId: null },
+        origin: 'native',
+        observedAt: timestamp,
+        observedInventoryRevision: 1,
+      },
+    }),
+  ])
+
+  const projection = projectArmoryInventory(document, catalogue, schema)
+
+  assert.equal(projection.document.version, 2)
+  assert.equal(projection.document.inventoryRevision, document.revision)
+
+  const item = projection.document.items[0]
+  assert.equal(item.sticker0Kit, 1234)
+  assert.equal(item.sticker0Wear, 0.12)
+  assert.equal(item.sticker0Rotation, 15)
+  assert.equal(item.sticker0OffsetX, 0.25)
+  assert.equal(item.sticker0Schema, 3)
+  assert.equal(item.sticker3Kit, 5678)
+  // An absent schema attribute must stay absent, not become 0.
+  assert.equal(item.sticker3Schema, undefined)
+  assert.equal(item.charmKit, 5613)
+  assert.equal(item.charmSeed, 7)
+  assert.equal(item.charmHighlight, 42)
+  assert.equal(item.charmSticker, undefined)
+})
+
+test('projects a stacked sticker as one inventory instance per unit', () => {
+  const document = armoryWith([
+    {
+      id: 'sticker-stack',
+      definitionId: 'cs2:sticker:bymykel-stickers:sticker-123',
+      kind: 'sticker',
+      quantity: 3,
+      customization: null,
+      createdAt: timestamp,
+      updatedAt: timestamp,
+    },
+  ])
+
+  // The Bridge never receives the sticker catalogue; the kit comes from the id.
+  const projection = projectArmoryInventory(document, buildArmoryCatalogue([]), null)
+  const ids = projection.document.items.map(item => item.instanceId)
+
+  assert.equal(projection.document.items.length, 3)
+  assert.deepEqual(ids, ['sticker-stack#0', 'sticker-stack#1', 'sticker-stack#2'])
+  assert.equal(projection.document.items[0].stickerKit, 123)
 })

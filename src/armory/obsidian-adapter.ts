@@ -2,6 +2,7 @@ import type {
   ArmoryDocument,
   ArmoryItemKind,
   InventoryProfile as ArmoryProfile,
+  ItemAttachments,
 } from './contracts.ts'
 import { catalogueDefinitionId } from './catalogue-identity.ts'
 
@@ -15,6 +16,8 @@ export type ObsidianInventoryItem = {
   stattrak: boolean
   stattrakKills?: number
   customName: string
+  /** Stickers and charm observed in CS2; dropped unless carried through here. */
+  attachments?: ItemAttachments | null
   createdAt?: string
   updatedAt?: string
 }
@@ -69,6 +72,7 @@ export function fromArmoryDocument(document: ArmoryDocument): {
       stattrak: item.customization?.statTrak?.enabled ?? false,
       stattrakKills: item.customization?.statTrak?.kills ?? 0,
       customName: item.customization?.customName ?? '',
+      attachments: item.attachments ?? null,
       createdAt: item.createdAt,
       updatedAt: item.updatedAt,
     })),
@@ -121,6 +125,9 @@ export function toArmoryDocument(
         kind,
         quantity: kind === 'skin' ? 1 : Math.max(1, Math.floor(Number(item.quantity) || 1)),
         customization: hasCustomization ? customization : null,
+        // Not editable in this UI: carried through so a save cannot drop what
+        // the native runtime observed in CS2.
+        attachments: item.attachments ?? null,
         createdAt: validTimestamp(item.createdAt ?? profile.createdAt, now),
         updatedAt: validTimestamp(item.updatedAt ?? profile.updatedAt, now),
       }

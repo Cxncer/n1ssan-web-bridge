@@ -1,5 +1,9 @@
 import { toCatalogueDefinition, type CatalogueSourceRecord } from './catalogue-identity.ts'
-import type { ArmoryDocument, CatalogueDefinition } from './contracts.ts'
+import type {
+  ArmoryDocument,
+  CatalogueDefinition,
+  InventoryItemInstance,
+} from './contracts.ts'
 import type { LiveSchemaItem } from './runtime-config.ts'
 
 /**
@@ -24,13 +28,19 @@ export type ArmoryInventoryItem = {
   stickerKit?: number
   keychain?: number
   keychainSeed?: number
+  /** Stickers and charm, flattened: one fixed key per value. */
+  [attachmentKey: string]: number | string | boolean | null | undefined
 }
 
 export type ArmoryInventoryDocument = {
-  version: 1
+  version: 2
+  /** 1 = the runtime understands the flat sticker / charm keys below. */
+  attachmentsVersion: 1
   generatedAt: string
   source: 'armory'
   profileId: string
+  /** Profile revision this projection was built from. */
+  inventoryRevision: number
   items: ArmoryInventoryItem[]
 }
 
@@ -80,7 +90,7 @@ export function buildArmoryCatalogue(
   const index = new Map<string, ArmoryCatalogueEntry>()
 
   for (const record of records) {
-    const definition = toCatalogueDefinition({ ...record, kind: 'skin' })
+    const definition = toCatalogueDefinition({ ...record })
     index.set(definition.id, {
       definition,
       weapon: (record.weapon ?? '').trim(),
@@ -101,6 +111,55 @@ function rarityNumber(rarity: string | null): number {
   return RARITY_NUMBER[rarity] ?? 4
 }
 
+/**
+ * Flattens an instance's attachment state into the runtime document's fixed
+ * keys. Kept flat on purpose: the native reader scans a single object per item.
+ */
+/**
+ * Sticker kit / keychain id from a canonical definition id, for catalogue rows
+ * the Bridge never receives. "cs2:sticker:bymykel-stickers:sticker-123" -> 123.
+ */
+export function kitFromDefinitionId(definitionId: string): number | null {
+  const tail = definitionId.slice(definitionId.lastIndexOf(':') + 1)
+  if (!tail) return null
+
+  const match = /(?:sticker|charm|keychain)-?(\d+)$/i.exec(decodeURIComponent(tail))
+  if (!match) return null
+
+  const kit = Number(match[1])
+  return Number.isSafeInteger(kit) && kit > 0 ? kit : null
+}
+
+function attachmentFields(instance: InventoryItemInstance): Record<string, number> {
+  const fields: Record<string, number> = {}
+  const attachments = instance.attachments
+  if (!attachments) return fields
+
+  for (const sticker of attachments.stickers) {
+    const slot = sticker.slot
+    fields[`sticker${slot}Kit`] = sticker.kitId
+    fields[`sticker${slot}Wear`] = sticker.wear
+    fields[`sticker${slot}Scale`] = sticker.scale
+    fields[`sticker${slot}Rotation`] = sticker.rotation
+    fields[`sticker${slot}OffsetX`] = sticker.offsetX
+    fields[`sticker${slot}OffsetY`] = sticker.offsetY
+    if (sticker.schema !== null) fields[`sticker${slot}Schema`] = sticker.schema
+  }
+
+  const charm = attachments.charm
+  if (charm) {
+    fields.charmKit = charm.kitId
+    fields.charmSeed = charm.seed
+    fields.charmX = charm.x
+    fields.charmY = charm.y
+    fields.charmZ = charm.z
+    if (charm.stickerKitId !== null) fields.charmSticker = charm.stickerKitId
+    if (charm.highlightId !== null) fields.charmHighlight = charm.highlightId
+  }
+
+  return fields
+}
+
 export function projectArmoryInventory(
   armory: ArmoryDocument,
   catalogue: Map<string, ArmoryCatalogueEntry>,
@@ -117,30 +176,29 @@ export function projectArmoryInventory(
   const skipped: SkippedInventoryItem[] = []
 
   for (const instance of profile?.items ?? []) {
-    if (instance.quantity !== 1) {
+    // Skins are individual instances. A stacked sticker or charm is still one
+    // item per unit in the game's inventory, so it is projected as that many
+    // instances — CS2 consumes one when the player applies it.
+    const copies = instance.kind === 'skin' ? 1 : Math.max(1, Math.floor(instance.quantity))
+
+    if (instance.kind === 'skin' && instance.quantity !== 1) {
       skipped.push({
         instanceId: instance.id,
         definitionId: instance.definitionId,
-        reason: 'stacked inventory entries are not supported yet',
+        reason: 'stacked skins are not supported',
       })
       continue
     }
 
     const entry = catalogue.get(instance.definitionId)
 
-    if (!entry) {
-      skipped.push({
-        instanceId: instance.id,
-        definitionId: instance.definitionId,
-        reason: 'catalogue definition not found',
-      })
-      continue
-    }
-
     if (instance.kind === 'sticker' || instance.kind === 'charm') {
-      const kit = instance.kind === 'sticker'
-        ? entry.definition.stickerKitId
-        : entry.definition.keychainId
+      // Sticker and charm catalogues live in the browser and never reach the
+      // Bridge, so the kit id also comes from the canonical instance id
+      // ("cs2:sticker:bymykel-stickers:sticker-123").
+      const kit = (instance.kind === 'sticker'
+        ? entry?.definition.stickerKitId
+        : entry?.definition.keychainId) ?? kitFromDefinitionId(instance.definitionId)
 
       if (!kit) {
         skipped.push({
@@ -157,21 +215,32 @@ export function projectArmoryInventory(
         ? instance.customization.seed
         : 0
 
-      items.push({
+      for (let copy = 0; copy < copies; ++copy) {
+        items.push({
+          instanceId: copies > 1 ? `${instance.id}#${copy}` : instance.id,
+          definitionId: instance.definitionId,
+          definitionIndex: instance.kind === 'sticker' ? DEF_STICKER : DEF_KEYCHAIN,
+          paintKit: 0,
+          float: 0.001,
+          seed: 0,
+          statTrak: false,
+          quality: 4,
+          rarity: rarityNumber(entry?.definition.rarity ?? null),
+          customName: null,
+          kind: instance.kind,
+          ...(instance.kind === 'sticker'
+            ? { stickerKit: kit }
+            : { keychain: kit, keychainSeed: charmSeed }),
+        })
+      }
+      continue
+    }
+
+    if (!entry) {
+      skipped.push({
         instanceId: instance.id,
         definitionId: instance.definitionId,
-        definitionIndex: instance.kind === 'sticker' ? DEF_STICKER : DEF_KEYCHAIN,
-        paintKit: 0,
-        float: 0.001,
-        seed: 0,
-        statTrak: false,
-        quality: 4,
-        rarity: rarityNumber(entry.definition.rarity),
-        customName: null,
-        kind: instance.kind,
-        ...(instance.kind === 'sticker'
-          ? { stickerKit: kit }
-          : { keychain: kit, keychainSeed: charmSeed }),
+        reason: 'catalogue definition not found',
       })
       continue
     }
@@ -233,15 +302,18 @@ export function projectArmoryInventory(
       rarity: rarityNumber(entry.definition.rarity),
       customName: customization?.customName?.trim() || null,
       kind: 'skin',
+      ...attachmentFields(instance),
     })
   }
 
   return {
     document: {
-      version: 1,
+      version: 2,
+      attachmentsVersion: 1,
       generatedAt: new Date().toISOString(),
       source: 'armory',
       profileId: armory.activeProfileId,
+      inventoryRevision: armory.revision,
       items,
     },
     skipped,

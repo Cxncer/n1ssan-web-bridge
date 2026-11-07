@@ -24,15 +24,26 @@ function definitionIdFor(item: LoadoutCatalogueItem): string {
   return catalogueDefinitionId('skin', item.id, source)
 }
 
+export type EquipmentAssignmentBuild = {
+  assignments: EquippedItemAssignment[]
+  /** Selections that cannot be equipped natively, with the reason. */
+  skipped: string[]
+}
+
 /**
  * Converts catalogue selections into owned Armory instance assignments.
  * It never creates inventory items and never treats catalogue IDs as instance IDs.
+ *
+ * With `skipUnresolved`, selections that are not owned in the active Armory
+ * inventory are reported instead of aborting the whole build: one unowned
+ * weapon must not strip the glove/knife/agent assignments that are owned.
  */
-export function buildProfileEquipmentAssignments(
+export function buildEquipmentAssignments(
   selection: LoadoutSelection,
   catalogue: LoadoutCatalogueItem[],
   armory: ArmoryDocument,
-): EquippedItemAssignment[] {
+  options: { skipUnresolved?: boolean } = {},
+): EquipmentAssignmentBuild {
   const profile = armory.profiles.find(entry => entry.id === armory.activeProfileId)
   if (!profile) throw new Error('The active Armory inventory profile could not be found.')
   const definitions = new Map(catalogue.map(item => [item.id, item]))
@@ -45,21 +56,31 @@ export function buildProfileEquipmentAssignments(
   }
 
   const assignments: EquippedItemAssignment[] = []
+  const skipped: string[] = []
   // One owned instance is equipped at most once across both teams, so a
   // second team assignment picks the next owned copy.
   const usedInstances = new Set<string>()
+  const reject = (message: string) => {
+    if (!options.skipUnresolved) throw new Error(message)
+    skipped.push(message)
+  }
   for (const team of ['T', 'CT'] as const) {
     const add = (slot: EquipmentSlot, target: string, catalogueId: number | string | null) => {
       if (catalogueId === null) return
       const item = definitions.get(catalogueId)
-      if (!item) throw new Error(`Selected catalogue item ${catalogueId} is no longer available.`)
+      if (!item) {
+        reject(`Selected catalogue item ${catalogueId} is no longer available.`)
+        return
+      }
       const definitionId = definitionIdFor(item)
       const instanceId = (byDefinition.get(definitionId) ?? []).find(id => !usedInstances.has(id))
       if (!instanceId) {
-        throw new Error(`${team} · ${target}: ${item.weapon} | catalogue item #${catalogueId} is not owned in the active Armory inventory.`)
+        reject(`${team} · ${target}: ${item.weapon} | catalogue item #${catalogueId} is not owned in the active Armory inventory.`)
+        return
       }
       if (slot === 'weapon' && item.weapon.trim().toLowerCase() !== target.trim().toLowerCase()) {
-        throw new Error(`${team} · ${target}: the selected item is ${item.weapon}, not ${target}.`)
+        reject(`${team} · ${target}: the selected item is ${item.weapon}, not ${target}.`)
+        return
       }
       usedInstances.add(instanceId)
       assignments.push({
@@ -78,7 +99,16 @@ export function buildProfileEquipmentAssignments(
       add(slot, slot, selection.equipment[team][slot])
     }
   }
-  return assignments
+  return { assignments, skipped }
+}
+
+/** Strict variant: throws when any selection cannot be equipped. */
+export function buildProfileEquipmentAssignments(
+  selection: LoadoutSelection,
+  catalogue: LoadoutCatalogueItem[],
+  armory: ArmoryDocument,
+): EquippedItemAssignment[] {
+  return buildEquipmentAssignments(selection, catalogue, armory).assignments
 }
 
 /** Replaces one Loadout Builder profile without disturbing other saved profiles. */

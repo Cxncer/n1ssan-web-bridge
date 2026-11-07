@@ -9,12 +9,14 @@ import {
 } from './armory-store.ts'
 import { createLocalIntegrationSnapshot } from '../src/integration/local-snapshot.ts'
 import { ArmoryEquipmentStore, EquipmentRevisionConflictError, EquipmentValidationError } from './armory-equipment-store.ts'
-import { validateArmoryEquipmentDocument } from '../src/armory/equipment.ts'
+import { AttachmentsSync } from './attachments-sync.ts'
+import { createEmptyEquipmentDocument, validateArmoryEquipmentDocument } from '../src/armory/equipment.ts'
 import { simulateLocalIntegration } from '../src/integration/simulator.ts'
 import skinCatalogueData from '../src/skins.json' with { type: 'json' }
 import knifeCatalogueData from '../src/obsidian/knife-skins.json' with { type: 'json' }
 import liveSchemaData from '../src/armory/n1ssan-cs2-schema.json' with { type: 'json' }
-import { LoadoutProfilesStore, LoadoutValidationError } from './loadout-profiles-store.ts'
+import { LoadoutProfilesStore, LoadoutValidationError, type StoredLoadoutProfile } from './loadout-profiles-store.ts'
+import { buildEquipmentAssignments, type LoadoutCatalogueItem } from '../src/armory/loadout-adapter.ts'
 import { buildArmoryCatalogue, projectArmoryInventory } from '../src/armory/armory-inventory.ts'
 import {
   buildLoadoutRuntimeCatalogue,
@@ -50,6 +52,12 @@ const LOADOUT_FILE = process.env.N1SSAN_LOADOUT_FILE
   ? path.resolve(process.env.N1SSAN_LOADOUT_FILE)
   : path.join(path.dirname(ARMORY_FILE), 'loadout-profiles.json')
 const loadoutStore = new LoadoutProfilesStore(LOADOUT_FILE)
+const ATTACHMENTS_FILE = process.env.N1SSAN_ATTACHMENTS_FILE
+  ? path.resolve(process.env.N1SSAN_ATTACHMENTS_FILE)
+  : path.join(path.dirname(ARMORY_FILE), 'armory-detected-attachments.json')
+const ATTACHMENTS_ACK_FILE = process.env.N1SSAN_ATTACHMENTS_ACK_FILE
+  ? path.resolve(process.env.N1SSAN_ATTACHMENTS_ACK_FILE)
+  : path.join(path.dirname(ARMORY_FILE), 'armory-attachments-ack.json')
 
 // Shared skin metadata. Loadout resolves catalogue IDs directly; Armory
 // inventory is a separate feature and is never consulted here.
@@ -62,6 +70,12 @@ const armoryCatalogue = buildArmoryCatalogue([
   ...(skinCatalogueData as unknown as CatalogueSourceRecord[]),
   ...(knifeCatalogueData as unknown as CatalogueSourceRecord[]),
 ])
+
+// Raw catalogue rows the equipment adapter resolves Loadout selections against.
+const loadoutCatalogueRecords: LoadoutCatalogueItem[] = [
+  ...(skinCatalogueData as unknown as LoadoutCatalogueItem[]),
+  ...(knifeCatalogueData as unknown as LoadoutCatalogueItem[]),
+]
 
 type RuntimeWriteResult = {
   written: boolean
@@ -214,9 +228,94 @@ async function readRuntimeMode(): Promise<RuntimeMode | null> {
  */
 async function projectActiveMode(mode: RuntimeMode | null): Promise<RuntimeWriteResult | InventoryWriteResult | null> {
   if (mode === 'armory')
+  {
+    // Assignments name instances in the inventory being projected, so they are
+    // refreshed before the projection can be consumed.
+    await syncEquipmentFromActiveLoadout()
     return projectInventoryOrReport()
+  }
 
   return projectRuntimeOrReport()
+}
+
+type EquipmentSyncResult = {
+  written: boolean
+  assignments: number
+  skipped: number
+  reasons: string[]
+}
+
+type EquipmentSyncFailure = {
+  written: false
+  reason: string
+}
+
+/**
+ * Mirrors a saved Loadout selection into the Armory equipment document the
+ * native runtime reads. Selections that are not owned in the active Armory
+ * inventory are reported and left out: one unowned weapon must not clear the
+ * glove, knife or agent slots that are owned.
+ *
+ * Selections made directly in the Armory UI are preserved: the Loadout only
+ * replaces the team+slot targets it actually resolves, so a slot picked inside
+ * Armory is not wiped by an unrelated Loadout save.
+ */
+async function syncEquipmentAssignments(profile: StoredLoadoutProfile): Promise<EquipmentSyncResult> {
+  const armory = armoryStore.read()
+  const { assignments, skipped } = buildEquipmentAssignments(
+    { loadoutProfileId: profile.id, loadouts: profile.loadouts, equipment: profile.equipment },
+    loadoutCatalogueRecords,
+    armory,
+    { skipUnresolved: true },
+  )
+
+  // An inventory edit between two saves can orphan an assignment; persist only
+  // instances the active profile still contains so validation succeeds instead
+  // of rejecting the whole document.
+  const active = armory.profiles.find(entry => entry.id === armory.activeProfileId)
+  const owned = new Set(
+    (active?.items ?? [])
+      .filter(item => item.kind === 'skin' && item.quantity === 1)
+      .map(item => item.id),
+  )
+  const valid = assignments.filter(assignment => owned.has(assignment.itemInstanceId))
+  const targetKey = (assignment: { team: string; slot: string; target: string }) =>
+    `${assignment.team}|${assignment.slot}|${assignment.target}`
+  const covered = new Set(valid.map(targetKey))
+  const usedInstances = new Set(valid.map(assignment => `${assignment.team}|${assignment.itemInstanceId}`))
+  const current = equipmentStore.read(armory)
+  const carried = (current.inventoryRevision === armory.revision && current.profileId === armory.activeProfileId
+    ? current.assignments
+    : [])
+    .filter(assignment => owned.has(assignment.itemInstanceId))
+    .filter(assignment => !covered.has(targetKey(assignment)))
+    .filter(assignment => !usedInstances.has(`${assignment.team}|${assignment.itemInstanceId}`))
+  const document = { ...createEmptyEquipmentDocument(armory), assignments: [...carried, ...valid] }
+  const saved = await equipmentStore.replace(armory.revision, document, armory)
+
+  return {
+    written: true,
+    assignments: saved.assignments.length,
+    skipped: skipped.length,
+    reasons: skipped.slice(0, 5),
+  }
+}
+
+async function syncEquipmentFromActiveLoadout(): Promise<EquipmentSyncResult | EquipmentSyncFailure | null> {
+  const profile = loadoutStore.active()
+
+  if (!profile)
+    return null
+
+  try {
+    return await syncEquipmentAssignments(profile)
+  } catch (error) {
+    console.error('Armory equipment sync failed:', error)
+    return {
+      written: false,
+      reason: error instanceof Error ? error.message : 'Armory equipment could not be saved',
+    }
+  }
 }
 
 const allowedOrigins = new Set([
@@ -266,7 +365,19 @@ let browserSessionGraceUntil = 0
 let hasSeenBrowserSession = false
 let bridgeHttpServer: ReturnType<typeof app.listen> | undefined
 let browserSessionSweep: NodeJS.Timeout | undefined
+let attachmentsSweep: NodeJS.Timeout | undefined
 let bridgeShutdownStarted = false
+
+// Owns the only write path from the native runtime into the Armory profile.
+const attachmentsSync = new AttachmentsSync({
+  detectionPath: ATTACHMENTS_FILE,
+  ackPath: ATTACHMENTS_ACK_FILE,
+  read: () => armoryStore.read(),
+  replace: (expectedRevision, candidate) => armoryStore.replace(expectedRevision, candidate),
+  onMerged: async () => {
+    await projectInventoryOrReport()
+  },
+})
 
 function pruneBrowserSessions(): void {
   const now = Date.now()
@@ -294,6 +405,7 @@ function stopBridgeAfterBrowserSession(): void {
   if (bridgeShutdownStarted || !hasSeenBrowserSession || hasActiveBrowserSession()) return
   bridgeShutdownStarted = true
   if (browserSessionSweep) clearInterval(browserSessionSweep)
+  if (attachmentsSweep) clearInterval(attachmentsSweep)
   console.log('No N1SSAN browser sessions remain. Shutting down Bridge.')
   bridgeHttpServer?.close(() => process.exit(0))
   setTimeout(() => process.exit(0), 5_000).unref()
@@ -639,7 +751,11 @@ app.post('/loadout/apply', async (req: Request, res: Response) => {
 
     const runtime = await projectRuntimeOrReport()
 
-    res.status(200).json({ data: saved, runtime })
+    // Armory mode reads its glove/knife/agent slots from the equipment document,
+    // so the same save publishes the assignments the native runtime consumes.
+    const equipment = await syncEquipmentFromActiveLoadout()
+
+    res.status(200).json({ data: saved, runtime, equipment })
   } catch (error) {
     if (error instanceof LoadoutValidationError) {
       res.status(400).json({ error: { code: 'VALIDATION_FAILED', message: error.message, details: error.details } })
@@ -654,6 +770,11 @@ app.post('/loadout/apply', async (req: Request, res: Response) => {
 
 app.post('/armory/apply', async (_req: Request, res: Response) => {
   try {
+    // Refresh the equipment assignments against the current inventory first:
+    // they name instances of the profile about to be projected, so an inventory
+    // edit must not leave the native runtime resolving removed items.
+    const equipment = await syncEquipmentFromActiveLoadout()
+
     // Write the selected Armory profile before switching the DLL runtime mode,
     // so the native watcher never observes Armory mode with an old document.
     const runtime = await projectInventoryOrReport()
@@ -680,7 +801,7 @@ app.post('/armory/apply', async (_req: Request, res: Response) => {
     }
 
     await writeRuntimeMode('armory')
-    res.status(200).json({ mode: 'armory', runtime })
+    res.status(200).json({ mode: 'armory', runtime, equipment })
   } catch (error) {
     console.error('Failed to apply Armory inventory:', error)
     res.status(500).json({
@@ -1004,6 +1125,22 @@ async function start(): Promise<void> {
     console.log(`Persistent Armory data file: ${ARMORY_FILE}`)
   })
   browserSessionSweep = setInterval(stopBridgeAfterBrowserSession, 2_000)
+  attachmentsSweep = setInterval(syncObservedAttachments, 2_000)
+}
+
+// Stickers and charms are applied in CS2's own inventory; the DLL reports what
+// the game holds and the Bridge persists it into the active profile.
+async function syncObservedAttachments(): Promise<void> {
+  try {
+    const result = await attachmentsSync.poll()
+    if (result.merged > 0) {
+      console.log(`Armory attachments merged into the profile: ${result.merged} item(s)`)
+    } else if (result.reason !== 'idle' && result.reason !== 'no detection file' && result.reason !== 'no records') {
+      console.log(`Armory attachments: ${result.reason}`)
+    }
+  } catch (error) {
+    console.error('Armory attachment sync failed:', error instanceof Error ? error.message : error)
+  }
 }
 
 void start().catch(error => {
