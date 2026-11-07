@@ -1016,3 +1016,15 @@ body,button,input,select{font-family:'Barlow',sans-serif}
 .attach-charm { margin-top: 8px; }
 .attach-panel small { display: block; margin-top: 10px; font-size: 9px; color: #64726a; }
 
+
+
+/* Applied sticker and charm previews: compact horizontal inventory strip. */
+.attach-preview-row{display:flex;align-items:flex-start;gap:10px;max-width:100%;overflow-x:auto;padding:2px 1px 7px;scrollbar-width:thin;scrollbar-color:#46594b transparent}
+.attach-preview-item{display:flex;flex:0 0 62px;min-width:0;flex-direction:column;align-items:center;gap:5px}
+.attach-preview-art{display:grid;width:58px;height:58px;place-items:center;overflow:hidden;border:1px solid #3b4b40;border-radius:6px;background:linear-gradient(145deg,#202b24,#121914)}
+.attach-preview-art img{display:block;width:88%;height:88%;object-fit:contain;filter:drop-shadow(0 3px 7px #0009)}
+.attach-preview-art>span{font:600 11px 'DM Mono',monospace;color:#9db5a2}
+.attach-preview-item>small{max-width:100%;overflow:hidden;color:#829388;font:8px 'DM Mono',monospace;letter-spacing:.45px;text-overflow:ellipsis;white-space:nowrap}
+.attach-preview-charm{margin-left:5px;padding-left:12px;border-left:1px solid #3a493e}
+.attach-preview-charm .attach-preview-art{border-color:#5a5540;background:linear-gradient(145deg,#302b20,#191710)}
+.attach-observed-at{display:block;margin-top:8px;color:#64726a;font-size:9px}
