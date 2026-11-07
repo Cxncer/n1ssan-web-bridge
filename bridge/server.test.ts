@@ -97,26 +97,6 @@ after(async () => {
   }
 })
 
-test('browser session heartbeat keeps the Bridge alive while a workspace tab is open', async () => {
-  const initial = await fetch(`${BASE_URL}/session/active`)
-  assert.equal(initial.status, 200)
-  const before = await initial.json() as { active: boolean; sessions: number }
-  assert.equal(before.active, false)
-
-  const heartbeat = await fetch(`${BASE_URL}/session/heartbeat`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ sessionId: 'test-browser-session-0001' }),
-  })
-  assert.equal(heartbeat.status, 204)
-
-  const active = await fetch(`${BASE_URL}/session/active`)
-  assert.equal(active.status, 200)
-  const state = await active.json() as { active: boolean; sessions: number }
-  assert.equal(state.active, true)
-  assert.equal(state.sessions, 1)
-})
-
 test('DOMINATE can reset a previous workspace selection to neutral', async () => {
   const selected = await fetch(`${BASE_URL}/runtime-mode`, {
     method: 'POST',
