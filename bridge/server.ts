@@ -2,6 +2,27 @@ import express from 'express'
 import type { Request, Response, NextFunction } from 'express'
 import { copyFile, readFile, writeFile, rename } from 'node:fs/promises'
 import path from 'node:path'
+import {
+  ArmoryRevisionConflictError,
+  ArmoryStore,
+  ArmoryValidationError,
+} from './armory-store.ts'
+import { createLocalIntegrationSnapshot } from '../src/integration/local-snapshot.ts'
+import { ArmoryEquipmentStore, EquipmentRevisionConflictError, EquipmentValidationError } from './armory-equipment-store.ts'
+import { validateArmoryEquipmentDocument } from '../src/armory/equipment.ts'
+import { simulateLocalIntegration } from '../src/integration/simulator.ts'
+import skinCatalogueData from '../src/skins.json' with { type: 'json' }
+import knifeCatalogueData from '../src/obsidian/knife-skins.json' with { type: 'json' }
+import liveSchemaData from '../src/armory/n1ssan-cs2-schema.json' with { type: 'json' }
+import { LoadoutProfilesStore, LoadoutValidationError } from './loadout-profiles-store.ts'
+import { buildArmoryCatalogue, projectArmoryInventory } from '../src/armory/armory-inventory.ts'
+import {
+  buildLoadoutRuntimeCatalogue,
+  projectLoadoutRuntime,
+  type LiveSchemaSnapshot,
+  type LoadoutSelectionSnapshot,
+} from '../src/armory/runtime-config.ts'
+import type { CatalogueSourceRecord } from '../src/armory/catalogue-identity.ts'
 
 const app = express()
 
@@ -11,6 +32,192 @@ const MAX_ITEMS = 100
 const DATA_FILE = process.env.N1SSAN_DATA_FILE
   ? path.resolve(process.env.N1SSAN_DATA_FILE)
   : path.join(process.cwd(), 'n1ssan-data.json')
+const ARMORY_FILE = process.env.N1SSAN_ARMORY_FILE
+  ? path.resolve(process.env.N1SSAN_ARMORY_FILE)
+  : path.join(process.cwd(), 'armory-data.json')
+const armoryStore = new ArmoryStore(ARMORY_FILE)
+const EQUIPMENT_FILE = process.env.N1SSAN_EQUIPMENT_FILE
+  ? path.resolve(process.env.N1SSAN_EQUIPMENT_FILE)
+  : path.join(path.dirname(ARMORY_FILE), 'armory-equipment.json')
+const equipmentStore = new ArmoryEquipmentStore(EQUIPMENT_FILE)
+const ARMORY_INVENTORY_FILE = process.env.N1SSAN_ARMORY_INVENTORY_FILE
+  ? path.resolve(process.env.N1SSAN_ARMORY_INVENTORY_FILE)
+  : path.join(path.dirname(ARMORY_FILE), 'armory-inventory.json')
+const MODE_FILE = process.env.N1SSAN_MODE_FILE
+  ? path.resolve(process.env.N1SSAN_MODE_FILE)
+  : path.join(path.dirname(ARMORY_FILE), 'runtime-mode.json')
+const LOADOUT_FILE = process.env.N1SSAN_LOADOUT_FILE
+  ? path.resolve(process.env.N1SSAN_LOADOUT_FILE)
+  : path.join(path.dirname(ARMORY_FILE), 'loadout-profiles.json')
+const loadoutStore = new LoadoutProfilesStore(LOADOUT_FILE)
+
+// Shared skin metadata. Loadout resolves catalogue IDs directly; Armory
+// inventory is a separate feature and is never consulted here.
+const runtimeCatalogue = buildLoadoutRuntimeCatalogue([
+  ...(skinCatalogueData as unknown as CatalogueSourceRecord[]),
+  ...(knifeCatalogueData as unknown as CatalogueSourceRecord[]),
+])
+const liveSchema = liveSchemaData as unknown as LiveSchemaSnapshot
+const armoryCatalogue = buildArmoryCatalogue([
+  ...(skinCatalogueData as unknown as CatalogueSourceRecord[]),
+  ...(knifeCatalogueData as unknown as CatalogueSourceRecord[]),
+])
+
+type RuntimeWriteResult = {
+  written: boolean
+  targetCount: number
+  skipped: number
+  activeLoadoutProfileId: string | null
+  path: string
+  reason: string
+}
+
+/**
+ * Resolves the active Loadout profile into the document n1ssan-dll.dll reads.
+ * An empty projection deliberately leaves the previous file untouched: writing
+ * an empty loadout would make the native runtime fail its preflight.
+ */
+async function writeRuntimeConfig(): Promise<RuntimeWriteResult> {
+  const profile = loadoutStore.active()
+
+  if (!profile) {
+    return {
+      written: false,
+      targetCount: 0,
+      skipped: 0,
+      activeLoadoutProfileId: null,
+      path: DATA_FILE,
+      reason: 'no saved Loadout profile; previous runtime config kept',
+    }
+  }
+
+  const projection = projectLoadoutRuntime(profile, runtimeCatalogue, liveSchema, profile.id)
+
+  if (projection.document.skins.length === 0) {
+    return {
+      written: false,
+      targetCount: 0,
+      skipped: projection.skipped.length,
+      activeLoadoutProfileId: profile.id,
+      path: DATA_FILE,
+      reason: 'no resolvable targets; previous runtime config kept',
+    }
+  }
+
+  const temporaryPath = `${DATA_FILE}.tmp`
+  await writeFile(temporaryPath, `${JSON.stringify(projection.document, null, 2)}\n`, 'utf8')
+  await rename(temporaryPath, DATA_FILE)
+
+  return {
+    written: true,
+    targetCount: projection.document.skins.length,
+    skipped: projection.skipped.length,
+    activeLoadoutProfileId: profile.id,
+    path: DATA_FILE,
+    reason: 'written',
+  }
+}
+
+async function projectRuntimeOrReport(): Promise<RuntimeWriteResult | null> {
+  try {
+    return await writeRuntimeConfig()
+  } catch (error) {
+    console.error('Runtime config projection failed:', error)
+    return null
+  }
+}
+
+type InventoryWriteResult = {
+  written: boolean
+  itemCount: number
+  skipped: number
+  skippedItems: Array<{ instanceId: string; definitionId: string; reason: string }>
+  path: string
+  reason: string
+}
+
+/**
+ * Writes the active Armory profile as an inventory document for the native
+ * runtime. Separate from Loadout; an intentionally empty active profile clears its managed set.
+ */
+async function writeArmoryInventory(): Promise<InventoryWriteResult> {
+  const armory = armoryStore.read()
+  const projection = projectArmoryInventory(
+    armory,
+    armoryCatalogue,
+    liveSchema.itemDefinitions ?? null,
+  )
+
+  // An empty profile is a valid clear operation. If source items existed but
+  // none could be resolved, keep the last good projection instead of clearing it.
+  if (projection.document.items.length === 0 && projection.skipped.length > 0) {
+    return {
+      written: false,
+      itemCount: 0,
+      skipped: projection.skipped.length,
+      skippedItems: projection.skipped,
+      path: ARMORY_INVENTORY_FILE,
+      reason: 'items could not be resolved; previous inventory kept',
+    }
+  }
+
+  const temporaryPath = `${ARMORY_INVENTORY_FILE}.tmp`
+  await writeFile(temporaryPath, `${JSON.stringify(projection.document, null, 2)}\n`, 'utf8')
+  await rename(temporaryPath, ARMORY_INVENTORY_FILE)
+
+  return {
+    written: true,
+    itemCount: projection.document.items.length,
+    skipped: projection.skipped.length,
+    skippedItems: projection.skipped,
+    path: ARMORY_INVENTORY_FILE,
+    reason: 'written',
+  }
+}
+
+async function projectInventoryOrReport(): Promise<InventoryWriteResult | null> {
+  try {
+    return await writeArmoryInventory()
+  } catch (error) {
+    console.error('Armory inventory projection failed:', error)
+    return null
+  }
+}
+
+type RuntimeMode = 'loadout' | 'armory'
+
+async function writeRuntimeMode(mode: RuntimeMode): Promise<void> {
+  const temporaryPath = `${MODE_FILE}.tmp`
+  await writeFile(temporaryPath, `${JSON.stringify({ mode, updatedAt: new Date().toISOString() }, null, 2)}\n`, 'utf8')
+  await rename(temporaryPath, MODE_FILE)
+}
+
+async function readRuntimeMode(): Promise<RuntimeMode | null> {
+  try {
+    const parsed: unknown = JSON.parse(await readFile(MODE_FILE, 'utf8'))
+
+    if (parsed && typeof parsed === 'object' &&
+        ((parsed as Record<string, unknown>).mode === 'loadout' ||
+         (parsed as Record<string, unknown>).mode === 'armory')) {
+      return (parsed as Record<string, unknown>).mode as RuntimeMode
+    }
+  } catch {
+    // No mode selected yet.
+  }
+
+  return null
+}
+
+/**
+ * Loadout and Armory are mutually exclusive runtime sources. The mode file
+ * tells the DLL which single dataset to consume.
+ */
+async function projectActiveMode(mode: RuntimeMode | null): Promise<RuntimeWriteResult | InventoryWriteResult | null> {
+  if (mode === 'armory')
+    return projectInventoryOrReport()
+
+  return projectRuntimeOrReport()
+}
 
 const allowedOrigins = new Set([
   'http://localhost:5173',
@@ -50,6 +257,47 @@ let selectedSkins: BridgeSkin[] = []
 let latestLoadout: LoadoutInfo | null = null
 let nextLoadoutId = 1
 let saveQueue = Promise.resolve()
+
+// Browser tabs own the local Bridge session. The Bridge remains available
+// during refresh/navigation, then exits after the final tab disappears.
+const BROWSER_SESSION_TIMEOUT_MS = 30_000
+const browserSessions = new Map<string, number>()
+let browserSessionGraceUntil = 0
+let hasSeenBrowserSession = false
+let bridgeHttpServer: ReturnType<typeof app.listen> | undefined
+let browserSessionSweep: NodeJS.Timeout | undefined
+let bridgeShutdownStarted = false
+
+function pruneBrowserSessions(): void {
+  const now = Date.now()
+  let latestExpiredAt = 0
+  for (const [sessionId, lastSeen] of browserSessions) {
+    if (now - lastSeen > BROWSER_SESSION_TIMEOUT_MS) {
+      browserSessions.delete(sessionId)
+      latestExpiredAt = Math.max(latestExpiredAt, lastSeen)
+    }
+  }
+  if (latestExpiredAt > 0 && browserSessions.size === 0) {
+    browserSessionGraceUntil = Math.max(
+      browserSessionGraceUntil,
+      latestExpiredAt + BROWSER_SESSION_TIMEOUT_MS,
+    )
+  }
+}
+
+function hasActiveBrowserSession(): boolean {
+  pruneBrowserSessions()
+  return browserSessions.size > 0 || Date.now() < browserSessionGraceUntil
+}
+
+function stopBridgeAfterBrowserSession(): void {
+  if (bridgeShutdownStarted || !hasSeenBrowserSession || hasActiveBrowserSession()) return
+  bridgeShutdownStarted = true
+  if (browserSessionSweep) clearInterval(browserSessionSweep)
+  console.log('No N1SSAN browser sessions remain. Shutting down Bridge.')
+  bridgeHttpServer?.close(() => process.exit(0))
+  setTimeout(() => process.exit(0), 5_000).unref()
+}
 
 function isObject(value: unknown): value is Record<string, unknown> {
   return typeof value === 'object' && value !== null && !Array.isArray(value)
@@ -303,7 +551,7 @@ app.use((req: Request, res: Response, next: NextFunction) => {
   if (origin && allowedOrigins.has(origin)) {
     res.setHeader('Access-Control-Allow-Origin', origin)
     res.setHeader('Vary', 'Origin')
-    res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS')
+    res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, OPTIONS')
     res.setHeader('Access-Control-Allow-Headers', 'Content-Type')
   }
 
@@ -315,8 +563,273 @@ app.use((req: Request, res: Response, next: NextFunction) => {
   next()
 })
 
-app.use(express.json({ limit: '500kb' }))
+app.use(express.json({ limit: '2mb' }))
 
+
+app.get('/armory', (_req: Request, res: Response) => {
+  res.json({ data: armoryStore.read() })
+})
+
+app.get('/armory/equipment', (_req: Request, res: Response) => {
+  const armory = armoryStore.read()
+  const data = equipmentStore.read(armory)
+  const validationErrors = validateArmoryEquipmentDocument(data, armory)
+  res.setHeader('Cache-Control', 'no-store')
+  res.json({ data, validationErrors })
+})
+
+app.put('/armory/equipment', async (req: Request, res: Response) => {
+  if (!isObject(req.body)) {
+    res.status(400).json({ error: { code: 'VALIDATION_FAILED', message: 'Invalid equipment request', details: ['Expected a JSON object'] } })
+    return
+  }
+  const { expectedInventoryRevision, data } = req.body
+  try {
+    const saved = await equipmentStore.replace(
+      typeof expectedInventoryRevision === 'number' ? expectedInventoryRevision : Number.NaN,
+      data,
+      armoryStore.read(),
+    )
+    res.status(200).json({ data: saved })
+  } catch (error) {
+    if (error instanceof EquipmentRevisionConflictError) {
+      res.status(409).json({ error: { code: 'REVISION_CONFLICT', message: error.message, details: ['Reload Armory and equipment before retrying'] } })
+      return
+    }
+    if (error instanceof EquipmentValidationError) {
+      res.status(400).json({ error: { code: 'VALIDATION_FAILED', message: error.message, details: error.details } })
+      return
+    }
+    console.error('Failed to persist Armory equipment:', error)
+    res.status(500).json({ error: { code: 'STORAGE_FAILURE', message: 'Armory equipment could not be saved' } })
+  }
+})
+
+
+app.get('/loadout/profiles', (_req: Request, res: Response) => {
+  res.setHeader('Cache-Control', 'no-store')
+  res.json({ data: loadoutStore.read() })
+})
+
+app.post('/loadout/apply', async (req: Request, res: Response) => {
+  if (!isObject(req.body)) {
+    res.status(400).json({ error: { code: 'VALIDATION_FAILED', message: 'Invalid Loadout apply request', details: ['Expected a JSON object'] } })
+    return
+  }
+
+  const profileId = typeof req.body.profileId === 'string' ? req.body.profileId.trim() : ''
+  const name = typeof req.body.name === 'string' ? req.body.name.trim() : ''
+
+  if (!profileId) {
+    res.status(400).json({ error: { code: 'VALIDATION_FAILED', message: 'profileId is required', details: [] } })
+    return
+  }
+
+  try {
+    // Loadout stores its own selection of catalogue IDs. Armory inventory is
+    // a separate feature and is not consulted, so any catalogue skin may be
+    // equipped without an ownership check.
+    const saved = await loadoutStore.saveProfile({
+      id: profileId,
+      name: name || 'Loadout',
+      loadouts: req.body.loadouts as LoadoutSelectionSnapshot['loadouts'],
+      equipment: req.body.equipment as LoadoutSelectionSnapshot['equipment'],
+      skinSettings: req.body.skinSettings as LoadoutSelectionSnapshot['skinSettings'],
+    })
+
+    const runtime = await projectRuntimeOrReport()
+
+    res.status(200).json({ data: saved, runtime })
+  } catch (error) {
+    if (error instanceof LoadoutValidationError) {
+      res.status(400).json({ error: { code: 'VALIDATION_FAILED', message: error.message, details: error.details } })
+      return
+    }
+
+    console.error('Failed to apply Loadout:', error)
+    res.status(500).json({ error: { code: 'STORAGE_FAILURE', message: 'Loadout could not be applied' } })
+  }
+})
+
+
+app.post('/armory/apply', async (_req: Request, res: Response) => {
+  try {
+    // Write the selected Armory profile before switching the DLL runtime mode,
+    // so the native watcher never observes Armory mode with an old document.
+    const runtime = await projectInventoryOrReport()
+
+    if (!runtime) {
+      res.status(500).json({
+        error: { code: 'PROJECTION_FAILED', message: 'Armory inventory could not be projected', details: [] },
+      })
+      return
+    }
+
+    if (!runtime.written) {
+      res.status(422).json({
+        error: {
+          code: 'EMPTY_ARMORY',
+          message: 'The active Armory profile could not be projected safely.',
+          details: runtime.skippedItems.length > 0
+            ? runtime.skippedItems.map(item => `${item.definitionId}: ${item.reason}`)
+            : ['Check that its items are supported and resolve against the current catalogue/schema.'],
+        },
+        runtime,
+      })
+      return
+    }
+
+    await writeRuntimeMode('armory')
+    res.status(200).json({ mode: 'armory', runtime })
+  } catch (error) {
+    console.error('Failed to apply Armory inventory:', error)
+    res.status(500).json({
+      error: { code: 'STORAGE_FAILURE', message: 'Armory inventory could not be applied', details: [] },
+    })
+  }
+})
+
+app.post('/runtime-mode/reset', async (_req: Request, res: Response) => {
+  try {
+    const temporaryPath = `${MODE_FILE}.tmp`
+    await writeFile(
+      temporaryPath,
+      `${JSON.stringify({ mode: 'unknown', updatedAt: new Date().toISOString() }, null, 2)}\n`,
+      'utf8',
+    )
+    await rename(temporaryPath, MODE_FILE)
+    res.status(200).json({ mode: 'unknown' })
+  } catch (error) {
+    console.error('Failed to reset runtime mode:', error)
+    res.status(500).json({
+      error: { code: 'STORAGE_FAILURE', message: 'Runtime mode could not be reset', details: [] },
+    })
+  }
+})
+
+app.post('/runtime-mode', async (req: Request, res: Response) => {
+  const mode = isObject(req.body) ? req.body.mode : null
+
+  if (mode !== 'loadout' && mode !== 'armory') {
+    res.status(400).json({ error: { code: 'VALIDATION_FAILED', message: "mode must be 'loadout' or 'armory'", details: [] } })
+    return
+  }
+
+  try {
+    await writeRuntimeMode(mode)
+    const runtime = await projectActiveMode(mode)
+    res.status(200).json({ mode, runtime })
+  } catch (error) {
+    console.error('Failed to select runtime mode:', error)
+    res.status(500).json({ error: { code: 'STORAGE_FAILURE', message: 'Runtime mode could not be saved' } })
+  }
+})
+
+app.put('/armory', async (req: Request, res: Response) => {
+  if (!isObject(req.body)) {
+    res.status(400).json({
+      error: {
+        code: 'VALIDATION_FAILED',
+        message: 'Invalid Armory request body',
+        details: ['Expected a JSON object'],
+      },
+    })
+    return
+  }
+
+  const { expectedRevision, data } = req.body
+
+  try {
+    const saved = await armoryStore.replace(
+      typeof expectedRevision === 'number' ? expectedRevision : Number.NaN,
+      data,
+    )
+
+    const inventory = await projectInventoryOrReport()
+
+    res.status(200).json({ data: saved, inventory })
+  } catch (error) {
+    if (error instanceof ArmoryRevisionConflictError) {
+      res.status(409).json({
+        error: {
+          code: 'REVISION_CONFLICT',
+          message: error.message,
+          details: ['Reload the latest Armory document before retrying'],
+        },
+      })
+      return
+    }
+
+    if (error instanceof ArmoryValidationError) {
+      res.status(400).json({
+        error: {
+          code: 'VALIDATION_FAILED',
+          message: error.message,
+          details: error.details,
+        },
+      })
+      return
+    }
+
+    console.error('Failed to persist Armory document:', error)
+    res.status(500).json({
+      error: {
+        code: 'STORAGE_FAILURE',
+        message: 'Armory could not save the document',
+      },
+    })
+  }
+})
+
+
+app.get('/integration/snapshot', (_req: Request, res: Response) => {
+  const armory = armoryStore.read()
+  const data = createLocalIntegrationSnapshot(
+    armory,
+    selectedSkins,
+    latestLoadout,
+    undefined,
+    equipmentStore.read(armory),
+  )
+
+  res.setHeader('Cache-Control', 'no-store')
+  res.json({ data })
+})
+
+
+app.get('/integration/simulator', (_req: Request, res: Response) => {
+  const armory = armoryStore.read()
+  const snapshot = createLocalIntegrationSnapshot(
+    armory,
+    selectedSkins,
+    latestLoadout,
+    undefined,
+    equipmentStore.read(armory),
+  )
+  const data = simulateLocalIntegration(snapshot)
+  res.setHeader('Cache-Control', 'no-store')
+  res.json({ data })
+})
+
+
+app.post('/session/heartbeat', (req: Request, res: Response) => {
+  const sessionId = isObject(req.body) ? req.body.sessionId : undefined
+  if (typeof sessionId !== 'string' || !/^[a-zA-Z0-9_-]{12,100}$/.test(sessionId)) {
+    res.status(400).json({ error: 'Invalid browser session ID' })
+    return
+  }
+  hasSeenBrowserSession = true
+  browserSessions.set(sessionId, Date.now())
+  browserSessionGraceUntil = 0
+  bridgeShutdownStarted = false
+  res.setHeader('Cache-Control', 'no-store')
+  res.status(204).end()
+})
+
+app.get('/session/active', (_req: Request, res: Response) => {
+  res.setHeader('Cache-Control', 'no-store')
+  res.json({ active: hasActiveBrowserSession(), sessions: browserSessions.size })
+})
 
 app.get('/health', (_req: Request, res: Response) => {
   res.json({
@@ -328,6 +841,8 @@ app.get('/health', (_req: Request, res: Response) => {
     loadoutId: latestLoadout?.id ?? null,
     itemCount: selectedSkins.length,
     storage: 'json-file',
+    armoryRevision: armoryStore.read().revision,
+    inventoryProfiles: armoryStore.read().profiles.length,
   })
 })
 
@@ -455,7 +970,7 @@ app.use(
     // handler. The `next` parameter must be present in the signature even
     // though it is not called in this branch.
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    next: NextFunction,
+    _next: NextFunction,
   ) => {
     if (err instanceof SyntaxError && err.status === 400) {
       res.status(400).json({
@@ -476,13 +991,19 @@ app.use(
 async function start(): Promise<void> {
   // If recovery fails, don't launch with empty state.
   await restoreState()
+  await armoryStore.initialize()
+  await equipmentStore.initialize(armoryStore.read())
+  await loadoutStore.initialize()
+  await projectActiveMode(await readRuntimeMode())
 
-  app.listen(PORT, HOST, () => {
+  bridgeHttpServer = app.listen(PORT, HOST, () => {
     console.log(`n1ssan Bridge running at http://${HOST}:${PORT}`)
     console.log(`Health check: http://${HOST}:${PORT}/health`)
     console.log(`Latest received skins: http://${HOST}:${PORT}/skins`)
-    console.log(`Persistent data file: ${DATA_FILE}`)
+    console.log(`Persistent loadout data file: ${DATA_FILE}`)
+    console.log(`Persistent Armory data file: ${ARMORY_FILE}`)
   })
+  browserSessionSweep = setInterval(stopBridgeAfterBrowserSession, 2_000)
 }
 
 void start().catch(error => {

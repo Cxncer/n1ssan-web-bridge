@@ -29,3 +29,8 @@ n1ssan-data.json.tmp
 n1ssan-data.json.recovery.tmp
 n1ssan-data.json.corrupt-*
 n1ssan-data.manual-backup.json
+# Armory runtime data (not source)
+armory-data.json
+armory-data.json.bak
+armory-data.json.tmp
+armory-data.json.corrupt-*

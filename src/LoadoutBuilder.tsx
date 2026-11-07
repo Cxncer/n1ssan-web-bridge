@@ -1,25 +1,28 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useState, type CSSProperties } from 'react'
 import './LoadoutBuilder.css'
+import './loadout-obsidian.css' // Loadout-specific visual layer
 import { findImageColorMatches } from './skinColorDetection'
 
-type Skin = {
-  id: number; weapon: string; name: string; type: string; rarity: string
+export type Skin = {
+  id: number | string; weapon: string; name: string; type: string; rarity: string
   color: string; art: string; description: string; image?: string
   minFloat?: number | null; maxFloat?: number | null
 }
+type SkinId = number | string
 type Team = 'T' | 'CT'
-type SavedLoadouts = Record<Team, Record<string, number | null>>
+type SavedLoadouts = Record<Team, Record<string, SkinId | null>>
 type SkinSettings = { seed: number; float: number }
 type SavedSkinSettings = Record<Team, Record<string, SkinSettings>>
 type EquipmentSlot = 'agent' | 'knife' | 'gloves' | 'zeus'
-type TeamEquipment = Record<EquipmentSlot, number | null>
+type TeamEquipment = Record<EquipmentSlot, SkinId | null>
 type SavedEquipment = Record<Team, TeamEquipment>
 type LoadoutBuilderProps = { skins: Skin[] }
-type WeaponColumn = { title: string; subtitle: string; weapons: string[] }
+type WeaponColumn = { title: string; weapons: string[] }
 type LoadoutProfile = { id: string; name: string; loadouts: SavedLoadouts; skinSettings: SavedSkinSettings; equipment: SavedEquipment }
 type DialogState = { mode: 'create' | 'duplicate' | 'rename' | 'delete' | 'clear'; value: string } | null
 
 const STORAGE_KEY = 'n1ssan-loadouts-v1'
+const BRIDGE_URL = 'http://127.0.0.1:3210'
 const SETTINGS_STORAGE_KEY = 'n1ssan-skin-settings-v1'
 const EQUIPMENT_STORAGE_KEY = 'n1ssan-equipment-v1'
 const PROFILES_STORAGE_KEY = 'n1ssan-loadout-profiles-v1'
@@ -37,16 +40,16 @@ const emptyEquipment: SavedEquipment = { T: { ...emptyTeamEquipment }, CT: { ...
 
 const TEAM_WEAPONS: Record<Team, WeaponColumn[]> = {
   T: [
-    { title: 'PISTOLS', subtitle: 'SIDEARMS', weapons: ['Glock-18', 'Dual Berettas', 'P250', 'Tec-9', 'CZ75-Auto', 'Desert Eagle', 'R8 Revolver'] },
-    { title: 'MID-TIER', subtitle: 'SMGs · SHOTGUNS · MACHINE GUNS', weapons: ['MAC-10', 'MP7', 'MP5-SD', 'UMP-45', 'P90', 'PP-Bizon', 'Nova', 'XM1014', 'Sawed-Off', 'M249', 'Negev'] },
-    { title: 'RIFLES', subtitle: 'ASSAULT RIFLES', weapons: ['Galil AR', 'AK-47', 'SG 553'] },
-    { title: 'SNIPERS', subtitle: 'PRECISION', weapons: ['SSG 08', 'AWP', 'G3SG1'] },
+    { title: 'PISTOLS', weapons: ['Glock-18', 'Dual Berettas', 'P250', 'Tec-9', 'CZ75-Auto', 'Desert Eagle', 'R8 Revolver'] },
+    { title: 'MID-TIER', weapons: ['MAC-10', 'MP7', 'MP5-SD', 'UMP-45', 'P90', 'PP-Bizon', 'Nova', 'XM1014', 'Sawed-Off', 'M249', 'Negev'] },
+    { title: 'RIFLES', weapons: ['Galil AR', 'AK-47', 'SG 553'] },
+    { title: 'SNIPERS', weapons: ['SSG 08', 'AWP', 'G3SG1'] },
   ],
   CT: [
-    { title: 'PISTOLS', subtitle: 'SIDEARMS', weapons: ['USP-S', 'P2000', 'Dual Berettas', 'P250', 'Five-SeveN', 'CZ75-Auto', 'Desert Eagle', 'R8 Revolver'] },
-    { title: 'MID-TIER', subtitle: 'SMGs · SHOTGUNS · MACHINE GUNS', weapons: ['MP9', 'MP7', 'MP5-SD', 'UMP-45', 'P90', 'PP-Bizon', 'Nova', 'XM1014', 'MAG-7', 'M249', 'Negev'] },
-    { title: 'RIFLES', subtitle: 'ASSAULT RIFLES', weapons: ['FAMAS', 'M4A4', 'M4A1-S', 'AUG'] },
-    { title: 'SNIPERS', subtitle: 'PRECISION', weapons: ['SSG 08', 'AWP', 'SCAR-20'] },
+    { title: 'PISTOLS', weapons: ['USP-S', 'P2000', 'Dual Berettas', 'P250', 'Five-SeveN', 'CZ75-Auto', 'Desert Eagle', 'R8 Revolver'] },
+    { title: 'MID-TIER', weapons: ['MP9', 'MP7', 'MP5-SD', 'UMP-45', 'P90', 'PP-Bizon', 'Nova', 'XM1014', 'MAG-7', 'M249', 'Negev'] },
+    { title: 'RIFLES', weapons: ['FAMAS', 'M4A4', 'M4A1-S', 'AUG'] },
+    { title: 'SNIPERS', weapons: ['SSG 08', 'AWP', 'SCAR-20'] },
   ],
 }
 const TEAM_IMAGES: Record<Team, string> = {
@@ -60,6 +63,8 @@ const EQUIPMENT_INFO: Record<EquipmentSlot, { title: string; subtitle: string; i
   zeus: { title: 'Zeus x27', subtitle: 'Electroshock weapon', icon: 'ϟ' },
 }
 function imageOf(s: Skin) { return s.image || s.art || '' }
+function wearCode(f: number) { return f <= .07 ? 'FN' : f <= .15 ? 'MW' : f <= .38 ? 'FT' : f <= .45 ? 'WW' : 'BS' }
+function floatColor(f: number) { return f <= .07 ? '#35d07f' : f <= .15 ? '#a8cf45' : f <= .38 ? '#e3c84b' : f <= .45 ? '#e9953b' : '#e05252' }
 function rarityColor(rarity: string) {
   const value = (rarity || '').toLowerCase()
   if (value.includes('contraband')) return '#df8b43'
@@ -125,13 +130,13 @@ function defaults(s?: Skin): SkinSettings {
   const l = limits(s)
   return { seed: 0, float: Number(((l.min + l.max) / 2).toFixed(6)) }
 }
-function settingsKey(w: string, id: number) { return `${w}:${id}` }
+function settingsKey(w: string, id: SkinId) { return `${w}:${id}` }
 function equipmentCategory(s: Skin): EquipmentSlot | null {
   const t = (s.type || '').toLowerCase(), w = (s.weapon || '').toLowerCase()
   if (t.includes('agent')) return 'agent'
   if (t.includes('glove') || w.includes('glove')) return 'gloves'
   if (w.includes('zeus') || w.includes('x27') || t.includes('zeus')) return 'zeus'
-  if (t.includes('knife') || w.includes('knife')) return 'knife'
+  if (t.includes('knife') || t.includes('kniv') || w.includes('knife')) return 'knife'
   return null
 }
 function agentForTeam(s: Skin, team: Team) {
@@ -151,8 +156,8 @@ export default function LoadoutBuilder({ skins }: LoadoutBuilderProps) {
   const [equipmentSearch, setEquipmentSearch] = useState('')
   const [equipmentColor, setEquipmentColor] = useState('')
   const [equipmentSort, setEquipmentSort] = useState<'rarity' | 'az' | 'popular'>('popular')
-  const [pickerColorMatchIds, setPickerColorMatchIds] = useState<Set<number> | null>(null)
-  const [equipmentColorMatchIds, setEquipmentColorMatchIds] = useState<Set<number> | null>(null)
+  const [pickerColorMatchIds, setPickerColorMatchIds] = useState<Set<SkinId> | null>(null)
+  const [equipmentColorMatchIds, setEquipmentColorMatchIds] = useState<Set<SkinId> | null>(null)
   const [pickerColorBusy, setPickerColorBusy] = useState(false)
   const [equipmentColorBusy, setEquipmentColorBusy] = useState(false)
   const [skinSort, setSkinSort] = useState<'rarity' | 'az' | 'popular'>('popular')
@@ -167,6 +172,9 @@ export default function LoadoutBuilder({ skins }: LoadoutBuilderProps) {
   const [seedDraft, setSeedDraft] = useState('0')
   const [profileMenuOpen, setProfileMenuOpen] = useState(false)
   const [dialog, setDialog] = useState<DialogState>(null)
+  const [activeTab, setActiveTab] = useState<'loadout' | 'diagnostics'>('loadout')
+  const [runtimeStatus, setRuntimeStatus] = useState<{ tone: 'idle' | 'ok' | 'error'; text: string }>({ tone: 'idle', text: '' })
+  const [applying, setApplying] = useState(false)
 
   // --- Color scan: weapon picker ---
   useEffect(() => {
@@ -227,9 +235,53 @@ export default function LoadoutBuilder({ skins }: LoadoutBuilderProps) {
     return () => window.removeEventListener('keydown', onKey)
   }, [])
 
-  // Sync the active profile in `profiles` whenever a loadout field changes.
-  // Called by the mutation helpers below. Not an effect, so it never fires
-  // on every keystroke.
+  // Explicitly send the current Loadout profile to the game. Editing a loadout
+  // never writes the runtime file by itself; the DLL adopts the last sent
+  // profile once the player is outside an active match.
+  async function applyLoadout() {
+    if (applying) return
+
+    setApplying(true)
+    setRuntimeStatus({ tone: 'idle', text: 'Sending loadout to the game…' })
+
+    try {
+      const response = await fetch(`${BRIDGE_URL}/loadout/apply`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          profileId: activeProfileId,
+          name: activeProfile.name,
+          loadouts,
+          equipment,
+          skinSettings,
+        }),
+      })
+      const body = await response.json().catch(() => null) as {
+        error?: { message?: string }
+        runtime?: { written?: boolean; targetCount?: number; skipped?: number; reason?: string }
+      } | null
+
+      if (!response.ok) throw new Error(body?.error?.message ?? `Bridge returned HTTP ${response.status}`)
+
+      const runtime = body?.runtime
+      setRuntimeStatus({
+        tone: 'ok',
+        text: runtime?.written
+          ? `SENT · ${runtime.targetCount} item${runtime.targetCount === 1 ? '' : 's'} · applies outside an active match${runtime.skipped ? ` · ${runtime.skipped} skipped` : ''}`
+          : `NOT SENT · ${runtime?.reason ?? 'no change'}`,
+      })
+    } catch (error) {
+      setRuntimeStatus({
+        tone: 'error',
+        text: `SEND FAILED · ${error instanceof Error ? error.message : 'apply failed'}`,
+      })
+    } finally {
+      setApplying(false)
+    }
+  }
+
+  // Keep the active profile snapshot current whenever a loadout field changes.
+  // Called by mutation helpers, not on every keystroke.
   function syncActiveProfile(next: { loadouts: SavedLoadouts; skinSettings: SavedSkinSettings; equipment: SavedEquipment }) {
     setProfiles(prev => prev.map(p => p.id === activeProfileId ? {
       ...p, loadouts: clone(next.loadouts), skinSettings: clone(next.skinSettings), equipment: clone(next.equipment),
@@ -356,7 +408,7 @@ export default function LoadoutBuilder({ skins }: LoadoutBuilderProps) {
     })
   }, [skins, activeEquipment, team, equipmentSearch, equipmentColor, equipmentColorMatchIds, equipmentSort])
 
-  function equipSkin(weapon: string, id: number | null) {
+  function equipSkin(weapon: string, id: SkinId | null) {
     const nextLoadouts = { ...loadouts, [team]: { ...loadouts[team], [weapon]: id } }
     let nextSkinSettings = skinSettings
     if (id !== null) {
@@ -366,9 +418,9 @@ export default function LoadoutBuilder({ skins }: LoadoutBuilderProps) {
     }
     setLoadouts(nextLoadouts)
     syncActiveProfile({ loadouts: nextLoadouts, skinSettings: nextSkinSettings, equipment })
-    setPickerOpen(false); setPickerSearch('')
+    setPickerOpen(false); setPickerSearch(''); setActiveWeapon(null)
   }
-  function equipItem(slot: EquipmentSlot, id: number | null) {
+  function equipItem(slot: EquipmentSlot, id: SkinId | null) {
     const nextEquipment = { ...equipment, [team]: { ...equipment[team], [slot]: id } }
     setEquipment(nextEquipment)
     syncActiveProfile({ loadouts, skinSettings, equipment: nextEquipment })
@@ -398,69 +450,34 @@ export default function LoadoutBuilder({ skins }: LoadoutBuilderProps) {
   }
   function matches() { return true }
 
-    async function sendToBridge() {
-    const bridgeSkins: Record<string, unknown>[] = []
-
-    for (const side of ['T', 'CT'] as Team[]) {
-      const sideLoadout = loadouts[side]
-      const sideEquipment = equipment[side]
-
-      for (const [weapon, id] of Object.entries(sideLoadout)) {
-        if (id == null) continue
-        const skin = skins.find(item => item.id === id)
-        if (!skin) continue
-        const settings = skinSettings[side][settingsKey(weapon, id)] ?? defaults(skin)
-        bridgeSkins.push({
-          ...skin,
-          slot: 'weapon',
-          equippedFor: weapon,
-          team: side,
-          float: settings.float,
-          seed: settings.seed,
-        })
-      }
-
-      for (const slot of ['agent', 'knife', 'gloves', 'zeus'] as EquipmentSlot[]) {
-        const id = sideEquipment[slot]
-        if (id == null) continue
-        const item = skins.find(skin => skin.id === id)
-        if (!item) continue
-        bridgeSkins.push({ ...item, slot, team: side })
-      }
-    }
-
-    try {
-      const response = await fetch('http://127.0.0.1:3210/skins', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          profile: activeProfile.name,
-          skins: bridgeSkins,
-        }),
-      })
-
-      if (!response.ok) {
-        throw new Error(`Bridge returned HTTP ${response.status}`)
-      }
-
-      const result = await response.json() as { received?: number; teams?: string[] }
-      const teamsLabel = result.teams?.length ? ` (${result.teams.join(' + ')})` : ''
-      alert(`n1ssan Bridge received ${result.received ?? bridgeSkins.length} items${teamsLabel}!`)
-    } catch (error) {
-      console.error('n1ssan Bridge error:', error)
-      alert('Could not connect to n1ssan Bridge. Make sure it is running at http://127.0.0.1:3210.')
-    }
-  }
 
   const activeSkin = activeWeapon ? selectedSkin(activeWeapon) : undefined
   const activeSettingsKey = activeWeapon && activeSkin ? settingsKey(activeWeapon, activeSkin.id) : ''
   const activeSettings = activeSkin ? skinSettings[team][activeSettingsKey] ?? defaults(activeSkin) : null
   const activeLimits = limits(activeSkin)
   const activeEquipmentTitle = activeEquipment ? EQUIPMENT_INFO[activeEquipment].title : ''
+  const totalEquipped = equippedCountT + equippedCountCT
+  const savedFloatSeedCount = Object.keys(skinSettings.T).length + Object.keys(skinSettings.CT).length
+  const browserStorageAvailable = (() => { try { window.localStorage.getItem(PROFILES_STORAGE_KEY); return true } catch { return false } })()
 
-  return <section className="lb-section" data-team={team}>
-    <div className="lb-heading">
-      <div><p className="lb-eyebrow">YOUR PERSONAL ARMORY</p><h2>Loadout Builder</h2><p className="lb-subtitle">Build your dream inventory, one skin at a time.</p></div>
+  return <div className="lb-workspace-shell obsidian-shell">
+    <header className="lb-topbar ob-topbar">
+      <a className="lb-brand ob-brand" href="/loadout" aria-label="n1ssan Loadout home"><span className="lb-brand-mark ob-mark">n.</span><span>n1ssan</span><i /><small>LOADOUT</small></a>
+      <nav className="lb-nav ob-nav" aria-label="Loadout workspace tabs">
+        <button type="button" className={activeTab === 'loadout' ? 'active' : ''} aria-current={activeTab === 'loadout' ? 'page' : undefined} onClick={() => setActiveTab('loadout')}>Loadout</button>
+        <button type="button" className={activeTab === 'diagnostics' ? 'active' : ''} aria-current={activeTab === 'diagnostics' ? 'page' : undefined} onClick={() => setActiveTab('diagnostics')}>Diagnostics</button>
+      </nav>
+      <div className={`lb-top-status ${runtimeStatus.tone === 'error' ? 'is-error' : ''}`} title={runtimeStatus.text}>
+        <span className="lb-status-indicator" />
+        {runtimeStatus.tone === 'idle' && !runtimeStatus.text
+          ? `LOCAL PROFILE · ${activeProfile.name}`
+          : runtimeStatus.text}
+      </div>
+    </header>
+    {activeTab === 'loadout' ? (
+    <section className="lb-section ob-main" data-team={team}>
+    <div className="lb-heading ob-heading">
+      <div><p className="lb-eyebrow">YOUR EQUIPMENT CONFIGURATION</p><h2>Your Loadout<span className="lb-title-accent">.</span></h2><p className="lb-subtitle">Configure every weapon and equipment slot for both sides.</p></div>
       <div className="lb-progress" aria-label={`Skins equipped: Terrorists ${equippedCountT}, Counter-Terrorists ${equippedCountCT}`}>
         <div className="lb-progress-counts">
           <div className="lb-progress-team lb-progress-team-t"><strong>{equippedCountT}</strong><small>T</small></div>
@@ -512,50 +529,114 @@ export default function LoadoutBuilder({ skins }: LoadoutBuilderProps) {
           <span><strong>{t === 'T' ? 'TERRORIST' : 'COUNTER-TERRORIST'}</strong><small>{t === 'T' ? 'Attacker loadout' : 'Defender loadout'}</small></span>
         </button>)}
       </div>
-      <div className="lb-team-save-actions"><span className="lb-profile-status"><span className="lb-profile-status-dot" />Saved locally</span><button className="lb-clear-button" type="button" onClick={() => openDialog('clear')}>Clear loadout</button><button className="lb-clear-button lb-bridge-button" type="button" onClick={sendToBridge}>Send to Bridge</button></div>
+      <div className="lb-team-save-actions">
+        <button className="lb-apply-button" type="button" onClick={applyLoadout} disabled={applying}>
+          {applying ? 'Sending…' : 'Apply to game'}
+        </button>
+        <button className="lb-clear-button" type="button" onClick={() => openDialog('clear')}>Clear loadout</button>
+      </div>
     </div>
     </div>
 
     <div className={`lb-board lb-board-${team.toLowerCase()}`}>
       <section className="lb-equipment-column">
-        <header className="lb-column-heading"><div className="lb-column-title-row"><span className="lb-column-mark">◇</span><h3>EQUIPMENT</h3></div><p>AGENT · KNIFE · GLOVES · ZEUS</p></header>
+        <header className="lb-column-heading"><div className="lb-column-title-row"><span className="lb-column-mark">◇</span><h3>EQUIPMENT</h3></div></header>
         <div className="lb-equipment-cards">{(['agent', 'knife', 'gloves', 'zeus'] as EquipmentSlot[]).map(slot => {
           const info = EQUIPMENT_INFO[slot], item = selectedItem(slot), img = item ? imageOf(item) : ''
           const label = slot === 'agent' ? `${team} Agent` : info.title
-          return <div className="lb-equipment-card-wrap" key={slot}>
-            <button type="button" className={`lb-weapon-card lb-equipment-card ${item ? 'is-equipped' : ''}`} onClick={() => openEquipmentPicker(slot)} aria-label={`Choose ${label}`}>
-              <div className="lb-card-top"><span>{label}</span><span className="lb-slot-icon">{item ? '✓' : '+'}</span></div>
-              <div className="lb-weapon-image lb-equipment-art">{img ? <img src={img} alt={item?.name || label} className="lb-equipped-image" loading="lazy" /> : <span className="lb-placeholder-label">{info.icon}</span>}<span className="lb-card-hover-action">{item ? 'CHANGE ITEM' : 'CHOOSE ITEM'}</span></div>
-              <div className="lb-card-bottom lb-equipment-card-bottom">{item ? <><strong>{item.name}</strong><small>{item.weapon}</small></> : <><strong>No item equipped</strong><small>{info.subtitle}</small></>}</div>
-            </button>
-            {item && <button type="button" className="lb-card-remove" title={`Remove ${label}`} aria-label={`Remove ${label}`} onClick={() => equipItem(slot, null)}><span aria-hidden="true">×</span></button>}
-          </div>
+          const tone = team === 'T' ? 'green' : 'blue'
+          return <article
+            key={slot}
+            role="button"
+            tabIndex={0}
+            className={`course-design-card card course-equipment-card ${tone} ${item ? 'is-equipped' : 'is-empty'}`}
+            style={{ '--course-accent': item ? rarityColor(item.rarity) : '#ffffff' } as CSSProperties}
+            aria-label={`${label}: ${item ? item.name : 'No item equipped'}. Choose item.`}
+            onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); openEquipmentPicker(slot) } }}
+            onClick={() => openEquipmentPicker(slot)}
+          >
+            <div className="card-header">
+              <div className="date course-card-weapon">{label}</div>
+              <div className="course-card-header-actions">
+                <span className="course-card-rarity">{item?.rarity ?? 'EMPTY SLOT'}</span>
+                {item && <button type="button" className="course-card-remove" title={`Remove ${label}`} aria-label={`Remove ${label}`} onClick={e => { e.stopPropagation(); equipItem(slot, null) }}>×</button>}
+              </div>
+            </div>
+            <div className="card-body">
+              <div className="course-card-art">
+                {img ? <img src={img} alt={item?.name ?? label} loading="lazy" /> : <span>{info.icon}</span>}
+              </div>
+              <h3>{item ? item.name : 'No item equipped'}</h3>
+            </div>
+            <div className="card-footer course-card-footer course-equipment-footer" aria-hidden="true" />
+          </article>
         })}</div>
       </section>
       {columns.map(col => {
         const visible = col.weapons.filter(matches)
         if (!visible.length) return null
-        return <section className="lb-column" key={col.title}>
-          <header className="lb-column-heading"><div className="lb-column-title-row"><span className="lb-column-mark">{col.title === 'PISTOLS' ? '⌁' : col.title === 'MID-TIER' ? '⌖' : col.title === 'RIFLES' ? '⌁' : '⌕'}</span><h3>{col.title}</h3></div><p>{col.subtitle}</p></header>
-          <div className="lb-column-cards">{visible.map(weapon => {
-            const s = selectedSkin(weapon), img = s ? imageOf(s) : placeholder(weapon)
+        return <section className={`lb-column lb-column-${col.title.toLowerCase().replace(/\s+/g, '-')}`} key={col.title}>
+          <header className="lb-column-heading"><div className="lb-column-title-row"><span className="lb-column-mark">{col.title === 'PISTOLS' ? '⌁' : col.title === 'MID-TIER' ? '⌖' : col.title === 'RIFLES' ? '⌁' : '⌕'}</span><h3>{col.title}</h3></div></header>
+          <div className="course-skin-grid">{visible.map(weapon => {
+            const s = selectedSkin(weapon)
+            const img = s ? imageOf(s) : placeholder(weapon)
             const st = s ? skinSettings[team][settingsKey(weapon, s.id)] ?? defaults(s) : null
-            return <div key={weapon} className={`lb-weapon-card-wrap ${s ? 'is-equipped' : ''}`}>
-              <button type="button" className={`lb-weapon-card ${s ? 'is-equipped' : ''}`} onClick={() => openPicker(weapon)} aria-label={`Choose a skin for ${weapon}`}>
-                <div className="lb-card-top"><span>{weapon}</span><span className="lb-slot-icon">{s ? '✓' : '+'}</span></div>
-                <div className="lb-weapon-image">{img ? <img src={img} alt={s ? s.name : `${weapon} placeholder`} className={s ? 'lb-equipped-image' : 'lb-placeholder-image'} /> : <span className="lb-placeholder-label">NO IMAGE YET</span>}<span className="lb-card-hover-action">{s ? 'CHANGE SKIN' : 'CHOOSE SKIN'}</span></div>
-                <div className="lb-card-bottom">{s ? <><strong>{s.name}</strong><small>{s.rarity}</small></> : <><strong>No skin equipped</strong><small>{img ? 'Default preview' : 'Image unavailable'}</small></>}</div>
-              </button>
-              {s && st && <div className="lb-card-meta-row"><button type="button" className="lb-inspect-button" onClick={() => openSettings(weapon)}><span>FLOAT / SEED · EDIT</span><strong>{st.float.toFixed(6)}</strong><small>{wear(st.float)} · Seed {st.seed}</small></button><button type="button" className="lb-card-remove" title={`Remove ${weapon} skin`} aria-label={`Remove ${weapon} skin`} onClick={() => equipSkin(weapon, null)}><span aria-hidden="true">×</span></button></div>}
-            </div>
+            const tone = team === 'T' ? 'green' : 'blue'
+            const floatPercent = st ? Math.max(0, Math.min(100, st.float * 100)) : 0
+            return <article
+              key={weapon}
+              role="button"
+              tabIndex={0}
+              className={`course-design-card card ${tone} ${s ? 'is-equipped' : 'is-empty'}`}
+              style={{ '--course-accent': s ? rarityColor(s.rarity) : '#ffffff' } as CSSProperties}
+              aria-label={`${weapon}: ${s ? s.name : 'No skin equipped'}. Choose skin.`}
+              onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); openPicker(weapon) } }}
+              onClick={() => openPicker(weapon)}
+            >
+              <div className="card-header">
+                <div className="date course-card-weapon">{weapon}</div>
+                <div className="course-card-header-actions">
+                  <span className="course-card-rarity">{s?.rarity ?? 'EMPTY SLOT'}</span>
+                  <button
+                    type="button"
+                    className="course-card-remove"
+                    aria-label={`Remove ${weapon} skin`}
+                    title="Remove item"
+                    onClick={e => { e.stopPropagation(); equipSkin(weapon, null) }}
+                  >×</button>
+                </div>
+              </div>
+              <div className="card-body">
+                <div className="course-card-art">
+                  {img ? <img src={img} alt={s?.name ?? weapon} loading="lazy" /> : <span>NO IMAGE</span>}
+                </div>
+                {s && <h3>{s.name}</h3>}
+                
+                {s && st && <div className="progress">
+                  <span className="course-card-float-value">{st.float.toFixed(5)}</span>
+                  <div className="progress-bar"><span style={{ width: `${floatPercent}%`, backgroundColor: floatColor(st.float) }} /></div>
+                </div>}
+              </div>
+              <div
+                className="card-footer course-card-footer"
+                role={s ? 'button' : undefined}
+                tabIndex={s ? 0 : undefined}
+                aria-label={s ? `Edit float and seed for ${weapon}` : undefined}
+                onClick={e => { if (s) { e.stopPropagation(); openSettings(weapon) } }}
+                onKeyDown={e => { if (s && (e.key === 'Enter' || e.key === ' ')) { e.preventDefault(); e.stopPropagation(); openSettings(weapon) } }}
+              >
+                <span>SEED <b>{st ? st.seed : '—'}</b></span>
+                <span className="course-card-wear" style={st ? { color: floatColor(st.float) } : undefined}>{st ? wearCode(st.float) : 'NOT EQUIPPED'}</span>
+              </div>
+            </article>
           })}</div>
         </section>
       })}
     </div>
-        <p className="lb-save-note">Profile: <strong>{activeProfile.name}</strong>. T and CT selections, equipment, float values, and seeds are saved separately in this browser.</p>
+        <p className="lb-save-note">Profile: <strong>{activeProfile.name}</strong>. T and CT selections, equipment, float values, and seeds are saved locally in Loadout.</p>
 
-    {pickerOpen && activeWeapon && <div className="lb-modal-backdrop" onClick={() => setPickerOpen(false)}><div className="lb-modal" role="dialog" aria-modal="true" aria-label={`Choose a skin for ${activeWeapon}`} onClick={e => e.stopPropagation()}>
-      <div className="lb-modal-header"><div><p className="lb-eyebrow">SKIN PICKER</p><h3>{activeWeapon}</h3><p className="lb-modal-subtitle">{weaponSkins.length} matching {weaponSkins.length === 1 ? 'skin' : 'skins'} · Search and sort finishes</p></div><button className="lb-close-button" type="button" onClick={() => { setPickerOpen(false); setPickerSearch('') }} aria-label="Close skin picker">×</button></div>
+    {pickerOpen && activeWeapon && <div className="lb-modal-backdrop" onClick={() => setPickerOpen(false)}><div className="lb-modal ob-dialog" role="dialog" aria-modal="true" aria-label={`Choose a skin for ${activeWeapon}`} onClick={e => e.stopPropagation()}>
+      <div className="lb-modal-header dialog-head"><div><p className="lb-eyebrow">SKIN PICKER</p><h3>{activeWeapon}</h3><p className="lb-modal-subtitle">{weaponSkins.length} matching {weaponSkins.length === 1 ? 'skin' : 'skins'} · Search and sort finishes</p></div><button className="lb-close-button" type="button" onClick={() => { setPickerOpen(false); setPickerSearch('') }} aria-label="Close skin picker">×</button></div>
       <div className="lb-picker-controls"><input className="lb-search" type="search" placeholder={`Search ${activeWeapon} skins by name...`} value={pickerSearch} onChange={e => setPickerSearch(e.target.value)} aria-label={`Search ${activeWeapon} skins`} /><label className="lb-sort-control"><span>Sort by</span><select value={skinSort} onChange={e => setSkinSort(e.target.value as 'rarity' | 'az' | 'popular')}><option value="rarity">Rarity</option><option value="az">A–Z</option><option value="popular">Popular</option></select></label></div>
       <div className="lb-color-filter"><span className="lb-color-filter-label">FILTER BY COLOR</span><div className="lb-color-swatches"><button type="button" className={`lb-color-chip ${!pickerColor ? 'active' : ''}`} onClick={() => setPickerColorFilter('')}>All colors</button>{COLOR_OPTIONS.map(c => <button key={c.name} type="button" title={c.name} aria-label={`Filter ${activeWeapon} skins by ${c.name}`} aria-pressed={pickerColor === c.name.toLowerCase()} className={`lb-color-swatch ${pickerColor === c.name.toLowerCase() ? 'active' : ''}`} onClick={() => setPickerColorFilter(pickerColor === c.name.toLowerCase() ? '' : c.name.toLowerCase())}><span style={{ background: c.hex }} />{c.name}</button>)}<label className={`lb-custom-color ${pickerColor.startsWith('#') ? 'active' : ''}`} title="Pick any color"><input type="color" value={pickerColor.startsWith('#') ? pickerColor : '#e34b4b'} onChange={e => setPickerColorFilter(e.target.value.toLowerCase())} aria-label={`Pick a custom color for ${activeWeapon}`} /><span>Custom</span></label></div></div>
       {pickerColor && pickerColorBusy && <div className="lb-empty"><p>Analyzing skin images for color matches…</p></div>}
@@ -564,8 +645,8 @@ export default function LoadoutBuilder({ skins }: LoadoutBuilderProps) {
       {currentLoadout[activeWeapon] != null && <button className="lb-unequip-button" type="button" onClick={() => equipSkin(activeWeapon, null)}>Unequip skin</button>}
     </div></div>}
 
-    {activeEquipment && <div className="lb-modal-backdrop" onClick={() => setActiveEquipment(null)}><div className="lb-modal" role="dialog" aria-modal="true" aria-label={`Choose ${activeEquipmentTitle}`} onClick={e => e.stopPropagation()}>
-      <div className="lb-modal-header"><div><p className="lb-eyebrow">{team === 'T' ? 'TERRORIST LOADOUT' : 'COUNTER-TERRORIST LOADOUT'}</p><h3>Choose {activeEquipmentTitle}</h3><p className="lb-modal-subtitle">{equipmentChoices.length} available {activeEquipmentTitle.toLowerCase()}{equipmentChoices.length === 1 ? '' : 's'}{activeEquipment === 'agent' ? ` for ${team}` : ''}</p></div><button className="lb-close-button" type="button" onClick={() => setActiveEquipment(null)} aria-label="Close equipment picker">×</button></div>
+    {activeEquipment && <div className="lb-modal-backdrop" onClick={() => setActiveEquipment(null)}><div className="lb-modal ob-dialog" role="dialog" aria-modal="true" aria-label={`Choose ${activeEquipmentTitle}`} onClick={e => e.stopPropagation()}>
+      <div className="lb-modal-header dialog-head"><div><p className="lb-eyebrow">{team === 'T' ? 'TERRORIST LOADOUT' : 'COUNTER-TERRORIST LOADOUT'}</p><h3>Choose {activeEquipmentTitle}</h3><p className="lb-modal-subtitle">{equipmentChoices.length} available {activeEquipmentTitle.toLowerCase()}{equipmentChoices.length === 1 ? '' : 's'}{activeEquipment === 'agent' ? ` for ${team}` : ''}</p></div><button className="lb-close-button" type="button" onClick={() => setActiveEquipment(null)} aria-label="Close equipment picker">×</button></div>
       <input className="lb-search lb-equipment-search" type="search" placeholder={`Search ${activeEquipmentTitle.toLowerCase()}...`} value={equipmentSearch} onChange={e => setEquipmentSearch(e.target.value)} aria-label={`Search ${activeEquipmentTitle}`} />
       <div className="lb-picker-controls lb-equipment-picker-controls"><label className="lb-sort-control"><span>Sort by</span><select value={equipmentSort} onChange={e => setEquipmentSort(e.target.value as 'rarity' | 'az' | 'popular')}><option value="rarity">Rarity</option><option value="az">A–Z</option><option value="popular">Popular</option></select></label></div>
       {activeEquipment !== 'agent' && <div className="lb-color-filter lb-equipment-color-filter"><span className="lb-color-filter-label">FILTER BY COLOR</span><div className="lb-color-swatches"><button type="button" className={`lb-color-chip ${!equipmentColor ? 'active' : ''}`} onClick={() => setEquipmentColorFilter('')}>All colors</button>{COLOR_OPTIONS.map(c => <button key={c.name} type="button" title={c.name} aria-label={`Filter ${activeEquipmentTitle} by ${c.name}`} aria-pressed={equipmentColor === c.name.toLowerCase()} className={`lb-color-swatch ${equipmentColor === c.name.toLowerCase() ? 'active' : ''}`} onClick={() => setEquipmentColorFilter(equipmentColor === c.name.toLowerCase() ? '' : c.name.toLowerCase())}><span style={{ background: c.hex }} />{c.name}</button>)}<label className={`lb-custom-color ${equipmentColor.startsWith('#') ? 'active' : ''}`} title="Pick any color"><input type="color" value={equipmentColor.startsWith('#') ? equipmentColor : '#e34b4b'} onChange={e => setEquipmentColorFilter(e.target.value.toLowerCase())} aria-label={`Pick a custom color for ${activeEquipmentTitle}`} /><span>Custom</span></label></div></div>}
@@ -575,18 +656,41 @@ export default function LoadoutBuilder({ skins }: LoadoutBuilderProps) {
       {currentEquipment[activeEquipment] !== null && <button className="lb-unequip-button" type="button" onClick={() => equipItem(activeEquipment, null)}>Unequip {activeEquipmentTitle.toLowerCase()}</button>}
     </div></div>}
 
-    {settingsOpen && activeWeapon && activeSkin && activeSettings && <div className="lb-modal-backdrop" onClick={() => setSettingsOpen(false)}><div className="lb-modal lb-settings-modal" role="dialog" aria-modal="true" aria-label={`Skin settings for ${activeWeapon}`} onClick={e => e.stopPropagation()}>
-      <div className="lb-modal-header"><div><p className="lb-eyebrow">ITEM INSPECT SETTINGS</p><h3>{activeWeapon} | {activeSkin.name}</h3><p className="lb-modal-subtitle">These are saved preview values. The skin image stays static.</p></div><button className="lb-close-button" type="button" onClick={() => setSettingsOpen(false)} aria-label="Close skin settings">×</button></div>
+    {settingsOpen && activeWeapon && activeSkin && activeSettings && <div className="lb-modal-backdrop" onClick={() => setSettingsOpen(false)}><div className="lb-modal ob-dialog lb-settings-modal" role="dialog" aria-modal="true" aria-label={`Skin settings for ${activeWeapon}`} onClick={e => e.stopPropagation()}>
+      <div className="lb-modal-header dialog-head"><div><p className="lb-eyebrow">ITEM INSPECT SETTINGS</p><h3>{activeWeapon} | {activeSkin.name}</h3><p className="lb-modal-subtitle">These are saved preview values. The skin image stays static.</p></div><button className="lb-close-button" type="button" onClick={() => setSettingsOpen(false)} aria-label="Close skin settings">×</button></div>
       <div className="lb-settings-summary"><img src={imageOf(activeSkin)} alt={activeSkin.name} /><div><strong>{wear(Number(floatDraft) || activeSettings.float)}</strong><span>Pattern seed {Math.max(0, Math.min(1000, Math.round(Number(seedDraft) || 0)))}</span></div></div>
       <div className="lb-setting-field"><div className="lb-setting-label"><label htmlFor="lb-float">Float value</label><strong>{Number(floatDraft || 0).toFixed(6)}</strong></div><input id="lb-float" className="lb-float-slider" type="range" min={activeLimits.min} max={activeLimits.max} step="0.000001" value={Math.min(activeLimits.max, Math.max(activeLimits.min, Number(floatDraft) || activeLimits.min))} onChange={e => setFloatDraft(e.target.value)} /><div className="lb-range-labels"><span>Min {activeLimits.min.toFixed(6)}</span><span>Max {activeLimits.max.toFixed(6)}</span></div><input className="lb-number-input" aria-label="Exact float value" type="number" min={activeLimits.min} max={activeLimits.max} step="0.000001" value={floatDraft} onChange={e => setFloatDraft(e.target.value)} /><small className="lb-field-help">Float limits are specific to each finish when available. Missing limits fall back to 0.000000–1.000000.</small></div>
       <div className="lb-setting-field"><div className="lb-setting-label"><label htmlFor="lb-seed">Pattern seed</label><strong>{Math.max(0, Math.min(1000, Math.round(Number(seedDraft) || 0)))}</strong></div><input id="lb-seed" className="lb-number-input" type="number" min="0" max="1000" step="1" value={seedDraft} onChange={e => setSeedDraft(e.target.value)} /><input className="lb-seed-slider" aria-label="Pattern seed slider" type="range" min="0" max="1000" step="1" value={Math.max(0, Math.min(1000, Math.round(Number(seedDraft) || 0)))} onChange={e => setSeedDraft(e.target.value)} /><div className="lb-range-labels"><span>Seed 0</span><span>Seed 1000</span></div><small className="lb-field-help">Seed is stored for this skin, but does not change its static image.</small></div>
       <div className="lb-settings-actions"><button type="button" className="lb-unequip-button" onClick={() => { const d = defaults(activeSkin); setFloatDraft(d.float.toFixed(6)); setSeedDraft('0') }}>Reset values</button><button type="button" className="lb-save-settings-button" onClick={saveSettings}>Save settings</button></div>
     </div></div>}
 
-    {dialog && <div className="lb-modal-backdrop lb-dialog-backdrop" onClick={() => setDialog(null)}><form className="lb-modal lb-confirm-modal" role="dialog" aria-modal="true" aria-labelledby="lb-dialog-title" onSubmit={e => { e.preventDefault(); submitDialog() }} onClick={e => e.stopPropagation()}>
-      <div className="lb-modal-header"><div><p className="lb-eyebrow">{dialog.mode === 'clear' || dialog.mode === 'delete' ? 'CONFIRM ACTION' : 'PROFILE MANAGER'}</p><h3 id="lb-dialog-title">{dialog.mode === 'create' ? 'Create a profile' : dialog.mode === 'duplicate' ? 'Duplicate profile' : dialog.mode === 'rename' ? 'Rename profile' : dialog.mode === 'delete' ? 'Delete this profile?' : 'Clear this loadout?'}</h3></div><button className="lb-close-button" type="button" onClick={() => setDialog(null)} aria-label="Close dialog">×</button></div>
+    {dialog && <div className="lb-modal-backdrop lb-dialog-backdrop" onClick={() => setDialog(null)}><form className="lb-modal ob-dialog lb-confirm-modal" role="dialog" aria-modal="true" aria-labelledby="lb-dialog-title" onSubmit={e => { e.preventDefault(); submitDialog() }} onClick={e => e.stopPropagation()}>
+      <div className="lb-modal-header dialog-head"><div><p className="lb-eyebrow">{dialog.mode === 'clear' || dialog.mode === 'delete' ? 'CONFIRM ACTION' : 'PROFILE MANAGER'}</p><h3 id="lb-dialog-title">{dialog.mode === 'create' ? 'Create a profile' : dialog.mode === 'duplicate' ? 'Duplicate profile' : dialog.mode === 'rename' ? 'Rename profile' : dialog.mode === 'delete' ? 'Delete this profile?' : 'Clear this loadout?'}</h3></div><button className="lb-close-button" type="button" onClick={() => setDialog(null)} aria-label="Close dialog">×</button></div>
       {dialog.mode === 'create' || dialog.mode === 'duplicate' || dialog.mode === 'rename' ? <><label className="lb-dialog-label" htmlFor="lb-profile-name">PROFILE NAME</label><input id="lb-profile-name" className="lb-dialog-input" autoFocus maxLength={48} value={dialog.value} placeholder="Enter a profile name" onChange={e => setDialog({ ...dialog, value: e.target.value })} /><p className="lb-dialog-help">{dialog.mode === 'create' ? 'Start with an empty T and CT loadout.' : dialog.mode === 'duplicate' ? 'Copy the current T and CT loadouts, equipment, floats, and seeds.' : 'Your saved items will stay exactly as they are.'}</p></> : <p className="lb-dialog-message">{dialog.mode === 'delete' ? <>Delete <strong>{activeProfile.name}</strong>? Its saved T and CT loadouts will be deleted. This cannot be undone.</> : <>Clear the <strong>{team === 'T' ? 'Terrorist' : 'Counter-Terrorist'}</strong> loadout for <strong>{activeProfile.name}</strong>? This removes equipped weapon skins and equipment for this team only.</>}</p>}
       <div className="lb-dialog-actions"><button type="button" className="lb-dialog-cancel" onClick={() => setDialog(null)}>Cancel</button><button type="submit" className={`lb-dialog-confirm ${dialog.mode === 'delete' || dialog.mode === 'clear' ? 'danger' : ''}`} disabled={['create', 'duplicate', 'rename'].includes(dialog.mode) && !dialog.value.trim()}>{dialog.mode === 'create' ? 'Create profile' : dialog.mode === 'duplicate' ? 'Duplicate profile' : dialog.mode === 'rename' ? 'Save name' : dialog.mode === 'delete' ? 'Delete profile' : 'Clear loadout'}</button></div>
     </form></div>}
-  </section>
+    </section>
+    ) : (
+      <section className="lb-section lb-diagnostics-page">
+        <div className="lb-breadcrumb"><span>WORKSPACE</span><b>/</b><strong>DIAGNOSTICS</strong></div>
+        <div className="lb-heading lb-diagnostics-heading">
+          <div><p className="lb-eyebrow">LOCAL WORKSPACE HEALTH</p><h2>Diagnostics<span className="lb-title-accent">.</span></h2><p className="lb-subtitle">A read-only overview of the Loadout page, saved profiles, and local browser data.</p></div>
+          <div className="lb-diagnostics-status"><span className={`lb-diagnostics-dot ${browserStorageAvailable ? 'is-ready' : 'is-warning'}`} /><div><strong>{browserStorageAvailable ? 'BROWSER STORAGE ACCESSIBLE' : 'BROWSER STORAGE UNAVAILABLE'}</strong><small>LocalStorage read access</small></div></div>
+        </div>
+        <div className="lb-diagnostics-grid">
+          <article className="lb-diagnostic-card"><span>SKIN CATALOGUE</span><strong>{skins.length.toLocaleString()}</strong><small>Items loaded into this page</small></article>
+          <article className="lb-diagnostic-card"><span>SAVED PROFILES</span><strong>{profiles.length}</strong><small>Current: {activeProfile.name}</small></article>
+          <article className="lb-diagnostic-card"><span>EQUIPPED ITEMS</span><strong>{totalEquipped}</strong><small>T: {equippedCountT} · CT: {equippedCountCT}</small></article>
+          <article className="lb-diagnostic-card"><span>FLOAT / SEED RECORDS</span><strong>{savedFloatSeedCount}</strong><small>Saved skin setting entries</small></article>
+        </div>
+        <div className="lb-diagnostics-panel">
+          <div className="lb-diagnostics-panel-heading"><div><p className="lb-eyebrow">INTEGRATION CHECKS</p><h3>Runtime connections</h3></div><span>READ ONLY</span></div>
+          <div className="lb-diagnostics-row"><div><strong>Browser storage</strong><small>Loadout profiles, equipment, float values, and seeds</small></div><span className={`diagnostic-state ${browserStorageAvailable ? 'ready' : 'warning'}`}>{browserStorageAvailable ? 'AVAILABLE' : 'UNAVAILABLE'}</span></div>
+          <div className="lb-diagnostics-row"><div><strong>DOMINATE Bridge</strong><small>This standalone page does not currently query live Bridge health.</small></div><span className="diagnostic-state neutral">NOT REPORTED</span></div>
+          <div className="lb-diagnostics-row"><div><strong>n1ssan DLL</strong><small>DLL readiness is not inferred from browser-side Loadout data.</small></div><span className="diagnostic-state neutral">NOT REPORTED</span></div>
+        </div>
+        <p className="lb-diagnostics-note">Diagnostics is intentionally read-only. It does not modify your loadout or claim that the Bridge or DLL is ready.</p>
+      </section>
+    )}
+  </div>
 }

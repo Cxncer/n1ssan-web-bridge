@@ -524,3 +524,8 @@
 .lb-picker-card .lb-rarity-label{transition:filter .15s ease}
 .lb-picker-card:hover .lb-rarity-label{filter:brightness(1.16)}
 @media(prefers-reduced-motion:reduce){.lb-picker-card .lb-rarity-label{transition:none}}
+
+.lb-apply-button{padding:7px 12px;color:#07130c;background:#2fd06a;border:1px solid #2fd06a;border-radius:5px;font-size:9px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;cursor:pointer;transition:background .15s,border-color .15s,opacity .15s}
+.lb-apply-button:hover:not(:disabled){background:#4de081;border-color:#4de081}
+.lb-apply-button:disabled{opacity:.55;cursor:not-allowed}
+
