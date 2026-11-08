@@ -42,6 +42,7 @@ async function startServer(): Promise<void> {
         N1SSAN_PORT: String(PORT),
         N1SSAN_DATA_FILE: dataFile,
         N1SSAN_ARMORY_FILE: path.join(tempDir, 'armory-data.json'),
+        N1SSAN_ARMORY_INVENTORY_FILE: path.join(tempDir, 'armory-inventory.json'),
         N1SSAN_EQUIPMENT_FILE: path.join(tempDir, 'armory-equipment.json'),
       },
       stdio: 'ignore',
