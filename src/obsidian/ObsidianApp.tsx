@@ -368,6 +368,45 @@ export default function ObsidianApp() {
     return () => { cancelled = true }
   }, [])
 
+  useEffect(() => {
+    const events = new EventSource('http://127.0.0.1:3210/armory/events')
+    const onAttachmentsUpdated = async (event: MessageEvent<string>) => {
+      try {
+        await flushArmorySave()
+        const payload = JSON.parse(event.data) as { profileId?: string; merged?: number }
+        const document = await readArmoryDocument()
+        const profileId = typeof payload.profileId === 'string' ? payload.profileId : document.activeProfileId
+        const incoming = fromArmoryDocument(document).profiles.find(profile => profile.id === profileId)
+        if (!incoming) return
+        const incomingById = new Map(incoming.items.map(item => [item.instanceId, item]))
+        setProfiles(current => current.map(profile => profile.id !== profileId ? profile : {
+          ...profile,
+          items: profile.items.map(item => {
+            const observed = incomingById.get(item.instanceId)
+            return observed ? { ...item, attachments: observed.attachments, updatedAt: observed.updatedAt } : item
+          }),
+          updatedAt: incoming.updatedAt,
+        }))
+        if (activeId === profileId) {
+          setItems(current => current.map(item => {
+            const observed = incomingById.get(item.instanceId)
+            return observed ? { ...item, attachments: observed.attachments, updatedAt: observed.updatedAt } : item
+          }))
+        }
+        revisionRef.current = document.revision
+        const count = Math.max(1, Number(payload.merged) || 1)
+        setNotice(count + ' weapon attachment update' + (count === 1 ? '' : 's') + ' received from CS2')
+      } catch (error) {
+        console.warn('Live Armory attachment refresh deferred:', error)
+      }
+    }
+    events.addEventListener('attachments-updated', onAttachmentsUpdated as EventListener)
+    return () => {
+      events.removeEventListener('attachments-updated', onAttachmentsUpdated as EventListener)
+      events.close()
+    }
+  }, [activeId])
+
   useEffect(() => () => {
     if (saveTimerRef.current !== null) window.clearTimeout(saveTimerRef.current)
   }, [])

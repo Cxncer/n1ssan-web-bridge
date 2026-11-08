@@ -27,6 +27,14 @@ import {
 import type { CatalogueSourceRecord } from '../src/armory/catalogue-identity.ts'
 
 const app = express()
+const armoryEventClients = new Set<Response>()
+
+function publishArmoryEvent(event: string, payload: Record<string, unknown>): void {
+  const frame = 'event: ' + event + '\ndata: ' + JSON.stringify(payload) + '\n\n'
+  for (const client of armoryEventClients) {
+    try { client.write(frame) } catch { armoryEventClients.delete(client) }
+  }
+}
 
 const PORT = Number(process.env.N1SSAN_PORT ?? 3210)
 const HOST = '127.0.0.1'
@@ -678,6 +686,17 @@ app.use((req: Request, res: Response, next: NextFunction) => {
 app.use(express.json({ limit: '2mb' }))
 
 
+app.get('/armory/events', (req: Request, res: Response) => {
+  res.status(200)
+  res.setHeader('Content-Type', 'text/event-stream; charset=utf-8')
+  res.setHeader('Cache-Control', 'no-cache, no-transform')
+  res.setHeader('Connection', 'keep-alive')
+  res.flushHeaders()
+  res.write(': connected\n\n')
+  armoryEventClients.add(res)
+  req.on('close', () => armoryEventClients.delete(res))
+})
+
 app.get('/armory', (_req: Request, res: Response) => {
   res.json({ data: armoryStore.read() })
 })
@@ -1132,6 +1151,12 @@ async function syncObservedAttachments(): Promise<void> {
   try {
     const result = await attachmentsSync.poll()
     if (result.merged > 0) {
+      const document = armoryStore.read()
+      publishArmoryEvent('attachments-updated', {
+        profileId: document.activeProfileId,
+        revision: document.revision,
+        merged: result.merged,
+      })
       console.log(`Armory attachments merged into the profile: ${result.merged} item(s)`)
     } else if (result.reason !== 'idle' && result.reason !== 'no detection file' && result.reason !== 'no records') {
       console.log(`Armory attachments: ${result.reason}`)
