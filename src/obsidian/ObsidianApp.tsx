@@ -373,10 +373,11 @@ export default function ObsidianApp() {
 
   useEffect(() => {
     const events = new EventSource('http://127.0.0.1:3210/armory/events')
-    const onAttachmentsUpdated = async (event: MessageEvent<string>) => {
+    const onAttachmentsUpdated: EventListener = async (event: Event) => {
       try {
         await flushArmorySaveRef.current()
-        const payload = JSON.parse(event.data) as { profileId?: string; merged?: number }
+        const message = event as MessageEvent<string>
+        const payload = JSON.parse(message.data) as { profileId?: string; merged?: number }
         const document = await readArmoryDocument()
         const profileId = typeof payload.profileId === 'string' ? payload.profileId : document.activeProfileId
         const incoming = fromArmoryDocument(document).profiles.find(profile => profile.id === profileId)
@@ -403,9 +404,9 @@ export default function ObsidianApp() {
         console.warn('Live Armory attachment refresh deferred:', error)
       }
     }
-    events.addEventListener('attachments-updated', onAttachmentsUpdated as EventListener)
+    events.addEventListener('attachments-updated', onAttachmentsUpdated)
     return () => {
-      events.removeEventListener('attachments-updated', onAttachmentsUpdated as EventListener)
+      events.removeEventListener('attachments-updated', onAttachmentsUpdated)
       events.close()
     }
   }, [activeId])
