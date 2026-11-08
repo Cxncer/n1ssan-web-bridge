@@ -7,8 +7,6 @@ import {
 } from '../armory/obsidian-adapter'
 import { migrateLegacyInventory } from '../armory/migrate-legacy'
 import { ArmoryBridgeError, applyArmoryToGame, readArmoryDocument, writeArmoryDocument } from '../armory/bridge-client'
-import { readArmoryEquipment, writeArmoryEquipment } from '../armory/equipment-client'
-import { createEmptyEquipmentDocument, type ArmoryEquipmentDocument, type EquipmentSlot } from '../armory/equipment'
 import { catalogueDefinitionId, toCatalogueDefinition } from '../armory/catalogue-identity'
 import skinData from '../skins.json'
 import knifeData from './knife-skins.json'
@@ -41,19 +39,13 @@ const legacyKnifeCatalogue = catalogue.filter(s => getCategory(s) === 'Knives').
 const skinCatalogue = [...catalogue.filter(s => getCategory(s) !== 'Knives'), ...knifeCatalogue]
 const rarityClass = (value: string) => value.toLowerCase().replace(/[^a-z]+/g, '-').replace(/^-|-$/g, '')
 const isAgent = (skin: Skin) => getCategory(skin) === 'Agents'
-const equipSlotFor = (skin: Skin): EquipmentSlot | null => {
-  const category = getCategory(skin)
-  if (category === 'Knives') return 'knife'
-  if (category === 'Gloves') return 'gloves'
-  if (category === 'Agents') return 'agent'
-  return null
-}
 const rarityRank = (value: string) => ({ 'Consumer Grade':1,'Base Grade':1,'Industrial Grade':2,'High Grade':2,'Mil-Spec Grade':3,'Remarkable':3,'Restricted':4,'Exotic':4,'Classified':5,'Extraordinary':5,'Covert':6,'Master':6,'Contraband':7 } as Record<string,number>)[value] ?? 0
 const STORAGE_KEY = 'n1ssan-obsidian-preview-v1'
 
 export default function ObsidianApp() {
   const [profiles, setProfiles] = useState<InventoryProfile[]>([])
   const [activeId, setActiveId] = useState('')
+  const appliedIdRef = useRef('')
   const [items, setItems] = useState<InventoryItem[]>([])
   const [booting, setBooting] = useState(true)
   const [armoryError, setArmoryError] = useState('')
@@ -67,11 +59,7 @@ export default function ObsidianApp() {
   const [category, setCategory] = useState('All items')
   const [search, setSearch] = useState('')
   const [sort, setSort] = useState('Recently Added')
-  const [dialog, setDialog] = useState<'add' | 'detail' | 'profiles' | 'diagnostics' | 'customize' | 'quantity' | 'equip' | null>(null)
-  const [equipment, setEquipment] = useState<ArmoryEquipmentDocument | null>(null)
-  const [equipmentError, setEquipmentError] = useState('')
-  const [equipmentSaving, setEquipmentSaving] = useState(false)
-  const [equipTeam, setEquipTeam] = useState<'T' | 'CT'>('T')
+  const [dialog, setDialog] = useState<'add' | 'detail' | 'profiles' | 'diagnostics' | 'customize' | 'quantity' | null>(null)
   const [page, setPage] = useState<'home' | 'inventory'>('home')
   const [pendingSkin, setPendingSkin] = useState<Skin | null>(null)
   const [pendingQuantity, setPendingQuantity] = useState(1)
@@ -128,6 +116,7 @@ export default function ObsidianApp() {
     revisionRef.current = document.revision
     setProfiles(nextProfiles)
     setActiveId(active.id)
+    appliedIdRef.current = active.id
     setItems(active.items.map(item => ({ ...item })))
   }
 
@@ -143,7 +132,7 @@ export default function ObsidianApp() {
       saveTimerRef.current = null
       saveQueueRef.current = saveQueueRef.current.then(async () => {
         if (writeBlockedRef.current) return
-        const document = toArmoryDocument(snapshot, nextActiveId, revisionRef.current)
+        const document = toArmoryDocument(snapshot, appliedIdRef.current || nextActiveId, revisionRef.current)
         const saved = await writeArmoryDocument(document, revisionRef.current)
         revisionRef.current = saved.revision
         setArmorySaveError(null)
@@ -169,7 +158,7 @@ export default function ObsidianApp() {
 
       saveQueueRef.current = saveQueueRef.current.then(async () => {
         if (writeBlockedRef.current) return
-        const document = toArmoryDocument(snapshot, activeId, revisionRef.current)
+        const document = toArmoryDocument(snapshot, appliedIdRef.current || activeId, revisionRef.current)
         const saved = await writeArmoryDocument(document, revisionRef.current)
         revisionRef.current = saved.revision
         setArmorySaveError(null)
@@ -195,6 +184,11 @@ export default function ObsidianApp() {
       // Flush the debounce queue first so the DLL receives the latest profile,
       // not the last snapshot that happened to finish saving.
       await flushArmorySave()
+      // Commit the selected profile only when the user explicitly applies it.
+      const selectedDocument = toArmoryDocument(profiles, activeId, revisionRef.current)
+      const committed = await writeArmoryDocument(selectedDocument, revisionRef.current)
+      revisionRef.current = committed.revision
+      appliedIdRef.current = activeId
       const result = await applyArmoryToGame()
       const skipped = result.runtime.skipped
       setNotice(
@@ -206,62 +200,6 @@ export default function ObsidianApp() {
       setNotice(error instanceof Error ? error.message : 'Armory could not be applied to CS2.')
     } finally {
       setArmoryApplying(false)
-    }
-  }
-
-  // Armory mode resolves gloves, knives and agents from the equipment document,
-  // so they are picked here from owned instances rather than from the Loadout
-  // catalogue (whose picks may not be owned at all).
-  const openEquip = async () => {
-    setDialog('equip')
-    setEquipmentError('')
-    setEquipment(null)
-
-    try {
-      await flushArmorySave()
-    } catch {
-      // The save banner already explains a blocked inventory write.
-    }
-
-    const armory = toArmoryDocument(profiles, activeId, revisionRef.current)
-
-    try {
-      const { data, validationErrors } = await readArmoryEquipment(armory)
-      setEquipment(data)
-      if (validationErrors.length)
-        setEquipmentError('Saved assignments no longer match this inventory. Equip the slot again to refresh it.')
-    } catch (error) {
-      setEquipmentError(error instanceof Error ? error.message : 'Armory equipment could not be loaded.')
-    }
-  }
-
-  const assignSlot = async (slot: EquipmentSlot, instanceId: string | null) => {
-    if (equipmentSaving || slot === 'weapon') return
-
-    const armory = toArmoryDocument(profiles, activeId, revisionRef.current)
-    const usable = equipment &&
-      equipment.inventoryRevision === armory.revision &&
-      equipment.profileId === armory.activeProfileId
-      ? equipment.assignments
-      : []
-    const kept = usable.filter(assignment => !(assignment.team === equipTeam && assignment.slot === slot))
-    const next: ArmoryEquipmentDocument = {
-      ...createEmptyEquipmentDocument(armory),
-      assignments: instanceId
-        ? [...kept, { loadoutProfileId: 'armory-slots', team: equipTeam, slot, target: slot, itemInstanceId: instanceId }]
-        : kept,
-    }
-
-    setEquipmentSaving(true)
-    try {
-      const saved = await writeArmoryEquipment(next, armory)
-      setEquipment(saved)
-      setEquipmentError('')
-      setNotice(instanceId ? `${equipTeam} · ${slot} equipped` : `${equipTeam} · ${slot} reset to default`)
-    } catch (error) {
-      setEquipmentError(error instanceof Error ? error.message : 'Armory equipment could not be saved.')
-    } finally {
-      setEquipmentSaving(false)
     }
   }
 
@@ -293,8 +231,7 @@ export default function ObsidianApp() {
     if (!next) return
     setActiveId(id)
     setItems(next.items.map(item => ({ ...item })))
-    persistSnapshot(profiles, id)
-    setNotice(`Loaded “${next.name}”`)
+    setNotice(`Selected “${next.name}” · click Apply to CS2 to import it`)
   }
   const saveProfile = () => {
     const name = profileName.trim()
@@ -319,6 +256,7 @@ export default function ObsidianApp() {
     if (profiles.length < 2) { setNotice('Keep at least one inventory profile'); return }
     const nextProfiles = profiles.filter(profile => profile.id !== id)
     const nextActiveId = id === activeId ? nextProfiles[0].id : activeId
+    if (id === appliedIdRef.current) appliedIdRef.current = nextProfiles[0].id
     setProfiles(nextProfiles)
     if (id === activeId) {
       setActiveId(nextActiveId)
@@ -466,7 +404,7 @@ export default function ObsidianApp() {
       <div className="ob-breadcrumb"><span>WORKSPACE</span><b>/</b><strong>INVENTORY</strong></div>
       <section className="ob-heading">
         <div><h1>Your Armory<span>.</span></h1><p>Every finish, in its place. Curate your collection and keep each version close.</p></div>
-        <div className="ob-heading-actions"><label className="profile-select-label">ACTIVE INVENTORY PROFILE<select value={activeId} onChange={e => switchProfile(e.target.value)}>{profiles.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}</select></label><button className="ob-button shimmer-button" onClick={() => setDialog('profiles')}>Manage profiles <span>↗</span></button><button className="ob-button shimmer-button" onClick={() => void openEquip()} disabled={!!armorySaveError}>Equip slots <span>↗</span></button><button className="ob-button shimmer-button" onClick={applyArmory} disabled={armoryApplying || !!armorySaveError || totalUnits === 0}>{armoryApplying ? 'Applying…' : 'Apply to CS2'} <span>↗</span></button></div>
+        <div className="ob-heading-actions"><label className="profile-select-label">SELECTED INVENTORY PROFILE<select value={activeId} onChange={e => switchProfile(e.target.value)}>{profiles.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}</select></label><button className="ob-button shimmer-button" onClick={() => setDialog('profiles')}>Manage profiles <span>↗</span></button><button className="ob-button shimmer-button" onClick={applyArmory} disabled={armoryApplying || !!armorySaveError || totalUnits === 0}>{armoryApplying ? 'Applying…' : 'Apply to CS2'} <span>↗</span></button></div>
       </section>
 
       <section className="ob-overview">
@@ -496,8 +434,7 @@ export default function ObsidianApp() {
       {dialog === 'customize' && pendingSkin && <section className="ob-dialog ob-customize-dialog"><div className="dialog-head"><div><div className="ob-kicker">NEW INVENTORY INSTANCE</div><h2>Configure <span>item.</span></h2><p>Set the finish details before importing it into your armory.</p></div><button className="dialog-close" onClick={() => setDialog('add')}>×</button></div><div className="detail-preview"><div className="detail-preview-art">{pendingSkin.image && <img src={pendingSkin.image} alt=""/>}</div><div><small>{pendingSkin.weapon}</small><h3>{pendingSkin.name}</h3><span>{pendingSkin.rarity} · {getCategory(pendingSkin)}</span></div></div><div className="ob-fields customize-fields"><label className="field-wide float-field">FLOAT VALUE <div className="float-slider-wrap"><div className="float-slider-value"><span>{Number(pendingFloat).toFixed(5)}</span><b>{Number(pendingFloat) <= 0.07 ? 'FN' : Number(pendingFloat) <= 0.15 ? 'MW' : Number(pendingFloat) <= 0.38 ? 'FT' : Number(pendingFloat) <= 0.45 ? 'WW' : 'BS'}</b></div><input className="float-slider" type="range" min={pendingSkin.minFloat ?? 0} max={pendingSkin.maxFloat ?? 1} step="0.00001" value={Math.min(pendingSkin.maxFloat ?? 1, Math.max(pendingSkin.minFloat ?? 0, Number(pendingFloat) || 0))} style={{ background: `linear-gradient(90deg, ${Number(pendingFloat) <= 0.07 ? '#65a9e8' : Number(pendingFloat) <= 0.15 ? '#62b987' : Number(pendingFloat) <= 0.38 ? '#b6bd55' : Number(pendingFloat) <= 0.45 ? '#d99a48' : '#d65d5d'} 0%, ${Number(pendingFloat) <= 0.07 ? '#65a9e8' : Number(pendingFloat) <= 0.15 ? '#62b987' : Number(pendingFloat) <= 0.38 ? '#b6bd55' : Number(pendingFloat) <= 0.45 ? '#d99a48' : '#d65d5d'} ${((Number(pendingFloat) - (pendingSkin.minFloat ?? 0)) / ((pendingSkin.maxFloat ?? 1) - (pendingSkin.minFloat ?? 0) || 1)) * 100}%, #303030 ${((Number(pendingFloat) - (pendingSkin.minFloat ?? 0)) / ((pendingSkin.maxFloat ?? 1) - (pendingSkin.minFloat ?? 0) || 1)) * 100}%, #303030 100%)` }} onChange={e => setPendingFloat(Number(e.target.value).toFixed(5))}/><div className="slider-marks"><span>{(pendingSkin.minFloat ?? 0).toFixed(2)}</span><span>{((pendingSkin.minFloat ?? 0) + ((pendingSkin.maxFloat ?? 1) - (pendingSkin.minFloat ?? 0)) * 0.25).toFixed(2)}</span><span>{((pendingSkin.minFloat ?? 0) + ((pendingSkin.maxFloat ?? 1) - (pendingSkin.minFloat ?? 0)) * 0.5).toFixed(2)}</span><span>{((pendingSkin.minFloat ?? 0) + ((pendingSkin.maxFloat ?? 1) - (pendingSkin.minFloat ?? 0)) * 0.75).toFixed(2)}</span><span>{(pendingSkin.maxFloat ?? 1).toFixed(2)}</span></div></div><input className="custom-float-input" value={pendingFloat} onChange={e => setPendingFloat(e.target.value)} inputMode="decimal" placeholder="Custom float (0.00000–1.00000)"/></label><label>PAINT SEED<input value={pendingSeed} onChange={e => setPendingSeed(String(Math.min(1000, Number(e.target.value.replace(/[^0-9]/g,'')) || 0)))} inputMode="numeric" maxLength={4} placeholder="0–1000"/>{getCategory(pendingSkin) === 'Knives' && pendingSkin.name === 'Case Hardened' && <small className="seed-hint">Use a seed from 0–1000. Blue Gem is a Case Hardened pattern variant determined by the paint seed.</small>}</label>{getCategory(pendingSkin) !== 'Gloves' && <div className="field-label">STATTRAK™ <button type="button" className={`stattrak-toggle ${pendingStatTrak ? 'enabled' : ''}`} aria-pressed={pendingStatTrak} onClick={() => setPendingStatTrak(v => !v)}><span className="st-toggle-track"><i/></span></button></div>}<label className="field-wide">NAME TAG<input value={pendingName} onChange={e => setPendingName(e.target.value)} placeholder="Optional name tag..." maxLength={20}/></label></div><div className="dialog-actions"><button className="ob-button secondary" onClick={() => setDialog('add')}>Back to catalogue</button><button className="ob-button shimmer-button" onClick={() => { const min = pendingSkin.minFloat ?? 0, max = pendingSkin.maxFloat ?? 1, value = Number(pendingFloat); if (!Number.isFinite(value) || value < min || value > max) { setNotice(`Float must be between ${min.toFixed(5)} and ${max.toFixed(5)}`); return } addSkin(pendingSkin, 1, { float: value.toFixed(5), seed: pendingSeed, stattrak: getCategory(pendingSkin) !== 'Gloves' && pendingStatTrak, customName: pendingName.trim() }) }}>Add to inventory <span>＋</span></button></div></section>}
       {dialog === 'quantity' && pendingSkin && <section className="ob-dialog ob-quantity-dialog"><div className="dialog-head"><div><div className="ob-kicker">STACK QUANTITY</div><h2>Add <span>{pendingSkin.kind === 'charm' ? 'charm.' : 'stickers.'}</span></h2><p>How many copies would you like to import?</p></div><button className="dialog-close" onClick={() => setDialog('add')}>×</button></div><div className="quantity-item-preview"><div className="catalogue-thumb">{pendingSkin.image && <img src={pendingSkin.image} alt=""/>}</div><div><strong>{pendingSkin.name}</strong><small>{pendingSkin.rarity} · {pendingSkin.kind}</small></div></div><div className="quantity-control"><button onClick={() => setPendingQuantity(n => Math.max(1,n-1))} aria-label="Decrease quantity">−</button><input type="number" min="1" max="999" value={pendingQuantity} onChange={e => setPendingQuantity(Math.max(1,Math.min(999,Number(e.target.value)||1)))}/><button onClick={() => setPendingQuantity(n => Math.min(999,n+1))} aria-label="Increase quantity">＋</button></div><div className="dialog-actions"><button className="ob-button secondary" onClick={() => setDialog('add')}>Back</button><button className="ob-button shimmer-button" onClick={() => addSkin(pendingSkin,pendingQuantity)}>Add ×{pendingQuantity} to inventory</button></div></section>}
       {dialog === 'detail' && selected && <section className="ob-dialog ob-detail-dialog"><div className="dialog-head"><div><div className="ob-kicker">INVENTORY INSTANCE</div><h2>Item <span>details.</span></h2></div><button className="dialog-close" onClick={() => setDialog(null)}>×</button></div><div className="detail-preview"><div className="detail-preview-art">{selected.skin.image && <img src={selected.skin.image} alt="" />}</div><div><small>{selected.skin.weapon}</small><h3>{selected.skin.name}</h3><span>{selected.skin.rarity} · {getCategory(selected.skin)}</span></div></div><div className="ob-fields">{(selected.item.kind ?? 'skin') === 'skin' && !isAgent(selected.skin) && <><label>FLOAT VALUE<input value={selected.item.float} onChange={e => updateSelected({ float: e.target.value })} inputMode="decimal" /></label><label>PAINT SEED<input value={selected.item.seed} onChange={e => updateSelected({ seed: String(Math.min(1000, Number(e.target.value.replace(/[^0-9]/g,'')) || 0)) })} inputMode="numeric" maxLength={4} placeholder="0–1000" />{getCategory(selected.skin) === 'Knives' && selected.skin.name === 'Case Hardened' && <small className="seed-hint">Use a seed from 0–1000. Blue Gem is determined by the Case Hardened paint seed.</small>}</label></>}{(selected.item.kind ?? 'skin') === 'skin' && <label className="field-wide">CUSTOM NAME<input value={selected.item.customName} onChange={e => updateSelected({ customName: e.target.value })} placeholder="Name this item..." /></label>}{(selected.item.kind ?? 'skin') === 'skin' && !isAgent(selected.skin) && getCategory(selected.skin) !== 'Gloves' && <button type="button" className={`stattrak-toggle ${selected.item.stattrak ? 'enabled' : ''}`} aria-pressed={selected.item.stattrak} onClick={() => updateSelected({ stattrak: !selected.item.stattrak })}><span className="st-toggle-label">ST</span><span className="st-toggle-track"><i /></span></button>}</div>{selected.item.attachments && (selected.item.attachments.stickers.length > 0 || selected.item.attachments.charm) && <div className="attach-panel"><div className="ob-kicker">APPLIED ATTACHMENTS</div><div className="attach-preview-row">{[...selected.item.attachments.stickers].sort((a, b) => a.slot - b.slot).map(sticker => { const name = labelForKit('sticker', sticker.kitId); const image = imageForKit('sticker', sticker.kitId); return <div className="attach-preview-item" key={sticker.slot} title={`Slot ${sticker.slot + 1}: ${name} · wear ${sticker.wear.toFixed(3)} · rotation ${sticker.rotation.toFixed(1)}° · offset ${sticker.offsetX.toFixed(2)}, ${sticker.offsetY.toFixed(2)}`}><div className="attach-preview-art">{image ? <img src={image} alt={name} loading="lazy" /> : <span>ST</span>}</div><small>STICKER {sticker.slot + 1}</small></div>})}{selected.item.attachments.charm && (() => { const charm = selected.item.attachments.charm; const name = labelForKit('charm', charm.kitId); const image = imageForKit('charm', charm.kitId); return <div className="attach-preview-item attach-preview-charm" title={`Charm: ${name} · seed ${charm.seed} · position ${charm.x.toFixed(2)}, ${charm.y.toFixed(2)}, ${charm.z.toFixed(2)}`}><div className="attach-preview-art">{image ? <img src={image} alt={name} loading="lazy" /> : <span>CH</span>}</div><small>CHARM</small></div>})()}</div>{selected.item.attachments.observedAt && <small className="attach-observed-at">Observed {new Date(selected.item.attachments.observedAt).toLocaleString()}</small>}</div>}{(selected.item.kind ?? 'skin') !== 'skin' && <div className="imported-item-note">Imported quantity: <strong>×{selected.item.quantity ?? 1}</strong> · Attach it from a weapon’s detail panel.</div>}<div className="dialog-actions"><button className="ob-button shimmer-button remove-item-button" onClick={removeSelected}>Remove item</button><button className="ob-button shimmer-button" onClick={() => setDialog(null)}>Done</button></div></section>}
-      {dialog === 'equip' && <section className="ob-dialog ob-equip-dialog"><div className="dialog-head"><div><div className="ob-kicker">EQUIP IN GAME</div><h2>Choose your <span>slots.</span></h2><p>Gloves, knives and agents apply from this inventory in Armory mode. Pick one owned instance per team slot.</p></div><button className="dialog-close" onClick={() => setDialog(null)}>×</button></div><div className="add-category-tabs">{(['T','CT'] as const).map(team => <button key={team} className={equipTeam === team ? 'active' : ''} onClick={() => setEquipTeam(team)}>{team === 'T' ? 'Terrorists' : 'Counter-Terrorists'}<small>{owned.filter(entry => equipSlotFor(entry.skin) && (entry.item.quantity ?? 1) === 1).length}</small></button>)}</div>{equipmentError && <div className="catalogue-state">{equipmentError}</div>}{(['knife','gloves','agent'] as const).map(slot => { const assigned = equipment?.assignments.find(assignment => assignment.team === equipTeam && assignment.slot === slot); const current = assigned ? owned.find(entry => entry.item.instanceId === assigned.itemInstanceId) : undefined; const candidates = owned.filter(entry => equipSlotFor(entry.skin) === slot && (entry.item.quantity ?? 1) === 1); return <div className="equip-slot" key={slot}><div className="equip-slot-head"><strong>{slot === 'knife' ? 'KNIFE' : slot === 'gloves' ? 'GLOVES' : 'AGENT'}</strong><span>{current ? `${current.skin.weapon} · ${current.skin.name}` : 'not equipped'}</span></div><div className="ob-catalogue-list">{assigned && <button onClick={() => void assignSlot(slot, null)} disabled={equipmentSaving}><span><strong>Use default</strong><small>Clear this slot assignment</small></span><b>×</b></button>}{candidates.length ? candidates.map(({ item, skin }) => <button key={item.instanceId} disabled={equipmentSaving} onClick={() => void assignSlot(slot, item.instanceId)}><div className="catalogue-thumb">{skin.image && <img src={skin.image} alt="" loading="lazy" />}</div><span><strong>{skin.weapon}</strong><small>{skin.name} · {skin.rarity}</small></span><b>{assigned?.itemInstanceId === item.instanceId ? '✓' : '＋'}</b></button>) : <div className="catalogue-state">No owned {slot} items in this inventory.</div>}</div></div> })}<div className="dialog-foot">{equipmentSaving ? 'Saving equipment…' : 'Equip one owned instance per slot · applied by Apply to CS2'}</div></section>}
-      {dialog === 'profiles' && <section className="ob-dialog ob-profiles-dialog"><div className="dialog-head"><div><div className="ob-kicker">SAVED SNAPSHOTS</div><h2>Inventory <span>profiles.</span></h2><p>Each profile stores a complete inventory snapshot. Switching replaces the active inventory.</p></div><button className="dialog-close" onClick={() => setDialog(null)}>×</button></div><div className="profile-list">{profiles.map(p => <div className={p.id === activeId ? 'profile-row current' : 'profile-row'} key={p.id}><button className="profile-load" onClick={() => switchProfile(p.id)}><span className="profile-radio">{p.id === activeId && <i />}</span><span><strong>{p.name}</strong><small>{p.items.reduce((sum,item) => sum + (item.quantity ?? 1), 0)} items · Updated {new Date(p.updatedAt).toLocaleString()}</small></span></button><button className="profile-delete" title="Delete profile" onClick={() => deleteProfile(p.id)} disabled={profiles.length < 2}>×</button></div>)}</div><div className="new-profile"><label>NEW INVENTORY PROFILE<input value={profileName} onChange={e => setProfileName(e.target.value)} placeholder="e.g. Tournament setup" onKeyDown={e => { if (e.key === 'Enter') saveProfile() }} /></label><button className="ob-button shimmer-button" onClick={saveProfile} disabled={!profileName.trim()}>Save snapshot <span>＋</span></button></div><div className="dialog-foot">Unlimited Armory profiles · Switching restores the saved snapshot, not a merge</div></section>}
+      {dialog === 'profiles' && <section className="ob-dialog ob-profiles-dialog"><div className="dialog-head"><div><div className="ob-kicker">SAVED SNAPSHOTS</div><h2>Inventory <span>profiles.</span></h2><p>Each profile stores a complete inventory snapshot. Switching selects a profile; click Apply to CS2 to import it.</p></div><button className="dialog-close" onClick={() => setDialog(null)}>×</button></div><div className="profile-list">{profiles.map(p => <div className={p.id === activeId ? 'profile-row current' : 'profile-row'} key={p.id}><button className="profile-load" onClick={() => switchProfile(p.id)}><span className="profile-radio">{p.id === activeId && <i />}</span><span><strong>{p.name}</strong><small>{p.items.reduce((sum,item) => sum + (item.quantity ?? 1), 0)} items · Updated {new Date(p.updatedAt).toLocaleString()}</small></span></button><button className="profile-delete" title="Delete profile" onClick={() => deleteProfile(p.id)} disabled={profiles.length < 2}>×</button></div>)}</div><div className="new-profile"><label>NEW INVENTORY PROFILE<input value={profileName} onChange={e => setProfileName(e.target.value)} placeholder="e.g. Tournament setup" onKeyDown={e => { if (e.key === 'Enter') saveProfile() }} /></label><button className="ob-button shimmer-button" onClick={saveProfile} disabled={!profileName.trim()}>Save snapshot <span>＋</span></button></div><div className="dialog-foot">Unlimited Armory profiles · Selection stages the saved snapshot; Apply to CS2 imports it</div></section>}
       {dialog === 'diagnostics' && <section className="ob-dialog ob-diagnostics-dialog"><div className="dialog-head"><div><div className="ob-kicker">SYSTEM HEALTH</div><h2>Diagnostics<span>.</span></h2><p>Runtime and compatibility checks for the CS2 integration.</p></div><button className="dialog-close" onClick={() => setDialog(null)}>×</button></div><div className="diagnostic-list"><div><span className="diagnostic-state pending" /><span><strong>CS2 process detection</strong><small>Not connected · preview cannot inspect local processes</small></span><b>WAITING</b></div><div><span className="diagnostic-state online" /><span><strong>Bridge connection</strong><small>Armory inventory API is connected and persistent</small></span><b>ONLINE</b></div><div><span className="diagnostic-state pending" /><span><strong>Offsets &amp; signatures</strong><small>Version validation will report outdated definitions here</small></span><b>NOT CHECKED</b></div></div><div className="dialog-foot">Diagnostics UI preview · no process or signature checks are running yet</div></section>}
     </div>}
     <button className="ob-back-to-top" type="button" aria-label="Back to top" title="Back to top" onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}><span>↑</span></button>

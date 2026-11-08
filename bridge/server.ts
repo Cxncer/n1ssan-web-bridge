@@ -866,9 +866,7 @@ app.put('/armory', async (req: Request, res: Response) => {
       data,
     )
 
-    const inventory = await projectInventoryOrReport()
-
-    res.status(200).json({ data: saved, inventory })
+    res.status(200).json({ data: saved })
   } catch (error) {
     if (error instanceof ArmoryRevisionConflictError) {
       res.status(409).json({

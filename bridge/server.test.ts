@@ -298,6 +298,12 @@ test('Armory API persists complete profiles and rejects stale or invalid writes'
   assert.equal(saved.data.revision, 1)
   assert.equal(saved.data.profiles[0].items.length, 1)
 
+  // Saving/staging a profile must not project it into the DLL runtime.
+  await assert.rejects(
+    readFile(path.join(tempDir, 'armory-inventory.json'), 'utf8'),
+    { code: 'ENOENT' },
+  )
+
   // Explicit Armory Apply writes the current profile projection before
   // switching the native runtime mode.
   const applyResponse = await fetch(`${BASE_URL}/armory/apply`, { method: 'POST' })
