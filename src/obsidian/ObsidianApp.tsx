@@ -368,11 +368,14 @@ export default function ObsidianApp() {
     return () => { cancelled = true }
   }, [])
 
+  const flushArmorySaveRef = useRef(flushArmorySave)
+  flushArmorySaveRef.current = flushArmorySave
+
   useEffect(() => {
     const events = new EventSource('http://127.0.0.1:3210/armory/events')
     const onAttachmentsUpdated = async (event: MessageEvent<string>) => {
       try {
-        await flushArmorySave()
+        await flushArmorySaveRef.current()
         const payload = JSON.parse(event.data) as { profileId?: string; merged?: number }
         const document = await readArmoryDocument()
         const profileId = typeof payload.profileId === 'string' ? payload.profileId : document.activeProfileId
