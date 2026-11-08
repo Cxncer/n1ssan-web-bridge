@@ -265,6 +265,14 @@ test('Armory API persists complete profiles and rejects stale or invalid writes'
   }],
 }
 
+  const runtimeInventoryPath = path.join(tempDir, 'armory-inventory.json')
+  let runtimeInventoryBeforeSave: Buffer | null = null
+  try {
+    runtimeInventoryBeforeSave = await readFile(runtimeInventoryPath)
+  } catch (error) {
+    if ((error as NodeJS.ErrnoException).code !== 'ENOENT') throw error
+  }
+
   const saveResponse = await fetch(`${BASE_URL}/armory`, {
     method: 'PUT',
     headers: { 'Content-Type': 'application/json' },
@@ -279,18 +287,20 @@ test('Armory API persists complete profiles and rejects stale or invalid writes'
   assert.equal(saved.data.revision, 1)
   assert.equal(saved.data.profiles[0].items.length, 1)
 
-  // Saving/staging a profile must not project it into the DLL runtime.
-  await assert.rejects(
-    readFile(path.join(tempDir, 'armory-inventory.json'), 'utf8'),
-    { code: 'ENOENT' },
-  )
+  // Saving/staging a profile must leave the DLL runtime projection untouched.
+  let runtimeInventoryAfterSave: Buffer | null = null
+  try {
+    runtimeInventoryAfterSave = await readFile(runtimeInventoryPath)
+  } catch (error) {
+    if ((error as NodeJS.ErrnoException).code !== 'ENOENT') throw error
+  }
+  assert.deepEqual(runtimeInventoryAfterSave, runtimeInventoryBeforeSave)
 
   // Explicit Armory Apply writes the current profile projection before
   // switching the native runtime mode.
   const applyResponse = await fetch(`${BASE_URL}/armory/apply`, { method: 'POST' })
   const applyBody = await applyResponse.json()
-console.log('ARMORY APPLY DEBUG:', JSON.stringify(applyBody, null, 2))
-assert.equal(applyResponse.status, 200)
+  assert.equal(applyResponse.status, 200)
   const applied = applyBody as {
     mode: string
     runtime: { written: boolean; itemCount: number; skipped: number }
