@@ -107,7 +107,7 @@ export default function ObsidianApp() {
   const [notice, setNotice] = useState('')
   const [specialItems, setSpecialItems] = useState<Skin[]>([])
   const [baseWeapons, setBaseWeapons] = useState<BaseWeapon[]>([])
-  const [baseWeaponsLoading, setBaseWeaponsLoading] = useState(false)
+  const [baseWeaponsLoading, setBaseWeaponsLoading] = useState(true)
   const [skinPickerLevel, setSkinPickerLevel] = useState<'root' | 'models' | 'finishes'>('root')
   const [selectedSkinGroup, setSelectedSkinGroup] = useState<'weapons' | 'knives' | 'gloves'>('weapons')
   const [selectedSkinWeapon, setSelectedSkinWeapon] = useState('')
