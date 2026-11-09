@@ -176,6 +176,7 @@ function agentForTeam(s: Skin, team: Team) {
   return team === 'T' ? t === 't agents' : t === 'ct agents'
 }
 export default function LoadoutApp({ skins }: LoadoutBuilderProps) {
+  useEffect(() => { document.title = 'Loadout - n1ssan' }, [])
   useEffect(() => {
     const icon = document.querySelector<HTMLLinkElement>('link[rel~="icon"]') ?? document.createElement('link')
     icon.rel = 'icon'
@@ -225,6 +226,9 @@ export default function LoadoutApp({ skins }: LoadoutBuilderProps) {
   const [floatDraft, setFloatDraft] = useState('0.000000')
   const [seedDraft, setSeedDraft] = useState('0')
   const [dialog, setDialog] = useState<DialogState>(null)
+  const [profileManagerOpen, setProfileManagerOpen] = useState(false)
+  const [activeSlotContext, setActiveSlotContext] = useState<{ category: string; index: number } | null>(null)
+  const [equipmentWeaponFilter, setEquipmentWeaponFilter] = useState('All')
   const [runtimeStatus, setRuntimeStatus] = useState<{ tone: 'idle' | 'ok' | 'error'; text: string }>({ tone: 'idle', text: '' })
   const [applying, setApplying] = useState(false)
 
@@ -273,7 +277,7 @@ export default function LoadoutApp({ skins }: LoadoutBuilderProps) {
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       if (e.key === 'Escape') {
-        setPickerOpen(false); setSettingsOpen(false); setActiveEquipment(null)
+        setPickerOpen(false); setSettingsOpen(false); setActiveEquipment(null); setProfileManagerOpen(false)
         setDialog(null)
       }
     }
@@ -434,7 +438,8 @@ export default function LoadoutApp({ skins }: LoadoutBuilderProps) {
     const matches = skins.filter(s => s.weapon.toLowerCase() === activeWeapon.toLowerCase() && (!q || `${s.name} ${s.rarity} ${s.type} ${s.description || ''} ${s.color || ''}`.toLowerCase().includes(q)) && (!pickerColor || !!pickerColorMatchIds?.has(s.id)))
     const rarityRank = (rarity: string) => ({ 'Covert': 7, 'Extraordinary': 7, 'Classified': 6, 'Exotic': 6, 'Restricted': 5, 'Remarkable': 5, 'Mil-Spec Grade': 4, 'High Grade': 4, 'Industrial Grade': 3, 'Distinguished': 3, 'Consumer Grade': 2, 'Base Grade': 1 } as Record<string, number>)[rarity] ?? 0
     const popularNames = ['dragon lore','howl','fade','asiimov','redline','medusa','fire serpent','wild lotus','printstream','the empress','neo-noir','kill confirmed','desert eagle | blaze','doppler','marble fade','case hardened','lore','tiger tooth','vulcan','hyper beast','cyrex','nightwish','head shot','asiimov']
-    return matches.sort((a, b) => {
+    const filtered = equipmentWeaponFilter === 'All' ? matches : matches.filter(item => item.weapon === equipmentWeaponFilter)
+    return filtered.sort((a, b) => {
       if (skinSort === 'az') return a.name.localeCompare(b.name)
       if (skinSort === 'rarity') return rarityRank(b.rarity) - rarityRank(a.rarity) || a.name.localeCompare(b.name)
       const score = (s: Skin) => { const n = `${s.weapon} | ${s.name}`.toLowerCase(); const i = popularNames.findIndex(term => n.includes(term)); return i < 0 ? 999 : i }
@@ -466,7 +471,7 @@ export default function LoadoutApp({ skins }: LoadoutBuilderProps) {
       }
       return score(a) - score(b) || rarityRank(b.rarity) - rarityRank(a.rarity) || a.name.localeCompare(b.name)
     })
-  }, [skins, activeEquipment, team, equipmentSearch, equipmentColor, equipmentColorMatchIds, equipmentSort])
+  }, [skins, activeEquipment, team, equipmentSearch, equipmentColor, equipmentColorMatchIds, equipmentSort, equipmentWeaponFilter])
 
   function equipSkin(weapon: string, id: SkinId | null) {
     const nextLoadouts = { ...loadouts, [team]: { ...loadouts[team], [weapon]: id } }
@@ -478,7 +483,19 @@ export default function LoadoutApp({ skins }: LoadoutBuilderProps) {
     }
     setLoadouts(nextLoadouts)
     syncActiveProfile({ loadouts: nextLoadouts, skinSettings: nextSkinSettings, equipment })
-    setPickerOpen(false); setPickerSearch(''); setActiveWeapon(null)
+    if (id !== null) {
+      const chosen = skins.find(x => x.id === id)
+      const configured = nextSkinSettings[team][settingsKey(weapon, id)] ?? defaults(chosen)
+      setActiveWeapon(weapon)
+      setFloatDraft(configured.float.toFixed(6))
+      setSeedDraft(String(configured.seed))
+      setPickerOpen(false)
+      setSettingsOpen(true)
+    } else {
+      setPickerOpen(false)
+      setActiveWeapon(null)
+    }
+    setPickerSearch('')
   }
   function equipItem(slot: EquipmentSlot, id: SkinId | null) {
     const nextEquipment = { ...equipment, [team]: { ...equipment[team], [slot]: id } }
@@ -486,8 +503,8 @@ export default function LoadoutApp({ skins }: LoadoutBuilderProps) {
     syncActiveProfile({ loadouts, skinSettings, equipment: nextEquipment })
     setActiveEquipment(null); setEquipmentSearch('')
   }
-  function openPicker(weapon: string) { setActiveWeapon(weapon); setPickerSearch(''); setPickerColorFilter(''); setSkinSort('popular'); setPickerOpen(true); setSettingsOpen(false); setActiveEquipment(null) }
-  function openEquipmentPicker(slot: EquipmentSlot) { setEquipmentSearch(''); setEquipmentColorFilter(''); setEquipmentSort('popular'); setActiveEquipment(slot); setPickerOpen(false); setSettingsOpen(false) }
+  function openPicker(weapon: string, category?: string, index?: number) { setActiveWeapon(weapon); setActiveSlotContext(category && index !== undefined ? { category, index } : null); setPickerSearch(''); setPickerColorFilter(''); setSkinSort('popular'); setPickerOpen(true); setSettingsOpen(false); setActiveEquipment(null) }
+  function openEquipmentPicker(slot: EquipmentSlot) { setEquipmentSearch(''); setEquipmentColorFilter(''); setEquipmentSort('popular'); setEquipmentWeaponFilter('All'); setActiveEquipment(slot); setPickerOpen(false); setSettingsOpen(false) }
   function saveSettings() {
     if (!activeWeapon) return
     const s = selectedSkin(activeWeapon)
@@ -526,7 +543,7 @@ export default function LoadoutApp({ skins }: LoadoutBuilderProps) {
         <div className="ob-breadcrumb"><span>WORKSPACE</span><b>/</b><strong>LOADOUT</strong></div>
         <section className="ob-heading loadout-heading"><div><h1>Your Loadout<span>.</span></h1><p>Build your five-slot CS2 weapon selection for each side.</p></div>
           <div className="ob-heading-actions"><div className="profile-select-label"><span>SELECTED LOADOUT PROFILE</span><ObsidianDropdown ariaLabel="Selected Loadout profile" className="profile-dropdown" value={activeProfileId} options={profiles.map(p => ({value:p.id,label:p.name}))} onChange={switchProfile}/></div>
-            <button className="ob-button shimmer-button" onClick={() => openDialog('create')}>New profile <span>＋</span></button><button className="ob-button secondary" onClick={() => openDialog('duplicate')}>Duplicate</button><button className="ob-button secondary" onClick={() => openDialog('rename')}>Rename</button><button className="ob-button secondary" onClick={() => openDialog('delete')} disabled={profiles.length <= 1}>Delete</button><button className="ob-button shimmer-button" onClick={applyLoadout} disabled={applying}>{applying ? 'Applying…' : 'Apply to CS2'} <span>↗</span></button>
+            <button className="ob-button secondary" onClick={() => setProfileManagerOpen(true)}>Manage profiles <span>⌄</span></button><button className="ob-button shimmer-button" onClick={applyLoadout} disabled={applying}>{applying ? 'Applying…' : 'Apply to CS2'} <span>↗</span></button>
           </div>
         </section>
         <section className="loadout-control-strip"><div className="loadout-team-switch">{(['T','CT'] as Team[]).map(side => <button key={side} type="button" className={team === side ? 'active' : ''} onClick={() => { setTeam(side); setPickerSearch(''); setEquipmentSearch('') }}><img src={TEAM_IMAGES[side]} alt=""/><span><strong>{side === 'T' ? 'TERRORIST' : 'COUNTER-TERRORIST'}</strong><small>{side === 'T' ? 'Attacker side' : 'Defender side'}</small></span></button>)}</div>
@@ -534,14 +551,16 @@ export default function LoadoutApp({ skins }: LoadoutBuilderProps) {
         </section>
         <section className="loadout-four-column-grid">
           <article className="loadout-category-column equipment-column"><header><span>01</span><h2>Equipment</h2><small>3 SLOTS</small></header><div className="loadout-slot-list">{(['agent','knife','gloves'] as EquipmentSlot[]).map((slot,index) => { const item = selectedItem(slot), info = EQUIPMENT_INFO[slot]; return <button type="button" className={`loadout-slot-card ${item ? 'is-filled' : ''}`} key={slot} onClick={() => openEquipmentPicker(slot)}><span className="loadout-slot-index">0{index+1}</span><span className="loadout-slot-art">{item && imageOf(item) ? <img src={imageOf(item)} alt=""/> : <i>{info.icon}</i>}</span><span className="loadout-slot-copy"><strong>{slot === 'agent' ? `${team} Agent` : info.title}</strong><small>{item ? item.name : 'Select equipment'}</small></span><span className="loadout-slot-action">{item ? 'EDIT' : '+'}</span></button>})}</div></article>
-          {columns.map((column,columnIndex) => <article className="loadout-category-column" key={column.title}><header><span>0{columnIndex+2}</span><h2>{column.title === 'MID-TIER' ? 'Mid-Tier' : column.title.charAt(0)+column.title.slice(1).toLowerCase()}</h2><small>5 SLOTS</small></header>
+          {columns.map((column,columnIndex) => <article className="loadout-category-column" key={column.title}><header><span>0{columnIndex+2}</span><h2>{column.title === 'MID-TIER' ? 'Mid-Tier' : column.title.charAt(0)+column.title.slice(1).toLowerCase()}</h2></header>
             <div className="loadout-slot-list">{Array.from({length:5},(_,slotIndex) => { const weapon = weaponSlots[team][column.title]?.[slotIndex] ?? null; const skin = weapon ? selectedSkin(weapon) : undefined; const image = skin ? imageOf(skin) : weapon ? placeholder(weapon) : ''; const st = skin && weapon ? skinSettings[team][settingsKey(weapon,skin.id)] ?? defaults(skin) : null;
-              return <div className={`loadout-slot-card weapon-slot ${skin ? 'is-filled' : ''}`} key={`${column.title}-${slotIndex}`}><span className="loadout-slot-index">0{slotIndex+1}</span><button type="button" className="loadout-slot-art" onClick={() => weapon && openPicker(weapon)} aria-label={weapon ? `Choose ${weapon} finish` : 'Choose weapon'}>{image ? <img src={image} alt=""/> : <i>＋</i>}</button>
+              return <div className={`loadout-slot-card weapon-slot ${skin ? 'is-filled' : ''}`} key={`${column.title}-${slotIndex}`}><span className="loadout-slot-index">0{slotIndex+1}</span><button type="button" className="loadout-slot-art" onClick={() => weapon && openPicker(weapon,column.title,slotIndex)} aria-label={weapon ? `Choose ${weapon} finish` : 'Choose weapon'}>{image ? <img src={image} alt=""/> : <i>＋</i>}</button>
                 <div className="loadout-slot-copy"><select aria-label={`${column.title} slot ${slotIndex+1} weapon`} value={weapon ?? ''} onChange={event => assignSlotWeapon(column.title,slotIndex,event.target.value)}><option value="" disabled>Select weapon</option>{column.weapons.map(option => <option key={option} value={option} disabled={(weaponSlots[team][column.title] ?? []).some((current,index) => index !== slotIndex && current === option)}>{option}</option>)}</select><small>{skin ? skin.name : weapon ? 'No finish selected' : 'Choose a weapon'}</small>{st && <small className="loadout-slot-meta">FLOAT {st.float.toFixed(5)} · SEED {st.seed}</small>}</div>
-                <button type="button" className="loadout-slot-action" onClick={() => weapon && openPicker(weapon)}>{skin ? 'EDIT' : '＋'}</button></div>})}</div></article>)}
+                <button type="button" className="loadout-slot-action" onClick={() => weapon && openPicker(weapon,column.title,slotIndex)}>{skin ? 'EDIT' : '＋'}</button></div>})}</div></article>)}
         </section><p className="loadout-save-note">Selections are saved locally by profile. Only the five assigned weapon positions per category are sent to CS2.</p>
       </> : <section className="loadout-diagnostics"><div className="ob-breadcrumb"><span>WORKSPACE</span><b>/</b><strong>DIAGNOSTICS</strong></div><h1>Diagnostics<span>.</span></h1><p>Read-only overview of your Loadout configuration and local profile data.</p><div className="loadout-diagnostic-grid"><article><small>SKIN CATALOGUE</small><strong>{skins.length.toLocaleString()}</strong></article><article><small>SAVED PROFILES</small><strong>{profiles.length}</strong></article><article><small>EQUIPPED ITEMS</small><strong>{totalEquipped}</strong></article><article><small>FLOAT / SEED RECORDS</small><strong>{savedFloatSeedCount}</strong></article></div><div className="loadout-diagnostic-panel"><strong>Bridge status</strong><span>{runtimeStatus.text || 'Not queried from this page.'}</span></div></section>}
-          {pickerOpen && activeWeapon && <div className="lb-modal-backdrop" onClick={() => setPickerOpen(false)}><div className="lb-modal ob-dialog" role="dialog" aria-modal="true" aria-label={`Choose a skin for ${activeWeapon}`} onClick={e => e.stopPropagation()}>
+          {profileManagerOpen && <div className="lb-modal-backdrop" onClick={() => setProfileManagerOpen(false)}><section className="lb-modal ob-dialog lb-confirm-modal loadout-profile-manager" role="dialog" aria-modal="true" aria-label="Manage Loadout profiles" onClick={e => e.stopPropagation()}><div className="lb-modal-header dialog-head"><div><p className="lb-eyebrow">PROFILE MANAGER</p><h3>Manage profiles.</h3></div><button className="lb-close-button" type="button" onClick={() => setProfileManagerOpen(false)} aria-label="Close profile manager">×</button></div><div className="loadout-profile-list">{profiles.map(profile => <div className={profile.id === activeProfileId ? 'loadout-profile-row current' : 'loadout-profile-row'} key={profile.id}><button type="button" className="loadout-profile-select" onClick={() => switchProfile(profile.id)}><span className="loadout-profile-radio">{profile.id === activeProfileId && <i/>}</span><span><strong>{profile.name}</strong><small>{Object.values(profile.loadouts).reduce((n,side) => n + Object.values(side).filter(id => id !== null).length,0)} weapon finishes · {profile.id === activeProfileId ? 'Active profile' : 'Saved profile'}</small></span></button>{profile.id === activeProfileId && <span className="loadout-profile-current">ACTIVE</span>}</div>)}</div><div className="loadout-profile-actions"><button className="ob-button shimmer-button" onClick={() => { setProfileManagerOpen(false); openDialog('create') }}>New profile ＋</button><button className="ob-button secondary" onClick={() => { setProfileManagerOpen(false); openDialog('duplicate') }}>Duplicate</button><button className="ob-button secondary" onClick={() => { setProfileManagerOpen(false); openDialog('rename') }}>Rename</button><button className="ob-button secondary" disabled={profiles.length <= 1} onClick={() => { setProfileManagerOpen(false); openDialog('delete') }}>Delete</button></div></section></div>}
+
+    {pickerOpen && activeWeapon && <div className="lb-modal-backdrop" onClick={() => setPickerOpen(false)}><div className="lb-modal ob-dialog" role="dialog" aria-modal="true" aria-label={`Choose a skin for ${activeWeapon}`} onClick={e => e.stopPropagation()}>
       <div className="lb-modal-header dialog-head"><div><p className="lb-eyebrow">SKIN PICKER</p><h3>{activeWeapon}</h3><p className="lb-modal-subtitle">{weaponSkins.length} matching {weaponSkins.length === 1 ? 'skin' : 'skins'} · Search and sort finishes</p></div><button className="lb-close-button" type="button" onClick={() => { setPickerOpen(false); setPickerSearch('') }} aria-label="Close skin picker">×</button></div>
       <div className="lb-picker-controls"><input className="lb-search" type="search" placeholder={`Search ${activeWeapon} skins by name...`} value={pickerSearch} onChange={e => setPickerSearch(e.target.value)} aria-label={`Search ${activeWeapon} skins`} /><label className="lb-sort-control"><span>Sort by</span><select value={skinSort} onChange={e => setSkinSort(e.target.value as 'rarity' | 'az' | 'popular')}><option value="rarity">Rarity</option><option value="az">A–Z</option><option value="popular">Popular</option></select></label></div>
       <div className="lb-color-filter"><span className="lb-color-filter-label">FILTER BY COLOR</span><div className="lb-color-swatches"><button type="button" className={`lb-color-chip ${!pickerColor ? 'active' : ''}`} onClick={() => setPickerColorFilter('')}>All colors</button>{COLOR_OPTIONS.map(c => <button key={c.name} type="button" title={c.name} aria-label={`Filter ${activeWeapon} skins by ${c.name}`} aria-pressed={pickerColor === c.name.toLowerCase()} className={`lb-color-swatch ${pickerColor === c.name.toLowerCase() ? 'active' : ''}`} onClick={() => setPickerColorFilter(pickerColor === c.name.toLowerCase() ? '' : c.name.toLowerCase())}><span style={{ background: c.hex }} />{c.name}</button>)}<label className={`lb-custom-color ${pickerColor.startsWith('#') ? 'active' : ''}`} title="Pick any color"><input type="color" value={pickerColor.startsWith('#') ? pickerColor : '#e34b4b'} onChange={e => setPickerColorFilter(e.target.value.toLowerCase())} aria-label={`Pick a custom color for ${activeWeapon}`} /><span>Custom</span></label></div></div>
