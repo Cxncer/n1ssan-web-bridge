@@ -29,7 +29,17 @@ n1ssan-data.json.tmp
 n1ssan-data.json.recovery.tmp
 n1ssan-data.json.corrupt-*
 n1ssan-data.manual-backup.json
-# Armory runtime data (not source)
+
+# Active Armory runtime state (local only)
+armory-inventory.json
+armory-equipment.json
+armory-equipment.json.bak
+armory-native-equipment.json
+armory-detected-attachments.json
+armory-attachments-ack.json
+runtime-mode.json
+
+# Legacy Armory runtime data (local only)
 armory-data.json
 armory-data.json.bak
 armory-data.json.tmp
