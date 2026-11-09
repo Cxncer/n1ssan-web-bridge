@@ -481,7 +481,7 @@ export default function ObsidianApp() {
               shimmerColor="#8fce98"
               shimmerSize="0.08em"
               shimmerDuration="3s"
-              borderRadius="8px"
+              borderRadius="9999px"
               background="#050706"
               onClick={() => { setPage('inventory'); setActiveNavIndex(1) }}
               className="ob-initiate-specular"
