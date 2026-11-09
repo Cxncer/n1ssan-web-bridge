@@ -423,12 +423,18 @@ export default function ObsidianApp() {
   if (booting) return <div className="ob-boot-screen"><span className="ob-mark">n.</span><strong>CONNECTING TO ARMORY</strong><small>Establishing a local Bridge session…</small></div>
   if (armoryError) return <div className="ob-boot-screen ob-boot-error"><span className="ob-mark">n.</span><strong>ARMORY CONNECTION INTERRUPTED</strong><small>{armoryError}</small><button className="ob-button shimmer-button" onClick={() => window.location.reload()}>Retry connection</button></div>
 
-  return <div className="obsidian-shell">
-    <header className="ob-topbar">
-      <a className="ob-brand" href="#home" onClick={e => { e.preventDefault(); setPage('home') }} aria-label="n1ssan Obsidian"><span className="ob-mark">n.</span><span>n1ssan</span><i /> <small>OBSIDIAN</small></a>
-      <nav className="ob-nav"><button className={page === 'home' ? 'active' : ''} onClick={() => setPage('home')}>Home</button><button className={page === 'inventory' ? 'active' : ''} onClick={() => setPage('inventory')}>Inventory</button><button onClick={() => setDialog('diagnostics')}>Diagnostics <span className="nav-count">01</span></button></nav>
-      <div className="ob-top-right"><span className="armory-status-dot" /><span className="armory-status-text">{armorySaveError ? 'ARMORY SAVE BLOCKED' : armoryStatus === 'connected' ? 'ARMORY CONNECTED' : 'ARMORY CONNECTING'}</span><span className="cs2-status-dot" /><span className="cs2-status-text">CS2 NOT DETECTED</span></div>
-    </header>
+  return <div className="obsidian-shell obsidian-shell-redesign">
+    <aside className="ob-line-sidebar" aria-label="Main navigation">
+      <a className="ob-line-brand" href="#home" onClick={e => { e.preventDefault(); setPage('home') }} aria-label="n1ssan Home">
+        <img src="/assets/icons/n1ssan-icon-white.png" alt="n1ssan" />
+      </a>
+      <nav className="ob-line-nav">
+        <button className={page === 'home' ? 'active' : ''} onClick={() => setPage('home')}><span className="ob-line-index">01</span><span>Home</span></button>
+        <button className={page === 'inventory' ? 'active' : ''} onClick={() => setPage('inventory')}><span className="ob-line-index">02</span><span>Armory</span></button>
+        <button onClick={() => setDialog('diagnostics')}><span className="ob-line-index">03</span><span>Diagnostics</span></button>
+      </nav>
+      <div className="ob-line-sidebar-foot"><span className="armory-status-dot" /><span>{armoryStatus === 'connected' && !armorySaveError ? 'CONNECTED' : armorySaveError ? 'SAVE BLOCKED' : 'CONNECTING'}</span></div>
+    </aside>
 
     {armorySaveError && <div className="ob-armory-save-error" role="alert">
       <div><strong>{armorySaveError.conflict ? 'ARMORY REVISION CONFLICT' : 'ARMORY SAVE INTERRUPTED'}</strong><span>{armorySaveError.message}</span></div>
@@ -439,10 +445,18 @@ export default function ObsidianApp() {
 
     <main className={`ob-main ${page === 'home' ? 'home-mode' : ''}`} id={page}>
       {page === 'home' ? <>
-        <div className="ob-breadcrumb"><span>OBSIDIAN</span><b>/</b><strong>COMMAND CENTER</strong></div>
-        <section className="home-hero"><div className="home-hero-copy"><div className="ob-kicker">YOUR COLLECTION, YOUR RULES</div><h1>Welcome to<br/><span>your armory.</span></h1><p>One place for every finish, charm and sticker in your collection. Build your inventory, save complete setups, and keep your CS2 collection in order.</p><div className="home-actions"><button className="ob-button shimmer-button" onClick={() => setPage('inventory')}>Open inventory <span>↗</span></button><button className="home-secondary" onClick={() => setDialog('profiles')}>Manage profiles</button></div></div><div className="home-hero-art"><div className="hero-orbit orbit-one"/><div className="hero-orbit orbit-two"/><div className="hero-emblem">n<span>.</span></div><div className="hero-coordinate">N1 / OBSIDIAN<br/>COLLECTION SYSTEM</div></div></section>
-        <section className="home-metrics"><div><small>ITEMS IN INVENTORY</small><strong>{totalUnits.toString().padStart(2,'0')}</strong><span>Across all item types</span></div><div><small>SAVED PROFILES</small><strong>{profiles.length.toString().padStart(2,'0')}</strong><span>Complete snapshots</span></div><div><small>ACTIVE PROFILE</small><strong className="home-profile-name">{profiles.find(p => p.id === activeId)?.name ?? 'Main inventory'}</strong><span>Ready to edit</span></div></section>
-        <section className="home-lower"><div className="home-panel"><div className="ob-kicker">QUICK ACCESS</div><h2>Pick up where<br/>you left off.</h2><button onClick={() => setPage('inventory')}>Go to inventory <span>↗</span></button></div><div className="home-panel home-panel-muted"><div className="ob-kicker">BUILT FOR COUNTER-STRIKE 2</div><h2>Import here.<br/><span>Equip in-game.</span></h2><p>Stickers and charms live in your inventory here. Attach them to a weapon from its detail panel and they load with it.</p></div></section>
+        <section className="ob-cinematic-home">
+          <div className="ob-cinematic-copy">
+            <div className="ob-cinematic-kicker"><span /> COUNTER-STRIKE 2 · PERSONAL ARMORY</div>
+            <h1>Every CS2 skin.<br/><span>In a click.</span></h1>
+            <p>Your collection, organized your way. Build your armory, manage your profiles, and bring your inventory into CS2.</p>
+            <button className="ob-initiate-button" onClick={() => setPage('inventory')}><span>Initiate</span><i aria-hidden="true">↗</i></button>
+          </div>
+          <div className="ob-rickshaw-stage" aria-hidden="true">
+            <img src="/assets/images/Rickshaw-clay.jpg" alt="" />
+          </div>
+          <div className="ob-home-index">N1 / ARMORY SYSTEM <span>—</span> 001</div>
+        </section>
       </> : <>
       <div className="ob-breadcrumb"><span>WORKSPACE</span><b>/</b><strong>INVENTORY</strong></div>
       <section className="ob-heading">
