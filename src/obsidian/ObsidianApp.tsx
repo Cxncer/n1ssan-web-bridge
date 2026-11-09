@@ -13,6 +13,7 @@ import knifeData from './knife-skins.json'
 import './obsidian.css'
 import rickshawImage from '../../assets/images/Rickshaw-clay.jpg'
 import n1ssanLogo from '../../assets/icons/n1ssan-icon-white.png'
+import LineSidebar from './LineSidebar'
 
 type ItemKind = 'skin' | 'sticker' | 'charm'
 type Skin = { id: number | string; weapon: string; name: string; type: string; rarity: string; color: string; art: string; description: string; image?: string; minFloat?: number | null; maxFloat?: number | null; kind?: ItemKind; phase?: string; patternId?: string; paintIndex?: string; paintKit?: number | string | null; gameDefinitionId?: number | null; stickerKitId?: number | null; keychainId?: number | null; legacyOnly?: boolean }
@@ -63,6 +64,7 @@ export default function ObsidianApp() {
   const [sort, setSort] = useState('Recently Added')
   const [dialog, setDialog] = useState<'add' | 'detail' | 'profiles' | 'diagnostics' | 'customize' | 'quantity' | null>(null)
   const [page, setPage] = useState<'home' | 'inventory'>('home')
+  const [activeNavIndex, setActiveNavIndex] = useState(0)
   const [pendingSkin, setPendingSkin] = useState<Skin | null>(null)
   const [pendingQuantity, setPendingQuantity] = useState(1)
   const [pendingFloat, setPendingFloat] = useState('0.00000')
@@ -427,14 +429,36 @@ export default function ObsidianApp() {
 
   return <div className="obsidian-shell obsidian-shell-redesign">
     <aside className="ob-line-sidebar" aria-label="Main navigation">
-      <a className="ob-line-brand" href="#home" onClick={e => { e.preventDefault(); setPage('home') }} aria-label="n1ssan Home">
+      <a className="ob-line-brand" href="#home" onClick={event => { event.preventDefault(); setPage('home'); setActiveNavIndex(0) }} aria-label="n1ssan Home">
         <img src={n1ssanLogo} alt="n1ssan" />
       </a>
-      <nav className="ob-line-nav">
-        <button className={page === 'home' ? 'active' : ''} onClick={() => setPage('home')}><span className="ob-line-index">01</span><span>Home</span></button>
-        <button className={page === 'inventory' ? 'active' : ''} onClick={() => setPage('inventory')}><span className="ob-line-index">02</span><span>Armory</span></button>
-        <button onClick={() => setDialog('diagnostics')}><span className="ob-line-index">03</span><span>Diagnostics</span></button>
-      </nav>
+      <LineSidebar
+        key={activeNavIndex}
+        className="ob-line-nav"
+        items={['Home', 'Armory', 'Diagnostics']}
+        accentColor="#8fbd96"
+        textColor="#737d75"
+        markerColor="#59645c"
+        showIndex
+        showMarker
+        proximityRadius={100}
+        maxShift={30}
+        falloff="smooth"
+        markerLength={60}
+        markerGap={0}
+        tickScale={0.5}
+        scaleTick
+        itemGap={20}
+        fontSize={1.1}
+        smoothing={100}
+        defaultActive={activeNavIndex}
+        onItemClick={index => {
+          setActiveNavIndex(index)
+          if (index === 0) setPage('home')
+          if (index === 1) setPage('inventory')
+          if (index === 2) setDialog('diagnostics')
+        }}
+      />
       <div className="ob-line-sidebar-foot"><span className="armory-status-dot" /><span>{armoryStatus === 'connected' && !armorySaveError ? 'CONNECTED' : armorySaveError ? 'SAVE BLOCKED' : 'CONNECTING'}</span></div>
     </aside>
 
@@ -452,7 +476,7 @@ export default function ObsidianApp() {
             <div className="ob-cinematic-kicker"><span /> COUNTER-STRIKE 2 · PERSONAL ARMORY</div>
             <h1>Every CS2 skin.<br/><span>In a click.</span></h1>
             <p>Your collection, organized your way. Build your armory, manage your profiles, and bring your inventory into CS2.</p>
-            <button className="ob-initiate-button" onClick={() => setPage('inventory')}><span>Initiate</span><i aria-hidden="true">↗</i></button>
+            <button className="ob-initiate-button" onClick={() => { setPage('inventory'); setActiveNavIndex(1) }}><span>Initiate</span><i aria-hidden="true">↗</i></button>
           </div>
           <div className="ob-rickshaw-stage" aria-hidden="true">
             <img src={rickshawImage} alt="" />
@@ -496,6 +520,5 @@ export default function ObsidianApp() {
       {dialog === 'profiles' && <section className="ob-dialog ob-profiles-dialog"><div className="dialog-head"><div><div className="ob-kicker">SAVED SNAPSHOTS</div><h2>Inventory <span>profiles.</span></h2><p>Each profile stores a complete inventory snapshot. Switching selects a profile; click Apply to CS2 to import it.</p></div><button className="dialog-close" onClick={() => setDialog(null)}>×</button></div><div className="profile-list">{profiles.map(p => <div className={p.id === activeId ? 'profile-row current' : 'profile-row'} key={p.id}><button className="profile-load" onClick={() => switchProfile(p.id)}><span className="profile-radio">{p.id === activeId && <i />}</span><span><strong>{p.name}</strong><small>{p.items.reduce((sum,item) => sum + (item.quantity ?? 1), 0)} items · Updated {new Date(p.updatedAt).toLocaleString()}</small></span></button><button className="profile-delete" title="Delete profile" onClick={() => deleteProfile(p.id)} disabled={profiles.length < 2}>×</button></div>)}</div><div className="new-profile"><label>NEW INVENTORY PROFILE<input value={profileName} onChange={e => setProfileName(e.target.value)} placeholder="e.g. Tournament setup" onKeyDown={e => { if (e.key === 'Enter') saveProfile() }} /></label><button className="ob-button shimmer-button" onClick={saveProfile} disabled={!profileName.trim()}>Save snapshot <span>＋</span></button></div><div className="dialog-foot">Unlimited Armory profiles · Selection stages the saved snapshot; Apply to CS2 imports it</div></section>}
       {dialog === 'diagnostics' && <section className="ob-dialog ob-diagnostics-dialog"><div className="dialog-head"><div><div className="ob-kicker">SYSTEM HEALTH</div><h2>Diagnostics<span>.</span></h2><p>Runtime and compatibility checks for the CS2 integration.</p></div><button className="dialog-close" onClick={() => setDialog(null)}>×</button></div><div className="diagnostic-list"><div><span className="diagnostic-state pending" /><span><strong>CS2 process detection</strong><small>Not connected · preview cannot inspect local processes</small></span><b>WAITING</b></div><div><span className="diagnostic-state online" /><span><strong>Bridge connection</strong><small>Armory inventory API is connected and persistent</small></span><b>ONLINE</b></div><div><span className="diagnostic-state pending" /><span><strong>Offsets &amp; signatures</strong><small>Version validation will report outdated definitions here</small></span><b>NOT CHECKED</b></div></div><div className="dialog-foot">Diagnostics UI preview · no process or signature checks are running yet</div></section>}
     </div>}
-    <button className="ob-back-to-top" type="button" aria-label="Back to top" title="Back to top" onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}><span>↑</span></button>
   </div>
 }
