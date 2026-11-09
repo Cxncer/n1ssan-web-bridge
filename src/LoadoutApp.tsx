@@ -340,7 +340,7 @@ export default function LoadoutApp({ skins }: LoadoutBuilderProps) {
       if (profiles.length <= 1) { setDialog(null); return }
       const remaining = profiles.filter(p => p.id !== activeProfileId)
       const next = remaining[0]
-      const outgoing = { ...activeProfile, loadouts: clone(loadouts), skinSettings: clone(skinSettings), equipment: clone(equipment) }
+      const outgoing = { ...activeProfile, loadouts: clone(loadouts), skinSettings: clone(skinSettings), equipment: clone(equipment), weaponSlots: clone(weaponSlots) }
       setProfiles(remaining.map(p => p.id === outgoing.id ? outgoing : p))
       setActiveProfileId(next.id); setLoadouts(clone(next.loadouts)); setSkinSettings(clone(next.skinSettings)); setEquipment(clone(next.equipment)); setWeaponSlots(clone(next.weaponSlots ?? emptyWeaponSlots))
       resetTransient()
@@ -364,7 +364,7 @@ export default function LoadoutApp({ skins }: LoadoutBuilderProps) {
           equipment: dialog.mode === 'duplicate' ? clone(equipment) : clone(emptyEquipment),
           weaponSlots: dialog.mode === 'duplicate' ? clone(weaponSlots) : clone(emptyWeaponSlots),
         }
-        const outgoing = { ...activeProfile, loadouts: clone(loadouts), skinSettings: clone(skinSettings), equipment: clone(equipment) }
+        const outgoing = { ...activeProfile, loadouts: clone(loadouts), skinSettings: clone(skinSettings), equipment: clone(equipment), weaponSlots: clone(weaponSlots) }
         setProfiles(prev => [...prev.map(p => p.id === outgoing.id ? outgoing : p), next])
         setActiveProfileId(next.id); setLoadouts(clone(next.loadouts)); setSkinSettings(clone(next.skinSettings)); setEquipment(clone(next.equipment)); setWeaponSlots(clone(next.weaponSlots ?? emptyWeaponSlots))
         resetTransient()
