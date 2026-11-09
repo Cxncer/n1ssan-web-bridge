@@ -472,7 +472,23 @@ export default function ObsidianApp() {
 
     <main className={`ob-main ${page === 'home' ? 'home-mode' : ''}`} id={page}>
       {page === 'home' ? <>
-        <section className="ob-cinematic-home">
+        <section
+          className="ob-cinematic-home"
+          onPointerMove={event => {
+            if (event.pointerType !== 'mouse') return
+            const bounds = event.currentTarget.getBoundingClientRect()
+            const x = ((event.clientX - bounds.left) / bounds.width - 0.5) * 2
+            const y = ((event.clientY - bounds.top) / bounds.height - 0.5) * 2
+            const image = event.currentTarget.querySelector<HTMLImageElement>('.ob-rickshaw-stage img')
+            image?.style.setProperty('--parallax-x', `${x * 16}px`)
+            image?.style.setProperty('--parallax-y', `${y * 11}px`)
+          }}
+          onPointerLeave={event => {
+            const image = event.currentTarget.querySelector<HTMLImageElement>('.ob-rickshaw-stage img')
+            image?.style.setProperty('--parallax-x', '0px')
+            image?.style.setProperty('--parallax-y', '0px')
+          }}
+        >
           <div className="ob-cinematic-copy">
             <div className="ob-cinematic-kicker"><span /> COUNTER-STRIKE 2 · PERSONAL ARMORY</div>
             <h1>Every CS2 skin.<br/><span>In a click.</span></h1>
