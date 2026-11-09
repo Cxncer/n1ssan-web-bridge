@@ -233,3 +233,55 @@
 @media(prefers-reduced-motion:reduce){
   .loadout-redesign .suggestive-search .suggestive-search-input,.loadout-redesign .lb-picker-card-wrap,.loadout-redesign .lb-picker-remove{transition:none}
 }
+
+
+/* Armory Item Details parity inside the navy Loadout shell. */
+.loadout-redesign .ob-detail-overlay{z-index:1100;padding:24px;background:rgba(0,0,0,.82);backdrop-filter:blur(12px)}
+.loadout-redesign .ob-detail-dialog{
+  display:flex;flex-direction:column;width:min(720px,94vw);max-height:min(90vh,900px);overflow-y:auto;
+  border:1px solid #304866!important;border-radius:27px!important;background:#0b1220!important;color:#f4f7ff!important;
+  box-shadow:0 30px 110px #000e!important;
+}
+.loadout-redesign .ob-detail-dialog .dialog-head{display:flex;align-items:center;justify-content:space-between;padding:27px 30px 22px;border-bottom:1px solid #263a56;background:#0b1220}
+.loadout-redesign .ob-detail-dialog .dialog-head h2,
+.loadout-redesign .ob-detail-dialog .dialog-head h2 span{margin:0;font:600 28px Barlow,sans-serif;letter-spacing:-.7px;color:#f4f7ff}
+.loadout-redesign .ob-detail-dialog .dialog-close{width:38px;height:38px;border:1px solid #304866;border-radius:10px;background:#111d30;color:#cfe2ff;font-size:24px}
+.loadout-redesign .ob-detail-dialog .detail-preview{display:flex;align-items:center;gap:22px;min-height:178px;margin:0 0 4px;padding:22px 30px;border-bottom:1px solid #263a56;background:#0d1727}
+.loadout-redesign .ob-detail-dialog .detail-preview-art{display:grid;place-items:center;flex:0 0 210px;width:210px;height:138px;overflow:hidden;border:1px solid #304866;border-radius:20px;background:#101d30}
+.loadout-redesign .ob-detail-dialog .detail-preview-art img{width:100%;height:100%;object-fit:contain}
+.loadout-redesign .ob-detail-dialog .detail-preview small{font:11px Barlow,sans-serif;color:#9eb4d1;text-transform:uppercase}
+.loadout-redesign .ob-detail-dialog .detail-preview h3{margin:7px 0;font:600 19px Barlow,sans-serif;color:#f4f7ff}
+.loadout-redesign .ob-detail-dialog .detail-rarity-line{display:flex;align-items:center;gap:7px;font:11px Barlow,sans-serif;color:#9eb4d1}
+.loadout-redesign .ob-detail-dialog .detail-rarity-line i{color:#657d9d;font-style:normal}
+.loadout-redesign .ob-detail-dialog .ob-fields{display:grid;grid-template-columns:1fr 1fr;gap:15px;padding:18px 30px 22px}
+.loadout-redesign .ob-detail-dialog .ob-fields label{display:flex;flex-direction:column;gap:8px;color:#9eb4d1;font:500 11px Barlow,sans-serif!important;letter-spacing:.7px}
+.loadout-redesign .ob-detail-dialog .ob-fields input:not([type=range]){width:100%;height:41px;padding:0 18px;border:1px solid #304866;border-radius:999px;background:#101d30;color:#f4f7ff;font:13px Barlow,sans-serif;outline:none;box-shadow:none}
+.loadout-redesign .ob-detail-dialog .ob-fields input:focus{border-color:#75aaff;outline:none}
+.loadout-redesign .ob-detail-dialog .ob-fields input::placeholder{color:#7189a8}
+.loadout-redesign .ob-detail-dialog .ob-fields .field-wide{grid-column:1/-1}
+.loadout-redesign .ob-detail-dialog .ob-fields .seed-hint{color:#91a5c1;font-size:11px;line-height:1.5;letter-spacing:0}
+.loadout-redesign .ob-detail-dialog .stattrak-toggle{grid-column:1/-1;display:flex;align-items:center;justify-content:space-between;width:100%;min-height:44px;padding:9px 13px;border:1px solid #304866;border-radius:9px;background:#101d30;color:#dceaff;cursor:pointer}
+.loadout-redesign .ob-detail-dialog .stattrak-toggle .st-toggle-label{font:700 11px 'DM Mono',monospace;letter-spacing:.7px}
+.loadout-redesign .ob-detail-dialog .st-toggle-track{position:relative;width:38px;height:21px;border:1px solid #49617e;border-radius:999px;background:#17243a;transition:background .16s,border-color .16s}
+.loadout-redesign .ob-detail-dialog .st-toggle-track i{position:absolute;top:3px;left:3px;width:13px;height:13px;border-radius:50%;background:#91a5c1;transition:transform .16s,background .16s}
+.loadout-redesign .ob-detail-dialog .stattrak-toggle.enabled .st-toggle-track{border-color:#75aaff;background:#315b91}
+.loadout-redesign .ob-detail-dialog .stattrak-toggle.enabled .st-toggle-track i{background:#fff;transform:translateX(17px)}
+.loadout-redesign .ob-detail-dialog .dialog-actions{display:flex;justify-content:space-between;gap:12px;padding:18px 30px 23px;border-top:1px solid #263a56;background:#0b1220}
+.loadout-redesign .ob-detail-dialog .dialog-actions .ob-button{min-height:38px;padding:9px 15px;border-radius:999px!important;font-size:11px!important}
+.loadout-redesign .ob-detail-dialog .dialog-actions .remove-item-button{border:1px solid #304866;background:#121e31;color:#cfe2ff}
+.loadout-redesign .ob-detail-dialog .dialog-actions .remove-item-button:hover{border-color:#75aaff;background:#172943}
+.loadout-redesign .ob-detail-dialog .dialog-actions .ob-button:last-child{border:1px solid #4f8fe8;background:#4f8fe8;color:#06101f}
+.loadout-redesign .ob-detail-dialog .dialog-actions .ob-button:last-child:hover{border-color:#75aaff;background:#75aaff}
+.loadout-redesign .lb-picker-card-wrap.selected>.lb-picker-remove{z-index:8;opacity:.88;pointer-events:auto;transform:scale(1)}
+.loadout-redesign .lb-picker-card-wrap.selected:hover>.lb-picker-remove,
+.loadout-redesign .lb-picker-card-wrap.selected:focus-within>.lb-picker-remove{opacity:1;transform:scale(1.08);box-shadow:0 0 0 3px #75aaff30,0 5px 16px #0008}
+.loadout-redesign .lb-picker-remove{z-index:8;pointer-events:auto}
+@media(max-width:560px){
+  .loadout-redesign .ob-detail-overlay{padding:12px}
+  .loadout-redesign .ob-detail-dialog{width:96vw;max-height:88vh}
+  .loadout-redesign .ob-detail-dialog .dialog-head{padding:20px 18px 16px}
+  .loadout-redesign .ob-detail-dialog .detail-preview{min-height:0;gap:14px;padding:16px 18px}
+  .loadout-redesign .ob-detail-dialog .detail-preview-art{flex-basis:122px;width:122px;height:96px}
+  .loadout-redesign .ob-detail-dialog .ob-fields{padding:15px 18px 18px;gap:12px}
+  .loadout-redesign .ob-detail-dialog .dialog-actions{padding:14px 18px 18px}
+}
