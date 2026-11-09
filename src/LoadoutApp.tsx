@@ -57,14 +57,30 @@ const TEAM_WEAPONS: Record<Team, WeaponColumn[]> = {
     { title: 'RIFLES', weapons: ['FAMAS', 'M4A4', 'M4A1-S', 'AUG', 'SSG 08', 'AWP', 'SCAR-20'] },
   ],
 }
+const PREFERRED_WEAPON_SLOTS: Record<Team, Record<string, string[]>> = {
+  T: {
+    PISTOLS: ['Glock-18','Dual Berettas','P250','Tec-9','Desert Eagle'],
+    'MID-TIER': ['Nova','XM1014','UMP-45','P90','MAC-10'],
+    RIFLES: ['Galil AR','AK-47','SSG 08','SG 553','AWP'],
+  },
+  CT: {
+    PISTOLS: ['USP-S','Dual Berettas','P250','Five-SeveN','Desert Eagle'],
+    'MID-TIER': ['Nova','XM1014','UMP-45','P90','MP9'],
+    RIFLES: ['FAMAS','M4A1-S','SSG 08','AUG','AWP'],
+  },
+}
 function defaultWeaponSlots(side: Team): Record<string, (string | null)[]> {
-  return Object.fromEntries(TEAM_WEAPONS[side].map(column => [column.title, [...column.weapons.slice(0, 5)]]))
+  return Object.fromEntries(TEAM_WEAPONS[side].map(column => {
+    const preferred = PREFERRED_WEAPON_SLOTS[side][column.title] ?? []
+    return [column.title, [...preferred.filter(weapon => column.weapons.includes(weapon)), ...column.weapons.filter(weapon => !preferred.includes(weapon))].slice(0, 5)]
+  }))
 }
 function weaponSlotsForProfile(profile: LoadoutProfile): SavedWeaponSlots {
   const sideSlots = (side: Team) => Object.fromEntries(TEAM_WEAPONS[side].map(column => {
     const previouslyEquipped = column.weapons.filter(weapon => profile.loadouts?.[side]?.[weapon] != null).slice(0, 5)
-    const remaining = column.weapons.filter(weapon => !previouslyEquipped.includes(weapon)).slice(0, 5 - previouslyEquipped.length)
-    return [column.title, [...previouslyEquipped, ...remaining]]
+    const preferred = defaultWeaponSlots(side)[column.title] ?? []
+    const remaining = preferred.filter(weapon => !previouslyEquipped.includes(weapon)).concat(column.weapons.filter(weapon => !previouslyEquipped.includes(weapon) && !preferred.includes(weapon)))
+    return [column.title, [...previouslyEquipped, ...remaining].slice(0, 5)]
   }))
   return { T: sideSlots('T'), CT: sideSlots('CT') }
 }
