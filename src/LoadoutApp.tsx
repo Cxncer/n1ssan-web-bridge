@@ -2,7 +2,6 @@ import { useEffect, useMemo, useState } from 'react'
 import './legacy/Loadout.Legacy.css'
 import './obsidian/obsidian.css'
 import './loadout-redesign.css'
-import { findImageColorMatches } from './skinColorDetection'
 import rickshawImage from '../assets/images/Rickshaw-clay.jpg'
 import n1ssanLogo from '../assets/icons/n1ssan-icon-white.png'
 import LineSidebar from './obsidian/LineSidebar'
@@ -198,14 +197,8 @@ export default function LoadoutApp({ skins }: LoadoutBuilderProps) {
   const initial = profiles.find(p => p.id === activeProfileId) ?? profiles[0]
   const [team, setTeam] = useState<Team>('T')
   const [pickerSearch, setPickerSearch] = useState('')
-  const [pickerColor, setPickerColor] = useState('')
   const [equipmentSearch, setEquipmentSearch] = useState('')
-  const [equipmentColor, setEquipmentColor] = useState('')
   const [equipmentSort, setEquipmentSort] = useState<'rarity' | 'az' | 'popular'>('popular')
-  const [pickerColorMatchIds, setPickerColorMatchIds] = useState<Set<SkinId> | null>(null)
-  const [equipmentColorMatchIds, setEquipmentColorMatchIds] = useState<Set<SkinId> | null>(null)
-  const [pickerColorBusy, setPickerColorBusy] = useState(false)
-  const [equipmentColorBusy, setEquipmentColorBusy] = useState(false)
   const [skinSort, setSkinSort] = useState<'rarity' | 'az' | 'popular'>('popular')
   const [activeWeapon, setActiveWeapon] = useState<string | null>(null)
   const [pickerOpen, setPickerOpen] = useState(false)
@@ -225,27 +218,6 @@ export default function LoadoutApp({ skins }: LoadoutBuilderProps) {
   const [equipmentWeaponFilter, setEquipmentWeaponFilter] = useState('All')
   const [runtimeStatus, setRuntimeStatus] = useState<{ tone: 'idle' | 'ok' | 'error'; text: string }>({ tone: 'idle', text: '' })
   const [applying, setApplying] = useState(false)
-
-  // --- Color scan: weapon picker ---
-  useEffect(() => {
-    if (!pickerColor || !activeWeapon) return
-    let cancelled = false
-    const eligible = skins.filter(s => s.weapon.toLowerCase() === activeWeapon.toLowerCase() && !!s.image)
-    findImageColorMatches(eligible, pickerColor, s => s.image || '').then(ids => {
-      if (!cancelled) { setPickerColorMatchIds(ids); setPickerColorBusy(false) }
-    })
-    return () => { cancelled = true }
-  }, [skins, activeWeapon, pickerColor])
-  // --- Color scan: equipment picker ---
-  useEffect(() => {
-    if (!equipmentColor || !activeEquipment || activeEquipment === 'agent') return
-    let cancelled = false
-    const eligible = skins.filter(s => equipmentCategory(s) === activeEquipment && !!s.image)
-    findImageColorMatches(eligible, equipmentColor, s => s.image || '').then(ids => {
-      if (!cancelled) { setEquipmentColorMatchIds(ids); setEquipmentColorBusy(false) }
-    })
-    return () => { cancelled = true }
-  }, [skins, activeEquipment, equipmentColor])
 
   const activeProfile = profiles.find(p => p.id === activeProfileId) ?? profiles[0]
   const columns = TEAM_WEAPONS[team]
@@ -335,26 +307,6 @@ export default function LoadoutApp({ skins }: LoadoutBuilderProps) {
     } : p))
   }
 
-  function setPickerColorFilter(next: string) {
-    setPickerColor(next)
-    if (next) {
-      setPickerColorMatchIds(new Set())
-      setPickerColorBusy(true)
-    } else {
-      setPickerColorMatchIds(null)
-      setPickerColorBusy(false)
-    }
-  }
-  function setEquipmentColorFilter(next: string) {
-    setEquipmentColor(next)
-    if (next && activeEquipment && activeEquipment !== 'agent') {
-      setEquipmentColorMatchIds(new Set())
-      setEquipmentColorBusy(true)
-    } else {
-      setEquipmentColorMatchIds(null)
-      setEquipmentColorBusy(false)
-    }
-  }
 
   function resetTransient() {
     setTeam('T'); setPickerSearch(''); setPickerColor(''); setEquipmentSearch(''); setEquipmentColor(''); setSkinSort('popular')
@@ -429,7 +381,7 @@ export default function LoadoutApp({ skins }: LoadoutBuilderProps) {
   const weaponSkins = useMemo(() => {
     if (!activeWeapon) return []
     const q = pickerSearch.trim().toLowerCase()
-    const matches = skins.filter(s => s.weapon.toLowerCase() === activeWeapon.toLowerCase() && (!q || `${s.name} ${s.rarity} ${s.type} ${s.description || ''} ${s.color || ''}`.toLowerCase().includes(q)) && (!pickerColor || !!pickerColorMatchIds?.has(s.id)))
+    const matches = skins.filter(s => s.weapon.toLowerCase() === activeWeapon.toLowerCase() && (!q || `${s.name} ${s.rarity} ${s.type} ${s.description || ''} ${s.color || ''}`.toLowerCase().includes(q)))
     const rarityRank = (rarity: string) => ({ 'Covert': 7, 'Extraordinary': 7, 'Classified': 6, 'Exotic': 6, 'Restricted': 5, 'Remarkable': 5, 'Mil-Spec Grade': 4, 'High Grade': 4, 'Industrial Grade': 3, 'Distinguished': 3, 'Consumer Grade': 2, 'Base Grade': 1 } as Record<string, number>)[rarity] ?? 0
     const popularNames = ['dragon lore','howl','fade','asiimov','redline','medusa','fire serpent','wild lotus','printstream','the empress','neo-noir','kill confirmed','desert eagle | blaze','doppler','marble fade','case hardened','lore','tiger tooth','vulcan','hyper beast','cyrex','nightwish','head shot','asiimov']
     return matches.sort((a, b) => {
@@ -438,7 +390,7 @@ export default function LoadoutApp({ skins }: LoadoutBuilderProps) {
       const score = (s: Skin) => { const n = `${s.weapon} | ${s.name}`.toLowerCase(); const i = popularNames.findIndex(term => n.includes(term)); return i < 0 ? 999 : i }
       return score(a) - score(b) || rarityRank(b.rarity) - rarityRank(a.rarity) || a.name.localeCompare(b.name)
     })
-  }, [skins, activeWeapon, pickerSearch, pickerColor, pickerColorMatchIds, skinSort])
+  }, [skins, activeWeapon, pickerSearch, skinSort])
   const equipmentChoices = useMemo(() => {
     if (!activeEquipment) return []
     const q = equipmentSearch.trim().toLowerCase()
@@ -452,7 +404,7 @@ export default function LoadoutApp({ skins }: LoadoutBuilderProps) {
     const matches = skins.filter(s => {
       if (equipmentCategory(s) !== activeEquipment) return false
       if (activeEquipment === 'agent' && !agentForTeam(s, team)) return false
-      return (!q || `${s.weapon} ${s.name} ${s.type} ${s.rarity} ${s.description || ''} ${s.color || ''}`.toLowerCase().includes(q)) && (!equipmentColor || (activeEquipment !== 'agent' && !!equipmentColorMatchIds?.has(s.id)))
+      return (!q || `${s.weapon} ${s.name} ${s.type} ${s.rarity} ${s.description || ''} ${s.color || ''}`.toLowerCase().includes(q))
     })
     const filtered = equipmentWeaponFilter === 'All' ? matches : matches.filter(item => item.weapon === equipmentWeaponFilter)
     return filtered.sort((a, b) => {
@@ -465,7 +417,7 @@ export default function LoadoutApp({ skins }: LoadoutBuilderProps) {
       }
       return score(a) - score(b) || rarityRank(b.rarity) - rarityRank(a.rarity) || a.name.localeCompare(b.name)
     })
-  }, [skins, activeEquipment, team, equipmentSearch, equipmentColor, equipmentColorMatchIds, equipmentSort, equipmentWeaponFilter])
+  }, [skins, activeEquipment, team, equipmentSearch, equipmentSort, equipmentWeaponFilter])
 
   function equipSkin(weapon: string, id: SkinId | null) {
     const nextLoadouts = { ...loadouts, [team]: { ...loadouts[team], [weapon]: id } }
@@ -497,7 +449,7 @@ export default function LoadoutApp({ skins }: LoadoutBuilderProps) {
     syncActiveProfile({ loadouts, skinSettings, equipment: nextEquipment })
     setActiveEquipment(null); setEquipmentSearch('')
   }
-  function openPicker(weapon: string, category?: string, index?: number) { setActiveWeapon(weapon); setActiveSlotContext(category && index !== undefined ? { category, index } : null); setPickerSearch(''); setPickerColorFilter(''); setSkinSort('popular'); setPickerOpen(true); setSettingsOpen(false); setActiveEquipment(null) }
+  function openPicker(weapon: string, category?: string, index?: number) { setActiveWeapon(weapon); setActiveSlotContext(category && index !== undefined ? { category, index } : null); setPickerSearch(''); setSkinSort('popular'); setPickerOpen(true); setSettingsOpen(false); setActiveEquipment(null) }
   function openEquipmentPicker(slot: EquipmentSlot) { setEquipmentSearch(''); setEquipmentColorFilter(''); setEquipmentSort('popular'); setEquipmentWeaponFilter('All'); setActiveEquipment(slot); setPickerOpen(false); setSettingsOpen(false) }
   function saveSettings() {
     if (!activeWeapon) return
