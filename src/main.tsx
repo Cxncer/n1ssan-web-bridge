@@ -2,7 +2,7 @@ import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
 import './index.css'
 import App from './App.tsx'
-import LoadoutBuilder, { type Skin } from './LoadoutBuilder'
+import LoadoutApp, { type Skin } from './LoadoutApp'
 import skinData from './skins.json'
 import knifeData from './obsidian/knife-skins.json'
 import { selectRuntimeMode } from './runtime-mode'
@@ -25,6 +25,6 @@ const loadoutCatalogue: Skin[] = [
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
-    {isLoadoutRoute ? <LoadoutBuilder skins={loadoutCatalogue} /> : <App />}
+    {isLoadoutRoute ? <LoadoutApp skins={loadoutCatalogue} /> : <App />}
   </StrictMode>,
 )
