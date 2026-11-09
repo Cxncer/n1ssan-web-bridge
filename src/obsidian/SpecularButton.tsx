@@ -1,5 +1,5 @@
 // @ts-nocheck
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, type ReactNode } from 'react';
 
 import './SpecularButton.css';
 
@@ -166,7 +166,7 @@ const link = gl => {
 };
 
 const SpecularButton = ({
-  children = 'Get Started',
+  children = 'Get Started' as ReactNode,
   size = 'lg',
   radius = 18,
   tint = '#79c98a',
