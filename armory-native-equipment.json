@@ -1,0 +1,59 @@
+{
+  "version": 1,
+  "profiles": [
+    {
+      "profileId": "profile-1793694856473-vrmr",
+      "assignments": [
+        {"team": "CT", "slot": "clothing_hands", "instanceId": "legacy:profile-1793694856473-vrmr:item-1793694910224-ql2n6"},
+        {"team": "CT", "slot": "customplayer", "instanceId": "item-1793695772472-bhvgw"},
+        {"team": "CT", "slot": "melee", "instanceId": "legacy:profile-1793694856473-vrmr:item-1793694963372-0fqz9"},
+        {"team": "CT", "slot": "rifle1", "instanceId": "item-1794186577561-8op0s"},
+        {"team": "CT", "slot": "rifle2", "instanceId": "item-1793695788128-2t5gl"},
+        {"team": "CT", "slot": "rifle4", "instanceId": "item-1793715889452-g55g9"},
+        {"team": "CT", "slot": "secondary0", "instanceId": "legacy:profile-1793694856473-vrmr:item-1793694920330-fpb9j"},
+        {"team": "CT", "slot": "secondary2", "instanceId": "item-1794074349597-cft63"},
+        {"team": "CT", "slot": "smg4", "instanceId": "item-1794186565316-7rk03"},
+        {"team": "T", "slot": "clothing_hands", "instanceId": "legacy:profile-1793694856473-vrmr:item-1793695561672-drh3i"},
+        {"team": "T", "slot": "customplayer", "instanceId": "legacy:profile-1793694856473-vrmr:item-1793694996426-vzvxs"},
+        {"team": "T", "slot": "melee", "instanceId": "legacy:profile-1793694856473-vrmr:item-1793695256284-02th1"},
+        {"team": "T", "slot": "rifle1", "instanceId": "legacy:profile-1793694856473-vrmr:item-1793695199212-pjawx"},
+        {"team": "T", "slot": "rifle4", "instanceId": "item-1793715889452-g55g9"},
+        {"team": "T", "slot": "secondary0", "instanceId": "legacy:profile-1793694856473-vrmr:item-1793695224264-scrve"},
+        {"team": "T", "slot": "secondary2", "instanceId": "item-1794074349597-cft63"}
+      ]
+    },
+    {
+      "profileId": "profile-1794104942044-ah1u",
+      "assignments": [
+        {"team": "CT", "slot": "clothing_hands", "instanceId": "item-1794105008504-d7zwe"},
+        {"team": "CT", "slot": "customplayer", "instanceId": "item-1794104959955-quxf6"},
+        {"team": "CT", "slot": "melee", "instanceId": "item-1794158463322-29zje"},
+        {"team": "CT", "slot": "rifle1", "instanceId": "item-1794105070324-mfrfy"},
+        {"team": "CT", "slot": "rifle2", "instanceId": "item-1794105058792-p7kr2"},
+        {"team": "CT", "slot": "rifle4", "instanceId": "item-1794105197869-7umla"},
+        {"team": "CT", "slot": "secondary0", "instanceId": "item-1794105231943-mmwd3"},
+        {"team": "CT", "slot": "smg4", "instanceId": "item-1794105257091-rg5uy"},
+        {"team": "T", "slot": "clothing_hands", "instanceId": "item-1794153054371-sdcvc"},
+        {"team": "T", "slot": "customplayer", "instanceId": "item-1794154990030-ycn6h"},
+        {"team": "T", "slot": "melee", "instanceId": "item-1794153044424-wx1xe"},
+        {"team": "T", "slot": "rifle1", "instanceId": "item-1794105099681-k0fuq"},
+        {"team": "T", "slot": "rifle4", "instanceId": "item-1794105197869-7umla"},
+        {"team": "T", "slot": "secondary0", "instanceId": "item-1794105299922-rgmzp"}
+      ]
+    },
+    {
+      "profileId": "profile-main",
+      "assignments": [
+        {"team": "CT", "slot": "clothing_hands", "instanceId": "item-1793767475499-8vn51"},
+        {"team": "CT", "slot": "customplayer", "instanceId": "item-1794050349794-9cfbk"},
+        {"team": "CT", "slot": "melee", "instanceId": "item-1794050365216-y9i5m"},
+        {"team": "CT", "slot": "rifle1", "instanceId": "item-1793780162231-5oxdd"},
+        {"team": "T", "slot": "clothing_hands", "instanceId": "item-1793767786237-jbqnh"},
+        {"team": "T", "slot": "customplayer", "instanceId": "item-1793767769305-0rtp6"},
+        {"team": "T", "slot": "melee", "instanceId": "item-1793763818781-d13ph"},
+        {"team": "T", "slot": "rifle1", "instanceId": "item-1793843734941-kvxvy"},
+        {"team": "T", "slot": "secondary0", "instanceId": "item-1793767656307-2qszj"}
+      ]
+    }
+  ]
+}
