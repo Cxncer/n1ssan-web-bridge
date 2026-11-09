@@ -60,6 +60,14 @@ const TEAM_WEAPONS: Record<Team, WeaponColumn[]> = {
 function defaultWeaponSlots(side: Team): Record<string, (string | null)[]> {
   return Object.fromEntries(TEAM_WEAPONS[side].map(column => [column.title, [...column.weapons.slice(0, 5)]]))
 }
+function weaponSlotsForProfile(profile: LoadoutProfile): SavedWeaponSlots {
+  const sideSlots = (side: Team) => Object.fromEntries(TEAM_WEAPONS[side].map(column => {
+    const previouslyEquipped = column.weapons.filter(weapon => profile.loadouts?.[side]?.[weapon] != null).slice(0, 5)
+    const remaining = column.weapons.filter(weapon => !previouslyEquipped.includes(weapon)).slice(0, 5 - previouslyEquipped.length)
+    return [column.title, [...previouslyEquipped, ...remaining]]
+  }))
+  return { T: sideSlots('T'), CT: sideSlots('CT') }
+}
 const TEAM_IMAGES: Record<Team, string> = {
   T: 'https://steamcommunity-a.akamaihd.net/economy/image/i0CoZ81Ui0m-9KwlBY1L_18myuGuq1wfhWSaZgMttyVfPaERSR0Wqmu7LAocGIa-2lmxU-LR0dnuNm6E8Vl45Iv181z1fgn8oYby8iRe_OGnZ6psLM-FD3WZj7wuseM-GnG2lh4h5m2EmderdX7DaA9zW8N2QuBbtBG-mty2N-i0tADAy9USaSI87As/512fx384f',
   CT: 'https://steamcommunity-a.akamaihd.net/economy/image/i0CoZ81Ui0m-9KwlBY1L_18myuGuq1wfhWSaZgMttyVfPaERSR0Wqmu7LAocGIa-2lmxU-LR0dnuNm6E8Vl45Iv181z1fh7lk6nz6XRk-fO8YaVjNPndVz-Ul74hsbNoHi21kUly6mrQzNagcijBPQEnCsciTOdY4Rm6m4XvN_SiuVLIl2LQXw/512fx384f',
@@ -175,7 +183,7 @@ export default function LoadoutApp({ skins }: LoadoutBuilderProps) {
   const [loadouts, setLoadouts] = useState<SavedLoadouts>(() => clone(initial.loadouts))
   const [skinSettings, setSkinSettings] = useState<SavedSkinSettings>(() => clone(initial.skinSettings))
   const [equipment, setEquipment] = useState<SavedEquipment>(() => clone(initial.equipment))
-  const [weaponSlots, setWeaponSlots] = useState<SavedWeaponSlots>(() => clone(initial.weaponSlots ?? emptyWeaponSlots))
+  const [weaponSlots, setWeaponSlots] = useState<SavedWeaponSlots>(() => clone(initial.weaponSlots ?? weaponSlotsForProfile(initial)))
   const [page, setPage] = useState<'home' | 'loadout' | 'diagnostics'>('home')
   const [activeNavIndex, setActiveNavIndex] = useState(0)
   const [floatDraft, setFloatDraft] = useState('0.000000')
@@ -325,7 +333,7 @@ export default function LoadoutApp({ skins }: LoadoutBuilderProps) {
     const outgoing = { ...activeProfile, loadouts: clone(loadouts), skinSettings: clone(skinSettings), equipment: clone(equipment), weaponSlots: clone(weaponSlots) }
     setProfiles(prev => prev.map(p => p.id === outgoing.id ? outgoing : p))
     setActiveProfileId(next.id)
-    setLoadouts(clone(next.loadouts)); setSkinSettings(clone(next.skinSettings)); setEquipment(clone(next.equipment)); setWeaponSlots(clone(next.weaponSlots ?? emptyWeaponSlots))
+    setLoadouts(clone(next.loadouts)); setSkinSettings(clone(next.skinSettings)); setEquipment(clone(next.equipment)); setWeaponSlots(clone(next.weaponSlots ?? weaponSlotsForProfile(next)))
     resetTransient()
   }
   function openDialog(mode: NonNullable<DialogState>['mode']) {
