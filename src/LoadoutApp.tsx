@@ -438,8 +438,7 @@ export default function LoadoutApp({ skins }: LoadoutBuilderProps) {
     const matches = skins.filter(s => s.weapon.toLowerCase() === activeWeapon.toLowerCase() && (!q || `${s.name} ${s.rarity} ${s.type} ${s.description || ''} ${s.color || ''}`.toLowerCase().includes(q)) && (!pickerColor || !!pickerColorMatchIds?.has(s.id)))
     const rarityRank = (rarity: string) => ({ 'Covert': 7, 'Extraordinary': 7, 'Classified': 6, 'Exotic': 6, 'Restricted': 5, 'Remarkable': 5, 'Mil-Spec Grade': 4, 'High Grade': 4, 'Industrial Grade': 3, 'Distinguished': 3, 'Consumer Grade': 2, 'Base Grade': 1 } as Record<string, number>)[rarity] ?? 0
     const popularNames = ['dragon lore','howl','fade','asiimov','redline','medusa','fire serpent','wild lotus','printstream','the empress','neo-noir','kill confirmed','desert eagle | blaze','doppler','marble fade','case hardened','lore','tiger tooth','vulcan','hyper beast','cyrex','nightwish','head shot','asiimov']
-    const filtered = equipmentWeaponFilter === 'All' ? matches : matches.filter(item => item.weapon === equipmentWeaponFilter)
-    return filtered.sort((a, b) => {
+    return matches.sort((a, b) => {
       if (skinSort === 'az') return a.name.localeCompare(b.name)
       if (skinSort === 'rarity') return rarityRank(b.rarity) - rarityRank(a.rarity) || a.name.localeCompare(b.name)
       const score = (s: Skin) => { const n = `${s.weapon} | ${s.name}`.toLowerCase(); const i = popularNames.findIndex(term => n.includes(term)); return i < 0 ? 999 : i }
@@ -461,7 +460,8 @@ export default function LoadoutApp({ skins }: LoadoutBuilderProps) {
       if (activeEquipment === 'agent' && !agentForTeam(s, team)) return false
       return (!q || `${s.weapon} ${s.name} ${s.type} ${s.rarity} ${s.description || ''} ${s.color || ''}`.toLowerCase().includes(q)) && (!equipmentColor || (activeEquipment !== 'agent' && !!equipmentColorMatchIds?.has(s.id)))
     })
-    return matches.sort((a, b) => {
+    const filtered = equipmentWeaponFilter === 'All' ? matches : matches.filter(item => item.weapon === equipmentWeaponFilter)
+    return filtered.sort((a, b) => {
       if (equipmentSort === 'az') return a.name.localeCompare(b.name) || a.weapon.localeCompare(b.weapon)
       if (equipmentSort === 'rarity') return rarityRank(b.rarity) - rarityRank(a.rarity) || a.name.localeCompare(b.name)
       const score = (item: Skin) => {
