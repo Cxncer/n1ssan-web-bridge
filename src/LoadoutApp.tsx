@@ -440,6 +440,7 @@ export default function LoadoutApp({ skins }: LoadoutBuilderProps) {
     } else {
       setPickerOpen(false)
       setActiveWeapon(null)
+      setConfigureOpen(false)
     }
     setPickerSearch('')
   }
@@ -461,13 +462,13 @@ export default function LoadoutApp({ skins }: LoadoutBuilderProps) {
         setConfigureOpen(true); setSettingsOpen(false)
       }
     } else {
-      setActiveEquipment(null); setActiveWeapon(null); setSettingsOpen(false)
+      setActiveEquipment(null); setActiveWeapon(null); setSettingsOpen(false); setConfigureOpen(false)
     }
   }
-  function openPicker(weapon: string, category?: string, index?: number) { setActiveWeapon(weapon); setActiveSlotContext(category && index !== undefined ? { category, index } : null); setPickerSearch(''); setSkinSort('popular'); setPickerOpen(true); setSettingsOpen(false); setActiveEquipment(null) }
+  function openPicker(weapon: string, category?: string, index?: number) { setActiveWeapon(weapon); setActiveSlotContext(category && index !== undefined ? { category, index } : null); setPickerSearch(''); setSkinSort('popular'); setPickerOpen(true); setSettingsOpen(false); setConfigureOpen(false); setActiveEquipment(null) }
   function openItemDetails(weapon: string, category?: string, index?: number) { const skin = selectedSkin(weapon); if (!skin) { openPicker(weapon); return } const value = skinSettings[team][settingsKey(weapon, skin.id)] ?? defaults(skin); setActiveWeapon(weapon); setActiveSlotContext(category && index !== undefined ? { category, index } : null); setFloatDraft(value.float.toFixed(6)); setSeedDraft(String(value.seed)); setStattrakDraft(value.stattrak ?? false); setCustomNameDraft(value.customName ?? ''); setConfigureOpen(false); setSettingsOpen(true); setPickerOpen(false); setActiveEquipment(null) }
   function openEquipmentDetails(slot: EquipmentSlot) { const skin = selectedItem(slot); if (!skin) { openEquipmentPicker(slot); return } const value = skinSettings[team][settingsKey(skin.weapon, skin.id)] ?? defaults(skin); setActiveWeapon(skin.weapon); setActiveSlotContext(null); setFloatDraft(value.float.toFixed(6)); setSeedDraft(String(value.seed)); setStattrakDraft(value.stattrak ?? false); setCustomNameDraft(value.customName ?? ''); setActiveEquipment(slot); setConfigureOpen(false); setSettingsOpen(true); setPickerOpen(false) }
-  function openEquipmentPicker(slot: EquipmentSlot) { setEquipmentSearch(''); setEquipmentSort('popular'); setEquipmentWeaponFilter('All'); setActiveEquipment(slot); setPickerOpen(false); setSettingsOpen(false) }
+  function openEquipmentPicker(slot: EquipmentSlot) { setEquipmentSearch(''); setEquipmentSort('popular'); setEquipmentWeaponFilter('All'); setActiveEquipment(slot); setPickerOpen(false); setSettingsOpen(false); setConfigureOpen(false) }
   function saveSettings() {
     if (!activeWeapon) return
     const s = activeEquipment ? selectedItem(activeEquipment) : selectedSkin(activeWeapon)
@@ -482,22 +483,7 @@ export default function LoadoutApp({ skins }: LoadoutBuilderProps) {
     setSettingsOpen(false); setConfigureOpen(false)
     setActiveEquipment(null); setActiveWeapon(null); setActiveSlotContext(null)
   }
-  function removeActiveItem() {
-    if (activeEquipment) {
-      const nextEquipment = { ...equipment, [team]: { ...equipment[team], [activeEquipment]: null } }
-      setEquipment(nextEquipment)
-      syncActiveProfile({ loadouts, skinSettings, equipment: nextEquipment })
-      setSettingsOpen(false); setConfigureOpen(false)
-      setActiveEquipment(null); setActiveWeapon(null)
-      return
-    }
-    if (!activeWeapon) return
-    const nextLoadouts = { ...loadouts, [team]: { ...loadouts[team], [activeWeapon]: null } }
-    setLoadouts(nextLoadouts)
-    syncActiveProfile({ loadouts: nextLoadouts, skinSettings, equipment })
-    setSettingsOpen(false); setConfigureOpen(false)
-    setActiveWeapon(null)
-  }
+
   const activeSkin = activeEquipment ? selectedItem(activeEquipment) : activeWeapon ? selectedSkin(activeWeapon) : undefined
   const activeSettingsKey = activeWeapon && activeSkin ? settingsKey(activeWeapon, activeSkin.id) : ''
   const activeSettings = activeSkin ? skinSettings[team][activeSettingsKey] ?? defaults(activeSkin) : null
