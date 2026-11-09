@@ -50,6 +50,7 @@ const STORAGE_KEY = 'n1ssan-obsidian-preview-v1'
 
 export default function ObsidianApp() {
   useEffect(() => {
+    document.title = 'Armory - n1ssan'
     const icon = document.querySelector<HTMLLinkElement>('link[rel~="icon"]') ?? document.createElement('link')
     icon.rel = 'icon'
     icon.type = 'image/png'
@@ -646,7 +647,7 @@ export default function ObsidianApp() {
           <div className="ob-item-copy"><div className="ob-item-weapon">{skin.weapon}{(item.kind ?? 'skin') === 'skin' && getCategory(skin) !== 'Gloves' && item.stattrak && <span className="stattrak">ST™</span>}</div><strong>{skin.name}</strong><div className="ob-item-foot">{(item.kind ?? 'skin') === 'skin' && !isAgent(skin) ? <><span>FLOAT <b>{item.float}</b></span><span>SEED <b>{item.seed}</b></span><span className="float-wear">{Number(item.float) <= 0.07 ? 'FN' : Number(item.float) <= 0.15 ? 'MW' : Number(item.float) <= 0.38 ? 'FT' : Number(item.float) <= 0.45 ? 'WW' : 'BS'}</span></> : (item.kind !== 'skin' && (item.quantity ?? 1) > 1) ? <span className="stack-count">×{item.quantity}</span> : null}</div></div><span className="item-open">↗</span>
         </div>)}</div> : <div className="ob-empty"><span>⌕</span><h3>Nothing in this view</h3><p>Try another filter or add an item from the catalogue.</p><button className="ob-button shimmer-button" onClick={() => { setCategory('All items'); setSearch('') }}>Clear filters</button></div>}
       </section>
-      <footer className="ob-footer"><span>n1ssan <b>/</b> OBSIDIAN</span><span>{'INVENTORY WORKSPACE'} <i /> PREVIEW BUILD</span><span>COUNTER-STRIKE 2</span></footer>
+      <footer className="ob-footer"><span>n1ssan <b>/</b> ARMORY</span><span>{'INVENTORY WORKSPACE'} <i /> PREVIEW BUILD</span><span>COUNTER-STRIKE 2</span></footer>
       </>}
     </main>
 
