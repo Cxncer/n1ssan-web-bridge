@@ -401,3 +401,147 @@
 .loadout-redesign .loadout-equipped-card-wrap:focus-within .loadout-card-remove,
 .loadout-redesign .lb-picker-card-wrap.selected:hover>.lb-picker-remove,
 .loadout-redesign .lb-picker-card-wrap.selected:focus-within>.lb-picker-remove{opacity:1;pointer-events:auto;transform:scale(1)}
+
+
+/* Loadout visual consistency pass — keep all changes scoped to Loadout. */
+
+/* Match Armory's shared LineSidebar defaults (fontSize=1.1rem). */
+.loadout-redesign .ob-line-nav .line-sidebar__label {
+  font: 400 1.1rem/1.2 'DM Sans', sans-serif !important;
+  letter-spacing: .1px;
+}
+.loadout-redesign .ob-line-nav .line-sidebar__index {
+  margin-right: 13px;
+  font: 10px 'DM Mono', monospace;
+  letter-spacing: .5px;
+}
+
+/* Match Armory's workspace title scale and weight. */
+.loadout-redesign .ob-heading h1 {
+  margin: 0;
+  color: hsl(var(--foreground));
+  font: 600 clamp(30px, 3.2vw, 38px)/1.05 Barlow, sans-serif;
+  letter-spacing: -.055em;
+}
+.loadout-redesign .ob-heading h1 span { color: hsl(var(--primary)); }
+
+/* Both heading actions use the same compact dimensions. */
+.loadout-redesign .loadout-heading .ob-heading-actions > .ob-button {
+  display: inline-flex;
+  min-height: 36px;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  padding: 9px 13px !important;
+  border-radius: 7px !important;
+  font: 600 11px/1 Barlow, sans-serif !important;
+  white-space: nowrap;
+}
+.loadout-redesign .loadout-heading .ob-heading-actions > .ob-button span {
+  margin-left: 0;
+}
+
+/* Remove the bright rarity outline inherited from Armory's global hover rule. */
+.loadout-redesign .loadout-item-card.ob-item-card {
+  border: 1px solid hsl(var(--border)) !important;
+  outline: none;
+  box-shadow: 0 9px 28px #0004 !important;
+}
+.loadout-redesign .loadout-item-card.ob-item-card:hover {
+  border-color: hsl(var(--ring)) !important;
+  outline: none !important;
+  box-shadow: 0 10px 26px #0008, 0 0 0 1px hsl(var(--ring)/.16) !important;
+}
+.loadout-redesign .loadout-item-card.ob-item-card:focus-visible {
+  outline: 2px solid hsl(var(--ring)) !important;
+  outline-offset: 3px;
+}
+
+/* Make the range track unmistakably visible in Configure Item. */
+.loadout-redesign .loadout-configure-dialog input.float-slider {
+  display: block !important;
+  width: 100% !important;
+  height: 6px !important;
+  min-height: 6px !important;
+  margin: 8px 0 !important;
+  padding: 0 !important;
+  appearance: none !important;
+  -webkit-appearance: none !important;
+  border: 0 !important;
+  border-radius: 999px !important;
+  background: linear-gradient(90deg, #2868d8 0%, #5795f5 55%, #8ab8ff 100%) !important;
+  cursor: pointer;
+}
+.loadout-redesign .loadout-configure-dialog input.float-slider::-webkit-slider-runnable-track {
+  height: 6px !important;
+  border: 0 !important;
+  border-radius: 999px !important;
+  background: linear-gradient(90deg, #2868d8 0%, #5795f5 55%, #8ab8ff 100%) !important;
+}
+.loadout-redesign .loadout-configure-dialog input.float-slider::-moz-range-track {
+  height: 6px !important;
+  border: 0 !important;
+  border-radius: 999px !important;
+  background: linear-gradient(90deg, #2868d8 0%, #5795f5 55%, #8ab8ff 100%) !important;
+}
+.loadout-redesign .loadout-configure-dialog input.float-slider::-webkit-slider-thumb {
+  appearance: none !important;
+  -webkit-appearance: none !important;
+  width: 14px !important;
+  height: 14px !important;
+  margin-top: -4px !important;
+  border: 2px solid #eaf2ff !important;
+  border-radius: 50% !important;
+  background: #3677ef !important;
+  box-shadow: 0 0 0 3px #3677ef35 !important;
+}
+.loadout-redesign .loadout-configure-dialog input.float-slider::-moz-range-thumb {
+  width: 14px !important;
+  height: 14px !important;
+  border: 2px solid #eaf2ff !important;
+  border-radius: 50% !important;
+  background: #3677ef !important;
+  box-shadow: 0 0 0 3px #3677ef35 !important;
+}
+
+/* Consistent typography across Equipment, Pistols, Mid-Tier and Rifles. */
+.loadout-redesign .loadout-category-column > header h2 {
+  font: 600 15px/1.2 Barlow, sans-serif;
+  letter-spacing: -.2px;
+}
+.loadout-redesign .loadout-category-column > header > span,
+.loadout-redesign .loadout-category-column > header > small {
+  font: 9px/1.2 'DM Mono', monospace;
+  letter-spacing: .7px;
+}
+.loadout-redesign .loadout-item-card .ob-item-weapon {
+  font: 500 10px/1.3 'DM Sans', sans-serif;
+  letter-spacing: .45px;
+}
+.loadout-redesign .loadout-item-card .ob-item-copy > strong {
+  font: 600 15px/1.3 Barlow, sans-serif;
+  letter-spacing: -.15px;
+}
+.loadout-redesign .loadout-item-card .item-rarity {
+  font: 600 9px/1.2 'DM Sans', sans-serif;
+  letter-spacing: .35px;
+}
+.loadout-redesign .loadout-item-card .ob-item-foot {
+  font: 500 9px/1.3 'DM Mono', monospace;
+  letter-spacing: .25px;
+}
+.loadout-redesign .loadout-item-card .ob-item-foot b,
+.loadout-redesign .loadout-item-card .ob-item-foot .float-wear {
+  font: 600 9px/1.3 'DM Sans', sans-serif;
+}
+.loadout-redesign .loadout-slot-copy select,
+.loadout-redesign .loadout-slot-action {
+  font-family: 'DM Sans', sans-serif;
+}
+.loadout-redesign .loadout-team-switch strong,
+.loadout-redesign .loadout-team-switch small,
+.loadout-redesign .loadout-equipped-count,
+.loadout-redesign .loadout-control-actions .ob-button,
+.loadout-redesign .loadout-save-note {
+  font-family: 'DM Sans', sans-serif;
+}
