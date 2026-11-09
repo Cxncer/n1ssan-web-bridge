@@ -309,7 +309,7 @@ export default function LoadoutApp({ skins }: LoadoutBuilderProps) {
 
 
   function resetTransient() {
-    setTeam('T'); setPickerSearch(''); setPickerColor(''); setEquipmentSearch(''); setEquipmentColor(''); setSkinSort('popular')
+    setTeam('T'); setPickerSearch(''); setEquipmentSearch(''); setEquipmentWeaponFilter('All'); setSkinSort('popular'); setEquipmentSort('popular')
     setActiveWeapon(null); setPickerOpen(false); setSettingsOpen(false); setActiveEquipment(null)
   }
   function switchProfile(id: string) {
