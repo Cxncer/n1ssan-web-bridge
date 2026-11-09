@@ -450,7 +450,7 @@ export default function LoadoutApp({ skins }: LoadoutBuilderProps) {
     setActiveEquipment(null); setEquipmentSearch('')
   }
   function openPicker(weapon: string, category?: string, index?: number) { setActiveWeapon(weapon); setActiveSlotContext(category && index !== undefined ? { category, index } : null); setPickerSearch(''); setSkinSort('popular'); setPickerOpen(true); setSettingsOpen(false); setActiveEquipment(null) }
-  function openEquipmentPicker(slot: EquipmentSlot) { setEquipmentSearch(''); setEquipmentColorFilter(''); setEquipmentSort('popular'); setEquipmentWeaponFilter('All'); setActiveEquipment(slot); setPickerOpen(false); setSettingsOpen(false) }
+  function openEquipmentPicker(slot: EquipmentSlot) { setEquipmentSearch(''); setEquipmentSort('popular'); setEquipmentWeaponFilter('All'); setActiveEquipment(slot); setPickerOpen(false); setSettingsOpen(false) }
   function saveSettings() {
     if (!activeWeapon) return
     const s = selectedSkin(activeWeapon)
@@ -511,7 +511,7 @@ export default function LoadoutApp({ skins }: LoadoutBuilderProps) {
       {activeSlotContext && <div className="loadout-picker-tabs" role="tablist" aria-label={`${activeSlotContext.category} weapons`}>{(columns.find(column => column.title === activeSlotContext.category)?.weapons ?? []).map(weapon => <button type="button" role="tab" aria-selected={weapon === activeWeapon} className={weapon === activeWeapon ? 'active' : ''} key={weapon} onClick={() => { assignSlotWeapon(activeSlotContext.category, activeSlotContext.index, weapon); setActiveWeapon(weapon); setPickerSearch('') }}>{weapon}</button>)}</div>}
       <div className="lb-picker-controls"><input className="lb-search" type="search" placeholder={`Search ${activeWeapon} skins by name...`} value={pickerSearch} onChange={e => setPickerSearch(e.target.value)} aria-label={`Search ${activeWeapon} skins`} /><label className="lb-sort-control"><span>Sort by</span><select value={skinSort} onChange={e => setSkinSort(e.target.value as 'rarity' | 'az' | 'popular')}><option value="rarity">Rarity</option><option value="az">A–Z</option><option value="popular">Popular</option></select></label></div>
       <div className="lb-picker-grid">{weaponSkins.map(s => <button key={s.id} type="button" className={`lb-picker-card ${currentLoadout[activeWeapon] === s.id ? 'selected' : ''}`} onClick={() => equipSkin(activeWeapon, s.id)}><div className="lb-picker-image"><img src={imageOf(s)} alt={s.name} /></div><strong>{s.name}</strong><small className="lb-rarity-label" style={{ color: rarityColor(s.rarity), backgroundColor: `${rarityColor(s.rarity)}18`, borderColor: `${rarityColor(s.rarity)}70` }}>{s.rarity}</small></button>)}</div>
-      {!weaponSkins.length && <div className="lb-empty"><p>{pickerSearch || pickerColor ? 'No skins match those search and color filters.' : 'No skins for this weapon are in your catalogue yet.'}</p></div>}
+      {!weaponSkins.length && <div className="lb-empty"><p>{pickerSearch ? 'No skins match your search.' : 'No skins for this weapon are in your catalogue yet.'}</p></div>}
       {currentLoadout[activeWeapon] != null && <button className="lb-unequip-button" type="button" onClick={() => equipSkin(activeWeapon, null)}>Unequip skin</button>}
     </div></div>}
 
