@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState, type CSSProperties } from 'react'
 import './LoadoutBuilder.css'
 import './loadout-obsidian.css' // Loadout-specific visual layer
-import { findImageColorMatches } from './skinColorDetection'
+import { findImageColorMatches } from '../skinColorDetection'
 
 export type Skin = {
   id: number | string; weapon: string; name: string; type: string; rarity: string
