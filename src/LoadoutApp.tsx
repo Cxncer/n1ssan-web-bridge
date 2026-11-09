@@ -175,6 +175,25 @@ function agentForTeam(s: Skin, team: Team) {
   return team === 'T' ? t === 't agents' : t === 'ct agents'
 }
 export default function LoadoutApp({ skins }: LoadoutBuilderProps) {
+  useEffect(() => {
+    const icon = document.querySelector<HTMLLinkElement>('link[rel~="icon"]') ?? document.createElement('link')
+    icon.rel = 'icon'
+    icon.type = 'image/png'
+    if (!icon.isConnected) document.head.appendChild(icon)
+    const logo = new Image()
+    logo.onload = () => {
+      const canvas = document.createElement('canvas')
+      canvas.width = 64
+      canvas.height = 64
+      const context = canvas.getContext('2d')
+      if (!context) { icon.href = n1ssanLogo; return }
+      context.clearRect(0, 0, 64, 64)
+      context.drawImage(logo, 9, 9, 46, 46)
+      icon.href = canvas.toDataURL('image/png')
+    }
+    logo.onerror = () => { icon.href = n1ssanLogo }
+    logo.src = n1ssanLogo
+  }, [])
   const [profiles, setProfiles] = useState<LoadoutProfile[]>(loadProfiles)
   const [activeProfileId, setActiveProfileId] = useState(() => {
     const id = localStorage.getItem(ACTIVE_PROFILE_STORAGE_KEY)
