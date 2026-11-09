@@ -51,10 +51,27 @@ export default function ObsidianApp() {
   useEffect(() => {
     const icon = document.querySelector<HTMLLinkElement>('link[rel~="icon"]') ?? document.createElement('link')
     icon.rel = 'icon'
-    icon.type = 'image/svg+xml'
-    const paddedIcon = `<svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 64 64"><image href="${n1ssanLogo}" x="9" y="9" width="46" height="46" preserveAspectRatio="xMidYMid meet"/></svg>`
-    icon.href = `data:image/svg+xml,${encodeURIComponent(paddedIcon)}`
+    icon.type = 'image/png'
     if (!icon.isConnected) document.head.appendChild(icon)
+
+    const logo = new Image()
+    logo.onload = () => {
+      const canvas = document.createElement('canvas')
+      canvas.width = 64
+      canvas.height = 64
+      const context = canvas.getContext('2d')
+      if (!context) {
+        icon.href = n1ssanLogo
+        return
+      }
+      context.clearRect(0, 0, 64, 64)
+      context.drawImage(logo, 9, 9, 46, 46)
+      icon.href = canvas.toDataURL('image/png')
+    }
+    logo.onerror = () => {
+      icon.href = n1ssanLogo
+    }
+    logo.src = n1ssanLogo
   }, [])
   const [profiles, setProfiles] = useState<InventoryProfile[]>([])
   const [activeId, setActiveId] = useState('')
