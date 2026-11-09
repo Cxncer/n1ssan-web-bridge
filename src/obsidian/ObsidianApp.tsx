@@ -500,12 +500,22 @@ export default function ObsidianApp() {
     ?? baseWeapons.find(weapon => weapon.category?.name === 'Gloves')
 
   const knifeModelTiles = useMemo(() => {
-    const models = new Map<string, Skin>()
-    for (const skin of knifeCatalogue) if (!models.has(skin.weapon)) models.set(skin.weapon, skin)
-    return [...models.values()]
-      .filter(skin => !catalogueSearch.trim() || skin.weapon.toLowerCase().includes(catalogueSearch.trim().toLowerCase()))
+    return baseWeapons
+      .filter(weapon => weapon.category?.name === 'Knives')
+      .map(weapon => ({
+        id: weapon.id,
+        weapon: weapon.name,
+        name: weapon.name,
+        type: 'Knives',
+        rarity: 'Base Grade',
+        color: '#b0c3d9',
+        art: 'KN',
+        description: '',
+        image: weapon.image,
+      } satisfies Skin))
+      .filter(weapon => !catalogueSearch.trim() || weapon.weapon.toLowerCase().includes(catalogueSearch.trim().toLowerCase()))
       .sort((a, b) => a.weapon.localeCompare(b.weapon))
-  }, [catalogueSearch])
+  }, [baseWeapons, catalogueSearch])
 
   const gloveModelTiles = useMemo(() => {
     const models = new Map<string, Skin>()
@@ -654,7 +664,7 @@ export default function ObsidianApp() {
             <button className="catalogue-weapon-card catalogue-special-card" onClick={() => { setSelectedSkinGroup('gloves'); setSkinPickerLevel('models'); setCatalogueSearch('') }}><div className="catalogue-weapon-art">{defaultGloves?.image && <img src={defaultGloves.image} alt="" loading="lazy" />}</div><strong>Gloves</strong><small>Choose a glove type</small></button>
             {baseWeaponTiles.map(weapon => <button key={weapon.id} className="catalogue-weapon-card" onClick={() => { setSelectedSkinGroup('weapons'); setSelectedSkinWeapon(weapon.name); setSkinPickerLevel('finishes'); setCatalogueSearch('') }}><div className="catalogue-weapon-art">{weapon.image && <img src={weapon.image} alt="" loading="lazy" />}</div><strong>{weapon.name}</strong><small>{weapon.category?.name === 'SMGs' || weapon.category?.name === 'Heavy' ? 'Mid-Tier' : weapon.category?.name}</small></button>)}
           </div> : <div className="catalogue-state">No matching weapons found.</div>)}
-          {skinPickerLevel === 'models' && <div className="catalogue-weapon-grid">{(selectedSkinGroup === 'knives' ? knifeModelTiles : gloveModelTiles).map(model => <button key={model.weapon} className="catalogue-weapon-card" onClick={() => { setSelectedSkinWeapon(model.weapon); setSkinPickerLevel('finishes'); setCatalogueSearch('') }}><div className="catalogue-weapon-art">{model.image && <img src={model.image} alt="" loading="lazy" />}</div><strong>{model.weapon}</strong>{selectedSkinGroup === 'knives' && <small>Knife finishes</small>}</button>)}</div>}
+          {skinPickerLevel === 'models' && <div className="catalogue-weapon-grid">{(selectedSkinGroup === 'knives' ? knifeModelTiles : gloveModelTiles).map(model => <button key={model.weapon} className="catalogue-weapon-card" onClick={() => { setSelectedSkinWeapon(model.weapon); setSkinPickerLevel('finishes'); setCatalogueSearch('') }}><div className="catalogue-weapon-art">{model.image && <img src={model.image} alt="" loading="lazy" />}</div><strong>{model.weapon}</strong></button>)}</div>}
           {skinPickerLevel === 'finishes' && <div className="ob-catalogue-list">{skinPickerCandidates.length ? skinPickerCandidates.map(skin => <button key={skin.id} onClick={() => chooseCatalogueItem(skin)}><div className="catalogue-thumb">{skin.image && <img src={skin.image} alt="" loading="lazy" />}</div><span><strong>{skin.weapon}</strong><small>{skin.name} · {skin.rarity}</small></span><b>＋</b></button>) : <div className="catalogue-state">No finishes found for {selectedSkinWeapon}.</div>}</div>}
         </> : <div className="ob-catalogue-list">{specialLoading ? <div className="catalogue-state">Loading {addCategory} catalogue…</div> : specialError && !specialItems.some(item => item.kind === addCategory) ? <div className="catalogue-state">{specialError}</div> : candidates.length ? candidates.map(skin => <button key={skin.id} onClick={() => chooseCatalogueItem(skin)}><div className="catalogue-thumb">{skin.image && <img src={skin.image} alt="" loading="lazy" />}</div><span><strong>{skin.weapon}</strong><small>{skin.name} · {skin.rarity}</small></span><b>＋</b></button>) : <div className="catalogue-state">No matching items found.</div>}</div>}
         {addCategory !== 'skin' && <div className="dialog-foot">Imported into inventory only · Attach from a weapon’s detail panel.</div>}
