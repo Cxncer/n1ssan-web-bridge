@@ -437,9 +437,9 @@ export default function ObsidianApp() {
         key={activeNavIndex}
         className="ob-line-nav"
         items={['Home', 'Armory', 'Diagnostics']}
-        accentColor="#8fbd96"
-        textColor="#737d75"
-        markerColor="#59645c"
+        accentColor="#a855f7"
+        textColor="#a1a1aa"
+        markerColor="#3f3f46"
         showIndex
         showMarker
         proximityRadius={100}
@@ -494,11 +494,11 @@ export default function ObsidianApp() {
             <h1>Every CS2 skin.<br/><span>In a click.</span></h1>
             <p>Your collection, organized your way. Build your armory, manage your profiles, and bring your inventory into CS2.</p>
             <ShimmerButton
-              shimmerColor="#8fce98"
+              shimmerColor="#06b6d4"
               shimmerSize="0.08em"
               shimmerDuration="3s"
               borderRadius="9999px"
-              background="#050706"
+              background="#050508"
               onClick={() => { setPage('inventory'); setActiveNavIndex(1) }}
               className="ob-initiate-specular"
             >
