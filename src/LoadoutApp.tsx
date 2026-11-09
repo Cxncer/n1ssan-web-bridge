@@ -140,13 +140,7 @@ function loadProfiles(): LoadoutProfile[] {
   } catch { /* continue in memory */ }
   return [p]
 }
-function wear(f: number) {
-  if (f < .07) return 'Factory New'
-  if (f < .15) return 'Minimal Wear'
-  if (f < .38) return 'Field-Tested'
-  if (f < .45) return 'Well-Worn'
-  return 'Battle-Scarred'
-}
+
 function limits(s?: Skin) {
   const min = typeof s?.minFloat === 'number' && Number.isFinite(s.minFloat) ? Math.max(0, Math.min(1, s.minFloat)) : 0
   const max = typeof s?.maxFloat === 'number' && Number.isFinite(s.maxFloat) ? Math.max(min, Math.min(1, s.maxFloat)) : 1
@@ -488,7 +482,6 @@ export default function LoadoutApp({ skins }: LoadoutBuilderProps) {
   const activeSkin = activeEquipment ? selectedItem(activeEquipment) : activeWeapon ? selectedSkin(activeWeapon) : undefined
   const activeSettingsKey = activeWeapon && activeSkin ? settingsKey(activeWeapon, activeSkin.id) : ''
   const activeSettings = activeSkin ? skinSettings[team][activeSettingsKey] ?? defaults(activeSkin) : null
-  const activeLimits = limits(activeSkin)
   const activeEquipmentTitle = activeEquipment ? EQUIPMENT_INFO[activeEquipment].title : ''
   const totalEquipped = equippedCountT + equippedCountCT
   const savedFloatSeedCount = Object.keys(skinSettings.T).length + Object.keys(skinSettings.CT).length
