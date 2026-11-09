@@ -77,9 +77,10 @@ function defaultWeaponSlots(side: Team): Record<string, (string | null)[]> {
 }
 function weaponSlotsForProfile(profile: LoadoutProfile): SavedWeaponSlots {
   const sideSlots = (side: Team) => Object.fromEntries(TEAM_WEAPONS[side].map(column => {
-    const previouslyEquipped = column.weapons.filter((weapon): weapon is string => typeof weapon === 'string' && profile.loadouts?.[side]?.[weapon] != null).slice(0, 5)
+    const availableWeapons = column.weapons.filter((weapon): weapon is string => typeof weapon === 'string')
+    const previouslyEquipped = availableWeapons.filter(weapon => profile.loadouts?.[side]?.[weapon] != null).slice(0, 5)
     const preferred = defaultWeaponSlots(side)[column.title] ?? []
-    const remaining = preferred.filter(weapon => !previouslyEquipped.includes(weapon)).concat(column.weapons.filter(weapon => !previouslyEquipped.includes(weapon) && !preferred.includes(weapon)))
+    const remaining = preferred.filter(weapon => !previouslyEquipped.includes(weapon)).concat(availableWeapons.filter(weapon => !previouslyEquipped.includes(weapon) && !preferred.includes(weapon)))
     return [column.title, [...previouslyEquipped, ...remaining].slice(0, 5)]
   }))
   return { T: sideSlots('T'), CT: sideSlots('CT') }
