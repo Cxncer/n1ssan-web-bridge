@@ -2068,3 +2068,52 @@ body,button,input,select{font-family:'Barlow',sans-serif}
   }
   .obsidian-shell-redesign .ob-detail-dialog .attach-preview-item > small { width: 64px; }
 }
+
+
+/* Final Item Details and cinematic Home refinements. */
+.obsidian-shell-redesign .ob-detail-dialog .dialog-actions .ob-button {
+  min-height: 34px;
+  padding: 8px 13px;
+  font-size: 10px !important;
+  line-height: 1.1;
+  letter-spacing: .2px;
+}
+.obsidian-shell-redesign .ob-detail-dialog .dialog-actions .remove-item-button {
+  padding-inline: 12px;
+}
+.obsidian-shell-redesign .ob-detail-dialog .detail-preview .detail-rarity-line {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 4px;
+  font: 500 10px 'Barlow',sans-serif;
+  color: #a1a1aa;
+}
+.obsidian-shell-redesign .ob-detail-dialog .detail-rarity-line i {
+  color: #71717a;
+  font-style: normal;
+}
+.obsidian-shell-redesign .ob-detail-dialog .detail-rarity {
+  font: 700 10px 'Barlow',sans-serif;
+  letter-spacing: .25px;
+  text-shadow: 0 0 12px currentColor;
+}
+.obsidian-shell-redesign .ob-detail-dialog .detail-rarity.rarity-consumer-grade,
+.obsidian-shell-redesign .ob-detail-dialog .detail-rarity.rarity-base-grade { color: #b0c3d9; }
+.obsidian-shell-redesign .ob-detail-dialog .detail-rarity.rarity-industrial-grade,
+.obsidian-shell-redesign .ob-detail-dialog .detail-rarity.rarity-high-grade { color: #5e98d9; }
+.obsidian-shell-redesign .ob-detail-dialog .detail-rarity.rarity-mil-spec-grade,
+.obsidian-shell-redesign .ob-detail-dialog .detail-rarity.rarity-remarkable { color: #4b69ff; }
+.obsidian-shell-redesign .ob-detail-dialog .detail-rarity.rarity-restricted,
+.obsidian-shell-redesign .ob-detail-dialog .detail-rarity.rarity-exotic { color: #8847ff; }
+.obsidian-shell-redesign .ob-detail-dialog .detail-rarity.rarity-classified { color: #d32ce6; }
+.obsidian-shell-redesign .ob-detail-dialog .detail-rarity.rarity-covert,
+.obsidian-shell-redesign .ob-detail-dialog .detail-rarity.rarity-extraordinary { color: #eb4b4b; }
+.obsidian-shell-redesign .ob-detail-dialog .detail-rarity.rarity-contraband { color: #e4ae39; }
+.obsidian-shell-redesign .ob-cinematic-home {
+  background: #000 !important;
+}
+.obsidian-shell-redesign .ob-cinematic-home::before {
+  background: #000 !important;
+}
