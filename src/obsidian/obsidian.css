@@ -2018,3 +2018,53 @@ body,button,input,select{font-family:'Barlow',sans-serif}
   }
   .obsidian-shell-redesign .attach-preview-item > small { width: 70px; }
 }
+
+
+/* Item detail: remove metadata noise and use the Obsidian violet for key labels. */
+.obsidian-shell-redesign .ob-detail-dialog .detail-preview > div:last-child > small {
+  color: var(--primary) !important;
+  font-size: 10px;
+  font-weight: 600;
+}
+.obsidian-shell-redesign .ob-detail-dialog .ob-fields > label {
+  color: var(--primary) !important;
+}
+.obsidian-shell-redesign .ob-detail-dialog .ob-fields > .field-label {
+  color: var(--primary) !important;
+}
+.obsidian-shell-redesign .ob-detail-dialog .attach-preview-row {
+  gap: 9px;
+  padding: 0 1px 2px;
+}
+.obsidian-shell-redesign .ob-detail-dialog .attach-preview-item {
+  flex: 0 0 68px;
+  width: 68px;
+  min-height: 116px;
+  gap: 5px;
+}
+.obsidian-shell-redesign .ob-detail-dialog .attach-preview-art {
+  width: 46px;
+  height: 46px;
+  flex-basis: 46px;
+}
+.obsidian-shell-redesign .ob-detail-dialog .attach-preview-item > small {
+  width: 68px;
+  min-height: 42px;
+  max-height: 42px;
+  font-size: 9px !important;
+  line-height: 14px !important;
+}
+.obsidian-shell-redesign .ob-detail-dialog .attach-observed-at {
+  display: none !important;
+}
+.obsidian-shell-redesign .ob-detail-dialog .attach-panel {
+  padding: 10px 18px 6px;
+}
+@media (max-width: 680px) {
+  .obsidian-shell-redesign .ob-detail-dialog .attach-preview-item {
+    flex-basis: 64px;
+    width: 64px;
+    min-height: 116px;
+  }
+  .obsidian-shell-redesign .ob-detail-dialog .attach-preview-item > small { width: 64px; }
+}
