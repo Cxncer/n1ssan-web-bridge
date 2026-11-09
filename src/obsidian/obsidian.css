@@ -1555,3 +1555,52 @@ body,button,input,select{font-family:'Barlow',sans-serif}
 .obsidian-shell-redesign .cs2-status-text { color: #fda4af; }
 .obsidian-shell-redesign .cs2-status-dot { background: #ef4444; box-shadow: 0 0 11px #ef444466; }
 .obsidian-shell-redesign .diagnostic-state.online { background: #10b981; box-shadow: 0 0 9px #10b98177; }
+
+
+/* Theme coverage for the cinematic artwork, navigation states and startup surface. */
+.obsidian-shell-redesign .ob-line-sidebar {
+  background: #050508;
+  border-right-color: #27272a;
+}
+.obsidian-shell-redesign .ob-line-nav button {
+  border-left-color: #3f3f46;
+  color: #a1a1aa;
+}
+.obsidian-shell-redesign .ob-line-nav button.active {
+  border-left-color: #a855f7;
+  background: linear-gradient(90deg, #a855f71c, transparent 90%);
+  color: #f4f4f5;
+}
+.obsidian-shell-redesign .ob-line-nav button:hover {
+  color: #67e8f9;
+}
+.obsidian-shell-redesign .ob-rickshaw-stage:after {
+  background:
+    linear-gradient(90deg, #050508 0%, #05050830 23%, transparent 53%),
+    linear-gradient(0deg, #05050866, transparent 23%, transparent 80%, #05050866);
+}
+.obsidian-shell-redesign .ob-rickshaw-stage img {
+  filter: contrast(1.06) brightness(.86) drop-shadow(0 0 32px #a855f71a);
+}
+.obsidian-shell-redesign .ob-home-index span {
+  color: var(--accent);
+}
+.obsidian-shell-redesign .ob-empty {
+  border-color: #3f3f46;
+  color: var(--muted-foreground);
+}
+.obsidian-shell-redesign .ob-empty h3 { color: var(--foreground); }
+.obsidian-shell-redesign .ob-empty p { color: var(--muted-foreground); }
+.ob-boot-screen {
+  background:
+    radial-gradient(ellipse at 50% 35%, #1e1b4b 0, transparent 50%),
+    #050508;
+  color: #f4f4f5;
+}
+.ob-boot-screen .ob-mark {
+  border-color: #a855f766;
+  background: #0d0d12;
+  color: #d8b4fe;
+}
+.ob-boot-screen > small { color: #a1a1aa; }
+.ob-boot-error > small { color: #fda4af; }
