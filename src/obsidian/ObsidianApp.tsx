@@ -518,7 +518,7 @@ export default function ObsidianApp() {
           <div className="ob-cinematic-copy">
             <div className="ob-cinematic-kicker"><span /> COUNTER-STRIKE 2 · PERSONAL ARMORY</div>
             <h1>Every CS2 skin.<br/><span>In a click.</span></h1>
-            <p>Your collection, organized your way. Build your armory, manage your profiles, and bring your inventory into CS2.</p>
+            
             <ShimmerButton
               shimmerColor="#06b6d4"
               shimmerSize="0.08em"
