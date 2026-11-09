@@ -487,7 +487,7 @@ export default function ObsidianApp() {
               className="ob-initiate-specular"
             >
               <span>Initiate</span><span aria-hidden="true" className="ob-initiate-arrow">↗</span>
-            </ShimmerButton>cularButton>
+            </ShimmerButton>
           </div>
           <div className="ob-rickshaw-stage" aria-hidden="true">
             <img src={rickshawImage} alt="" />
