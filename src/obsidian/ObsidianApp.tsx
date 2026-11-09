@@ -14,6 +14,7 @@ import './obsidian.css'
 import rickshawImage from '../../assets/images/Rickshaw-clay.jpg'
 import n1ssanLogo from '../../assets/icons/n1ssan-icon-white.png'
 import LineSidebar from './LineSidebar'
+import SpecularButton from './SpecularButton'
 
 type ItemKind = 'skin' | 'sticker' | 'charm'
 type Skin = { id: number | string; weapon: string; name: string; type: string; rarity: string; color: string; art: string; description: string; image?: string; minFloat?: number | null; maxFloat?: number | null; kind?: ItemKind; phase?: string; patternId?: string; paintIndex?: string; paintKit?: number | string | null; gameDefinitionId?: number | null; stickerKitId?: number | null; keychainId?: number | null; legacyOnly?: boolean }
@@ -476,7 +477,27 @@ export default function ObsidianApp() {
             <div className="ob-cinematic-kicker"><span /> COUNTER-STRIKE 2 · PERSONAL ARMORY</div>
             <h1>Every CS2 skin.<br/><span>In a click.</span></h1>
             <p>Your collection, organized your way. Build your armory, manage your profiles, and bring your inventory into CS2.</p>
-            <button className="ob-initiate-button" onClick={() => { setPage('inventory'); setActiveNavIndex(1) }}><span>Initiate</span><i aria-hidden="true">↗</i></button>
+            <SpecularButton
+              size="lg"
+              radius={18}
+              tint="#79c98a"
+              tintOpacity={0.04}
+              textColor="#f5f5f5"
+              lineColor="#80c990"
+              baseColor="#050706"
+              intensity={1}
+              idleIntensity={0.35}
+              shineSize={10}
+              shineFade={34}
+              thickness={1.2}
+              glow={1}
+              followMouse
+              proximity={250}
+              onClick={() => { setPage('inventory'); setActiveNavIndex(1) }}
+              className="ob-initiate-specular"
+            >
+              <span>Initiate</span><span aria-hidden="true" className="ob-initiate-arrow">↗</span>
+            </SpecularButton>
           </div>
           <div className="ob-rickshaw-stage" aria-hidden="true">
             <img src={rickshawImage} alt="" />
