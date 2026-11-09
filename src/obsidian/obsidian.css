@@ -1890,3 +1890,7 @@ body,button,input,select{font-family:'Barlow',sans-serif}
     flex-basis: 30px;
   }
 }
+
+.obsidian-shell-redesign small { font-size: max(11px, 1em); }
+.obsidian-shell-redesign .item-rarity { font-size: 9px; }
+.obsidian-shell-redesign .ob-item-card:hover .item-attachment-thumb img { transform: none; }
