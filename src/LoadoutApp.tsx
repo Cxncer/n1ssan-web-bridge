@@ -182,9 +182,7 @@ export default function LoadoutApp({ skins }: LoadoutBuilderProps) {
   const [activeNavIndex, setActiveNavIndex] = useState(0)
   const [floatDraft, setFloatDraft] = useState('0.000000')
   const [seedDraft, setSeedDraft] = useState('0')
-  const [profileMenuOpen, setProfileMenuOpen] = useState(false)
   const [dialog, setDialog] = useState<DialogState>(null)
-  const [activeTab, setActiveTab] = useState<'loadout' | 'diagnostics'>('loadout')
   const [runtimeStatus, setRuntimeStatus] = useState<{ tone: 'idle' | 'ok' | 'error'; text: string }>({ tone: 'idle', text: '' })
   const [applying, setApplying] = useState(false)
 
@@ -234,7 +232,7 @@ export default function LoadoutApp({ skins }: LoadoutBuilderProps) {
     const onKey = (e: KeyboardEvent) => {
       if (e.key === 'Escape') {
         setPickerOpen(false); setSettingsOpen(false); setActiveEquipment(null)
-        setProfileMenuOpen(false); setDialog(null)
+        setDialog(null)
       }
     }
     window.addEventListener('keydown', onKey)
@@ -326,14 +324,13 @@ export default function LoadoutApp({ skins }: LoadoutBuilderProps) {
     if (id === activeProfileId) return
     const next = profiles.find(p => p.id === id)
     if (!next) return
-    const outgoing = { ...activeProfile, loadouts: clone(loadouts), skinSettings: clone(skinSettings), equipment: clone(equipment) }
+    const outgoing = { ...activeProfile, loadouts: clone(loadouts), skinSettings: clone(skinSettings), equipment: clone(equipment), weaponSlots: clone(weaponSlots) }
     setProfiles(prev => prev.map(p => p.id === outgoing.id ? outgoing : p))
     setActiveProfileId(next.id)
     setLoadouts(clone(next.loadouts)); setSkinSettings(clone(next.skinSettings)); setEquipment(clone(next.equipment)); setWeaponSlots(clone(next.weaponSlots ?? emptyWeaponSlots))
     resetTransient()
   }
   function openDialog(mode: NonNullable<DialogState>['mode']) {
-    setProfileMenuOpen(false)
     const value = mode === 'rename' ? activeProfile.name : mode === 'duplicate' ? `${activeProfile.name} Copy` : ''
     setDialog({ mode, value })
   }
@@ -469,9 +466,6 @@ export default function LoadoutApp({ skins }: LoadoutBuilderProps) {
     syncActiveProfile({ loadouts, skinSettings: nextSkinSettings, equipment })
     setSettingsOpen(false)
   }
-  function matches() { return true }
-
-
   const activeSkin = activeWeapon ? selectedSkin(activeWeapon) : undefined
   const activeSettingsKey = activeWeapon && activeSkin ? settingsKey(activeWeapon, activeSkin.id) : ''
   const activeSettings = activeSkin ? skinSettings[team][activeSettingsKey] ?? defaults(activeSkin) : null
@@ -479,7 +473,6 @@ export default function LoadoutApp({ skins }: LoadoutBuilderProps) {
   const activeEquipmentTitle = activeEquipment ? EQUIPMENT_INFO[activeEquipment].title : ''
   const totalEquipped = equippedCountT + equippedCountCT
   const savedFloatSeedCount = Object.keys(skinSettings.T).length + Object.keys(skinSettings.CT).length
-  const browserStorageAvailable = (() => { try { window.localStorage.getItem(PROFILES_STORAGE_KEY); return true } catch { return false } })()
 
   const activeCount = team === 'T' ? equippedCountT : equippedCountCT
   return <div className="obsidian-shell obsidian-shell-redesign loadout-redesign">
