@@ -14,7 +14,7 @@ import './obsidian.css'
 import rickshawImage from '../../assets/images/Rickshaw-clay.jpg'
 import n1ssanLogo from '../../assets/icons/n1ssan-icon-white.png'
 import LineSidebar from './LineSidebar'
-import SpecularButton from './SpecularButton'
+import { ShimmerButton } from './ShimmerButton'
 
 type ItemKind = 'skin' | 'sticker' | 'charm'
 type Skin = { id: number | string; weapon: string; name: string; type: string; rarity: string; color: string; art: string; description: string; image?: string; minFloat?: number | null; maxFloat?: number | null; kind?: ItemKind; phase?: string; patternId?: string; paintIndex?: string; paintKit?: number | string | null; gameDefinitionId?: number | null; stickerKitId?: number | null; keychainId?: number | null; legacyOnly?: boolean }
@@ -477,27 +477,17 @@ export default function ObsidianApp() {
             <div className="ob-cinematic-kicker"><span /> COUNTER-STRIKE 2 · PERSONAL ARMORY</div>
             <h1>Every CS2 skin.<br/><span>In a click.</span></h1>
             <p>Your collection, organized your way. Build your armory, manage your profiles, and bring your inventory into CS2.</p>
-            <SpecularButton
-              size="lg"
-              radius={18}
-              tint="#79c98a"
-              tintOpacity={0.04}
-              textColor="#f5f5f5"
-              lineColor="#80c990"
-              baseColor="#050706"
-              intensity={1}
-              idleIntensity={0.35}
-              shineSize={10}
-              shineFade={34}
-              thickness={1.2}
-              glow={1}
-              followMouse
-              proximity={250}
+            <ShimmerButton
+              shimmerColor="#8fce98"
+              shimmerSize="0.08em"
+              shimmerDuration="3s"
+              borderRadius="8px"
+              background="#050706"
               onClick={() => { setPage('inventory'); setActiveNavIndex(1) }}
               className="ob-initiate-specular"
             >
               <span>Initiate</span><span aria-hidden="true" className="ob-initiate-arrow">↗</span>
-            </SpecularButton>
+            </ShimmerButton>cularButton>
           </div>
           <div className="ob-rickshaw-stage" aria-hidden="true">
             <img src={rickshawImage} alt="" />
