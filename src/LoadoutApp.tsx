@@ -17,7 +17,7 @@ export type Skin = {
 type SkinId = number | string
 type Team = 'T' | 'CT'
 type SavedLoadouts = Record<Team, Record<string, SkinId | null>>
-type SkinSettings = { seed: number; float: number; stattrak?: boolean }
+type SkinSettings = { seed: number; float: number; stattrak?: boolean; customName?: string }
 type SavedSkinSettings = Record<Team, Record<string, SkinSettings>>
 type EquipmentSlot = 'agent' | 'knife' | 'gloves' | 'zeus'
 type TeamEquipment = Record<EquipmentSlot, SkinId | null>
@@ -213,6 +213,7 @@ export default function LoadoutApp({ skins }: LoadoutBuilderProps) {
   const [activeNavIndex, setActiveNavIndex] = useState(0)
   const [floatDraft, setFloatDraft] = useState('0.000000')
   const [seedDraft, setSeedDraft] = useState('0')
+  const [customNameDraft, setCustomNameDraft] = useState('')
   const [stattrakDraft, setStattrakDraft] = useState(false)
   const [dialog, setDialog] = useState<DialogState>(null)
   const [profileManagerOpen, setProfileManagerOpen] = useState(false)
@@ -437,6 +438,7 @@ export default function LoadoutApp({ skins }: LoadoutBuilderProps) {
       setFloatDraft(configured.float.toFixed(6))
       setSeedDraft(String(configured.seed))
       setStattrakDraft(configured.stattrak ?? false)
+      setCustomNameDraft(configured.customName ?? '')
       setPickerOpen(false)
       setSettingsOpen(true)
     } else {
@@ -452,8 +454,8 @@ export default function LoadoutApp({ skins }: LoadoutBuilderProps) {
     setActiveEquipment(null); setEquipmentSearch('')
   }
   function openPicker(weapon: string, category?: string, index?: number) { setActiveWeapon(weapon); setActiveSlotContext(category && index !== undefined ? { category, index } : null); setPickerSearch(''); setSkinSort('popular'); setPickerOpen(true); setSettingsOpen(false); setActiveEquipment(null) }
-  function openItemDetails(weapon: string, category?: string, index?: number) { const skin = selectedSkin(weapon); if (!skin) { openPicker(weapon); return } const value = skinSettings[team][settingsKey(weapon, skin.id)] ?? defaults(skin); setActiveWeapon(weapon); setActiveSlotContext(category && index !== undefined ? { category, index } : null); setFloatDraft(value.float.toFixed(6)); setSeedDraft(String(value.seed)); setStattrakDraft(value.stattrak ?? false); setSettingsOpen(true); setPickerOpen(false); setActiveEquipment(null) }
-  function openEquipmentDetails(slot: EquipmentSlot) { const skin = selectedItem(slot); if (!skin || slot === 'agent') { openEquipmentPicker(slot); return } const value = skinSettings[team][settingsKey(skin.weapon, skin.id)] ?? defaults(skin); setActiveWeapon(skin.weapon); setActiveSlotContext(null); setFloatDraft(value.float.toFixed(6)); setSeedDraft(String(value.seed)); setStattrakDraft(value.stattrak ?? false); setActiveEquipment(slot); setSettingsOpen(true); setPickerOpen(false) }
+  function openItemDetails(weapon: string, category?: string, index?: number) { const skin = selectedSkin(weapon); if (!skin) { openPicker(weapon); return } const value = skinSettings[team][settingsKey(weapon, skin.id)] ?? defaults(skin); setActiveWeapon(weapon); setActiveSlotContext(category && index !== undefined ? { category, index } : null); setFloatDraft(value.float.toFixed(6)); setSeedDraft(String(value.seed)); setStattrakDraft(value.stattrak ?? false); setCustomNameDraft(value.customName ?? ''); setSettingsOpen(true); setPickerOpen(false); setActiveEquipment(null) }
+  function openEquipmentDetails(slot: EquipmentSlot) { const skin = selectedItem(slot); if (!skin || slot === 'agent') { openEquipmentPicker(slot); return } const value = skinSettings[team][settingsKey(skin.weapon, skin.id)] ?? defaults(skin); setActiveWeapon(skin.weapon); setActiveSlotContext(null); setFloatDraft(value.float.toFixed(6)); setSeedDraft(String(value.seed)); setStattrakDraft(value.stattrak ?? false); setCustomNameDraft(value.customName ?? ''); setActiveEquipment(slot); setSettingsOpen(true); setPickerOpen(false) }
   function openEquipmentPicker(slot: EquipmentSlot) { setEquipmentSearch(''); setEquipmentSort('popular'); setEquipmentWeaponFilter('All'); setActiveEquipment(slot); setPickerOpen(false); setSettingsOpen(false) }
   function saveSettings() {
     if (!activeWeapon) return
@@ -463,9 +465,24 @@ export default function LoadoutApp({ skins }: LoadoutBuilderProps) {
     if (!Number.isFinite(f) || !Number.isFinite(rawSeed)) return
     const value = Math.min(l.max, Math.max(l.min, f)), seed = Math.min(1000, Math.max(0, Math.round(rawSeed)))
     const key = settingsKey(activeWeapon, s.id)
-    const nextSkinSettings = { ...skinSettings, [team]: { ...skinSettings[team], [key]: { float: Number(value.toFixed(6)), seed, stattrak: stattrakDraft } } }
+    const nextSkinSettings = { ...skinSettings, [team]: { ...skinSettings[team], [key]: { float: Number(value.toFixed(6)), seed, stattrak: stattrakDraft, customName: customNameDraft.trim() } } }
     setSkinSettings(nextSkinSettings)
     syncActiveProfile({ loadouts, skinSettings: nextSkinSettings, equipment })
+    setSettingsOpen(false)
+  }
+  function removeActiveItem() {
+    if (activeEquipment) {
+      const nextEquipment = { ...equipment, [team]: { ...equipment[team], [activeEquipment]: null } }
+      setEquipment(nextEquipment)
+      syncActiveProfile({ loadouts, skinSettings, equipment: nextEquipment })
+      setSettingsOpen(false)
+      setActiveEquipment(null)
+      return
+    }
+    if (!activeWeapon) return
+    const nextLoadouts = { ...loadouts, [team]: { ...loadouts[team], [activeWeapon]: null } }
+    setLoadouts(nextLoadouts)
+    syncActiveProfile({ loadouts: nextLoadouts, skinSettings, equipment })
     setSettingsOpen(false)
   }
   const activeSkin = activeEquipment ? selectedItem(activeEquipment) : activeWeapon ? selectedSkin(activeWeapon) : undefined
@@ -522,14 +539,16 @@ export default function LoadoutApp({ skins }: LoadoutBuilderProps) {
       {!equipmentChoices.length && <div className="lb-empty"><h3>No matching items</h3><p>Try another search or check the generated catalogue's item categories.</p></div>}
     </div></div>}
 
-    {settingsOpen && activeWeapon && activeSkin && activeSettings && <div className="lb-modal-backdrop" onClick={() => setSettingsOpen(false)}><div className="lb-modal ob-dialog lb-settings-modal" role="dialog" aria-modal="true" aria-label={`Item details for ${activeWeapon}`} onClick={e => e.stopPropagation()}>
-      <div className="lb-modal-header dialog-head"><div><p className="lb-eyebrow">ITEM DETAILS</p><h3>{activeWeapon} | {activeSkin.name}</h3><p className="lb-modal-subtitle">Inspect this finish and adjust its paint values.</p></div><button className="lb-close-button" type="button" onClick={() => setSettingsOpen(false)} aria-label="Close skin settings">×</button></div>
-      <div className="lb-settings-summary"><img src={imageOf(activeSkin)} alt={activeSkin.name} /><div><strong>{activeSkin.name}</strong><span>{activeSkin.weapon} · <b style={{ color: rarityColor(activeSkin.rarity) }}>{activeSkin.rarity}</b></span><small>Wear: {wear(Number(floatDraft) || activeSettings.float)} · Pattern seed {Math.max(0, Math.min(1000, Math.round(Number(seedDraft) || 0)))}</small></div></div>
-      <div className="lb-setting-field"><div className="lb-setting-label"><label htmlFor="lb-float">Float value</label><strong>{Number(floatDraft || 0).toFixed(6)}</strong></div><input id="lb-float" className="lb-float-slider" type="range" min={activeLimits.min} max={activeLimits.max} step="0.000001" value={Math.min(activeLimits.max, Math.max(activeLimits.min, Number(floatDraft) || activeLimits.min))} onChange={e => setFloatDraft(e.target.value)} /><div className="lb-range-labels"><span>Min {activeLimits.min.toFixed(6)}</span><span>Max {activeLimits.max.toFixed(6)}</span></div><input className="lb-number-input" aria-label="Exact float value" type="number" min={activeLimits.min} max={activeLimits.max} step="0.000001" value={floatDraft} onChange={e => setFloatDraft(e.target.value)} /><small className="lb-field-help">Float limits are specific to each finish when available. Missing limits fall back to 0.000000–1.000000.</small></div>
-      <div className="lb-setting-field"><div className="lb-setting-label"><label htmlFor="lb-seed">Pattern seed</label><strong>{Math.max(0, Math.min(1000, Math.round(Number(seedDraft) || 0)))}</strong></div><input id="lb-seed" className="lb-number-input" type="number" min="0" max="1000" step="1" value={seedDraft} onChange={e => setSeedDraft(e.target.value)} /><input className="lb-seed-slider" aria-label="Pattern seed slider" type="range" min="0" max="1000" step="1" value={Math.max(0, Math.min(1000, Math.round(Number(seedDraft) || 0)))} onChange={e => setSeedDraft(e.target.value)} /><div className="lb-range-labels"><span>Seed 0</span><span>Seed 1000</span></div><small className="lb-field-help">Seed is stored for this skin, but does not change its static image.</small></div>
-      {activeEquipment !== 'gloves' && <label className="lb-stattrak-toggle"><input type="checkbox" checked={stattrakDraft} onChange={e => setStattrakDraft(e.target.checked)}/><span><strong>StatTrak™</strong><small>Display the StatTrak finish indicator on this card.</small></span></label>}
-      <div className="lb-settings-actions"><button type="button" className="lb-unequip-button" onClick={() => { setSettingsOpen(false); if (activeEquipment) openEquipmentPicker(activeEquipment); else openPicker(activeWeapon, activeSlotContext?.category, activeSlotContext?.index) }}>Change skin</button><button type="button" className="lb-save-settings-button" onClick={saveSettings}>Done</button></div>
-    </div></div>}
+    {settingsOpen && activeWeapon && activeSkin && activeSettings && <div className="lb-modal-backdrop ob-detail-overlay" onClick={() => setSettingsOpen(false)}><section className="ob-dialog ob-detail-dialog loadout-item-details" role="dialog" aria-modal="true" aria-label={`Item details for ${activeWeapon}`} onClick={e => e.stopPropagation()}>
+      <div className="dialog-head"><div><h2>Item <span>details.</span></h2></div><button className="dialog-close" type="button" onClick={() => setSettingsOpen(false)} aria-label="Close item details">×</button></div>
+      <div className="detail-preview"><div className="detail-preview-art">{imageOf(activeSkin) && <img src={imageOf(activeSkin)} alt="" />}</div><div><small>{activeSkin.weapon}</small><h3>{activeSkin.name}</h3><span className="detail-rarity-line"><b style={{ color: rarityColor(activeSkin.rarity) }}>{activeSkin.rarity}</b><i>·</i>{activeEquipment === 'knife' ? 'Knives' : activeEquipment === 'gloves' ? 'Gloves' : activeSkin.type || activeSlotContext?.category || 'Weapon skin'}</span></div></div>
+      <div className="ob-fields">
+        {!activeEquipment || activeEquipment === 'knife' || activeEquipment === 'gloves' ? <><label>FLOAT VALUE<input value={floatDraft} onChange={e => setFloatDraft(e.target.value)} inputMode="decimal" /></label><label>PAINT SEED<input value={seedDraft} onChange={e => setSeedDraft(String(Math.min(1000, Number(e.target.value.replace(/[^0-9]/g,'')) || 0)))} inputMode="numeric" maxLength={4} placeholder="0–1000"/>{activeEquipment === 'knife' && activeSkin.name === 'Case Hardened' && <small className="seed-hint">Use a seed from 0–1000. Blue Gem is determined by the Case Hardened paint seed.</small>}</label></> : null}
+        <label className="field-wide">CUSTOM NAME<input value={customNameDraft} onChange={e => setCustomNameDraft(e.target.value)} placeholder="Name this item..." maxLength={20} /></label>
+        {activeEquipment !== 'gloves' && <button type="button" className={`stattrak-toggle ${stattrakDraft ? 'enabled' : ''}`} aria-pressed={stattrakDraft} onClick={() => setStattrakDraft(value => !value)}><span className="st-toggle-label">ST</span><span className="st-toggle-track"><i /></span></button>}
+      </div>
+      <div className="dialog-actions"><button className="ob-button shimmer-button remove-item-button" type="button" onClick={removeActiveItem}>Remove item</button><button className="ob-button shimmer-button" type="button" onClick={saveSettings}>Done</button></div>
+    </section></div>}
 
     {dialog && <div className="lb-modal-backdrop lb-dialog-backdrop" onClick={() => setDialog(null)}><form className="lb-modal ob-dialog lb-confirm-modal" role="dialog" aria-modal="true" aria-labelledby="lb-dialog-title" onSubmit={e => { e.preventDefault(); submitDialog() }} onClick={e => e.stopPropagation()}>
       <div className="lb-modal-header dialog-head"><div><p className="lb-eyebrow">{dialog.mode === 'clear' || dialog.mode === 'delete' ? 'CONFIRM ACTION' : 'PROFILE MANAGER'}</p><h3 id="lb-dialog-title">{dialog.mode === 'create' ? 'Create a profile' : dialog.mode === 'duplicate' ? 'Duplicate profile' : dialog.mode === 'rename' ? 'Rename profile' : dialog.mode === 'delete' ? 'Delete this profile?' : 'Clear this loadout?'}</h3></div><button className="lb-close-button" type="button" onClick={() => setDialog(null)} aria-label="Close dialog">×</button></div>
