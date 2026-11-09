@@ -1197,3 +1197,33 @@ body,button,input,select{font-family:'Barlow',sans-serif}
     display: none;
   }
 }
+
+
+/* Let the navigation rail sit directly on the page canvas. */
+.obsidian-shell-redesign .ob-line-sidebar {
+  background: transparent !important;
+  border-right: 0 !important;
+}
+@media(max-width:600px) {
+  .obsidian-shell-redesign .ob-line-sidebar {
+    background: transparent !important;
+    border-top: 0 !important;
+  }
+}
+
+/* Initiate uses the green-on-black SpecularButton component. */
+.obsidian-shell-redesign .ob-initiate-specular {
+  margin-top: 42px;
+  min-width: 190px;
+  background: #050706 !important;
+}
+.obsidian-shell-redesign .ob-initiate-specular .ob-initiate-arrow {
+  color: #9bd6a3;
+  font-size: 17px;
+  line-height: 1;
+}
+@media(max-width:600px) {
+  .obsidian-shell-redesign .ob-initiate-specular {
+    margin-top: 27px;
+  }
+}
