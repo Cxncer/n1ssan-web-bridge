@@ -2117,3 +2117,122 @@ body,button,input,select{font-family:'Barlow',sans-serif}
 .obsidian-shell-redesign .ob-cinematic-home::before {
   background: #000 !important;
 }
+
+
+/* Proportionally enlarged Item Details dialog. */
+.obsidian-shell-redesign .ob-detail-dialog {
+  width: min(720px, 94vw);
+  max-height: min(90vh, 900px);
+  border-radius: 27px !important;
+}
+.obsidian-shell-redesign .ob-detail-dialog .dialog-head {
+  padding: 27px 30px 22px;
+}
+.obsidian-shell-redesign .ob-detail-dialog .dialog-head h2,
+.obsidian-shell-redesign .ob-detail-dialog .dialog-head h2 span {
+  font-size: 28px;
+}
+.obsidian-shell-redesign .ob-detail-dialog .dialog-close {
+  width: 38px;
+  height: 38px;
+  font-size: 24px;
+}
+.obsidian-shell-redesign .ob-detail-dialog .detail-preview {
+  padding: 22px 30px;
+  gap: 22px;
+  min-height: 178px;
+}
+.obsidian-shell-redesign .ob-detail-dialog .detail-preview-art {
+  flex-basis: 210px;
+  width: 210px;
+  height: 138px;
+  border-radius: 20px;
+}
+.obsidian-shell-redesign .ob-detail-dialog .detail-preview small {
+  font-size: 11px;
+}
+.obsidian-shell-redesign .ob-detail-dialog .detail-preview h3 {
+  font-size: 19px;
+  margin: 7px 0;
+}
+.obsidian-shell-redesign .ob-detail-dialog .detail-preview .detail-rarity-line,
+.obsidian-shell-redesign .ob-detail-dialog .detail-preview .detail-rarity {
+  font-size: 11px;
+}
+.obsidian-shell-redesign .ob-detail-dialog .ob-fields {
+  padding: 18px 30px 22px;
+  gap: 15px;
+}
+.obsidian-shell-redesign .ob-detail-dialog .ob-fields label {
+  font-size: 11px !important;
+  gap: 8px;
+}
+.obsidian-shell-redesign .ob-detail-dialog .ob-fields input:not([type=range]),
+.obsidian-shell-redesign .ob-detail-dialog .ob-fields select {
+  height: 41px;
+  padding-inline: 18px;
+  font-size: 13px;
+}
+.obsidian-shell-redesign .ob-detail-dialog .ob-fields .seed-hint {
+  font-size: 11px;
+  line-height: 1.5;
+}
+.obsidian-shell-redesign .ob-detail-dialog .attach-panel {
+  padding: 14px 30px 18px;
+}
+.obsidian-shell-redesign .ob-detail-dialog .attach-preview-row {
+  gap: 12px;
+}
+.obsidian-shell-redesign .ob-detail-dialog .attach-preview-item {
+  width: 78px;
+  min-height: 128px;
+}
+.obsidian-shell-redesign .ob-detail-dialog .attach-preview-art {
+  width: 54px;
+  height: 54px;
+}
+.obsidian-shell-redesign .ob-detail-dialog .attach-preview-item small {
+  font-size: 10px;
+  line-height: 1.4;
+}
+.obsidian-shell-redesign .ob-detail-dialog .imported-item-note {
+  padding: 14px 30px;
+  font-size: 12px;
+}
+.obsidian-shell-redesign .ob-detail-dialog .dialog-actions {
+  padding: 18px 30px 23px;
+}
+.obsidian-shell-redesign .ob-detail-dialog .dialog-actions .ob-button {
+  min-height: 38px;
+  padding: 9px 15px;
+  font-size: 11px !important;
+}
+@media (max-width: 560px) {
+  .obsidian-shell-redesign .ob-detail-dialog {
+    width: 96vw;
+    max-height: 88vh;
+  }
+  .obsidian-shell-redesign .ob-detail-dialog .dialog-head {
+    padding: 20px 18px 16px;
+  }
+  .obsidian-shell-redesign .ob-detail-dialog .detail-preview {
+    padding: 16px 18px;
+    gap: 14px;
+    min-height: 0;
+  }
+  .obsidian-shell-redesign .ob-detail-dialog .detail-preview-art {
+    flex-basis: 122px;
+    width: 122px;
+    height: 96px;
+  }
+  .obsidian-shell-redesign .ob-detail-dialog .ob-fields {
+    padding: 15px 18px 18px;
+    gap: 12px;
+  }
+  .obsidian-shell-redesign .ob-detail-dialog .attach-panel {
+    padding-inline: 18px;
+  }
+  .obsidian-shell-redesign .ob-detail-dialog .dialog-actions {
+    padding: 14px 18px 18px;
+  }
+}
