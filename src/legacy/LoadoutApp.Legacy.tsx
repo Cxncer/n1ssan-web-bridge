@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState, type CSSProperties } from 'react'
-import './Loadout.css'
-import './loadout-theme.css'
-import { findImageColorMatches } from './skinColorDetection'
+import './Loadout.Legacy.css'
+import './loadout-theme.Legacy.css'
+import { findImageColorMatches } from '../skinColorDetection'
 
 export type Skin = {
   id: number | string; weapon: string; name: string; type: string; rarity: string
