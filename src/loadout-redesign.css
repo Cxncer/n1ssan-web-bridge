@@ -90,3 +90,30 @@
 @media(max-width:1250px){.loadout-redesign .loadout-four-column-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
 @media(max-width:760px){.loadout-redesign .ob-heading-actions{width:100%;align-items:stretch}.loadout-redesign .loadout-control-strip{align-items:stretch;flex-direction:column}.loadout-redesign .loadout-team-switch button{min-width:0;flex:1}.loadout-redesign .loadout-control-actions{justify-content:space-between}.loadout-redesign .loadout-four-column-grid{grid-template-columns:1fr}.loadout-redesign .loadout-category-column{padding:12px}.loadout-redesign .loadout-slot-card{min-height:78px}.loadout-redesign .loadout-diagnostic-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
 @media(max-width:480px){.loadout-redesign .loadout-team-switch{flex-direction:column}.loadout-redesign .ob-heading-actions{display:grid;grid-template-columns:1fr 1fr}.loadout-redesign .profile-select-label{grid-column:1/-1}.loadout-redesign .ob-heading-actions .ob-button:last-child{grid-column:1/-1}.loadout-redesign .loadout-slot-art{flex-basis:54px;width:54px;height:52px}.loadout-redesign .loadout-diagnostic-grid{grid-template-columns:1fr 1fr}}
+
+
+/* Loadout profile manager and larger weapon presentation */
+.loadout-redesign .loadout-profile-list{display:grid;gap:8px;margin:18px 0}
+.loadout-redesign .loadout-profile-row{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:13px 14px;border:1px solid #263a56;border-radius:9px;background:#0a1220}
+.loadout-redesign .loadout-profile-row.current{border-color:#4f8fe8;background:#122039}
+.loadout-redesign .loadout-profile-select{display:flex;align-items:center;gap:12px;min-width:0;flex:1;border:0;background:none;color:#eaf2ff;text-align:left}
+.loadout-redesign .loadout-profile-select>span:last-child{display:grid;gap:4px;min-width:0}
+.loadout-redesign .loadout-profile-select strong{font:600 13px Barlow,sans-serif}
+.loadout-redesign .loadout-profile-select small{color:#8198b9;font-size:10px}
+.loadout-redesign .loadout-profile-radio{width:15px;height:15px;flex:0 0 15px;border:1px solid #506987;border-radius:50%;display:grid;place-items:center}
+.loadout-redesign .loadout-profile-radio i{width:7px;height:7px;border-radius:50%;background:#75aaff}
+.loadout-redesign .loadout-profile-current{color:#75aaff;font:9px 'DM Mono',monospace;letter-spacing:1px}
+.loadout-redesign .loadout-profile-actions{display:flex;flex-wrap:wrap;gap:8px;padding-top:15px;border-top:1px solid #263a56}
+.loadout-redesign .weapon-slot{min-height:142px;padding:12px 10px;align-items:center}
+.loadout-redesign .weapon-slot .loadout-slot-art{width:112px;height:92px;flex:0 0 112px;display:grid;place-items:center;overflow:hidden}
+.loadout-redesign .weapon-slot .loadout-slot-art img{width:100%;height:100%;object-fit:contain;transform:scale(1.18);transition:transform .2s ease}
+.loadout-redesign .weapon-slot:hover .loadout-slot-art img{transform:scale(1.27)}
+.loadout-redesign .weapon-slot .loadout-slot-copy{gap:7px}
+.loadout-redesign .loadout-picker-tabs{display:flex;gap:6px;overflow-x:auto;padding:2px 0 12px;margin:0 0 12px;border-bottom:1px solid #263a56;scrollbar-width:thin}
+.loadout-redesign .loadout-picker-tabs button{flex:0 0 auto;padding:8px 12px;border:1px solid transparent;border-radius:6px;background:transparent;color:#91a5c1;font:600 11px Barlow,sans-serif;white-space:nowrap;transition:.16s}
+.loadout-redesign .loadout-picker-tabs button:hover{color:#eaf2ff;background:#14243b}
+.loadout-redesign .loadout-picker-tabs button.active{border-color:#4f8fe8;background:#172b47;color:#9fc5ff;box-shadow:inset 0 -2px #75aaff}
+.loadout-redesign .equipment-tabs{margin-top:14px}
+.loadout-redesign .lb-picker-controls{align-items:center}
+.loadout-redesign .lb-picker-controls .lb-sort-control select{border-color:#304866;background:#09111e;color:#eaf2ff}
+@media(max-width:760px){.loadout-redesign .weapon-slot{min-height:126px}.loadout-redesign .weapon-slot .loadout-slot-art{width:92px;height:78px;flex-basis:92px}}
