@@ -265,7 +265,7 @@ export default function LoadoutApp({ skins }: LoadoutBuilderProps) {
             T: Object.fromEntries(Object.entries(loadouts.T).filter(([weapon]) => TEAM_WEAPONS.T.some(column => (weaponSlots.T[column.title] ?? []).includes(weapon)))),
             CT: Object.fromEntries(Object.entries(loadouts.CT).filter(([weapon]) => TEAM_WEAPONS.CT.some(column => (weaponSlots.CT[column.title] ?? []).includes(weapon)))),
           },
-          equipment,
+          equipment: { T: { ...equipment.T, zeus: null }, CT: { ...equipment.CT, zeus: null } },
           skinSettings,
         }),
       })
