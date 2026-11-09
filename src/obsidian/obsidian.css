@@ -1211,7 +1211,7 @@ body,button,input,select{font-family:'Barlow',sans-serif}
   }
 }
 
-/* Initiate uses the green-on-black SpecularButton component. */
+/* Initiate uses the green shimmer-border button. */
 .obsidian-shell-redesign .ob-initiate-specular {
   margin-top: 42px;
   min-width: 190px;
