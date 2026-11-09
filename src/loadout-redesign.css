@@ -157,3 +157,32 @@
  .loadout-redesign .equipment-column .loadout-slot-card{min-height:126px}
  .loadout-redesign .equipment-column .loadout-slot-art{width:92px;height:78px;flex-basis:92px}
 }
+
+
+/* Loadout cards now mirror Armory's inventory-card anatomy, recolored navy. */
+.loadout-redesign .loadout-card-list{display:grid;grid-template-columns:minmax(0,1fr);gap:12px}
+.loadout-redesign .loadout-item-card.ob-item-card{display:block;position:relative;width:100%;min-width:0;padding:0;overflow:hidden;border:1px solid #263a56;border-radius:7px;background:linear-gradient(155deg,#171f2c,#0d1422 68%);color:#eaf2ff;text-align:left;cursor:pointer;transition:border-color .2s,transform .2s,box-shadow .2s}
+.loadout-redesign .loadout-item-card.ob-item-card:hover{border-color:#75aaff;transform:translateY(-2px);box-shadow:0 14px 32px #0008,0 0 20px #4f8fe81c}
+.loadout-redesign .loadout-item-card .ob-item-art{position:relative;display:grid;place-items:center;height:190px;overflow:hidden;border-bottom:1px solid #263a56;background:radial-gradient(ellipse at 50% 58%,#4f8fe82a,transparent 66%),linear-gradient(145deg,#202b3c,#101722 75%)}
+.loadout-redesign .loadout-item-card .ob-item-art:after{content:'';position:absolute;inset:0;background:linear-gradient(135deg,transparent 40%,#ffffff08 50%,transparent 60%);pointer-events:none}
+.loadout-redesign .loadout-item-card .ob-item-art>img{position:relative;z-index:1;width:85%;height:78%;object-fit:contain;filter:drop-shadow(0 12px 16px #0009);transition:transform .3s}
+.loadout-redesign .loadout-item-card:hover .ob-item-art>img{transform:scale(1.06)}
+.loadout-redesign .loadout-item-card .item-glow{position:absolute;width:170px;height:90px;border-radius:50%;background:#75aaff22;filter:blur(35px)}
+.loadout-redesign .loadout-item-card .item-rarity{position:absolute;z-index:2;top:11px;right:10px;color:#a9bad2;font:600 10px 'DM Mono',monospace;letter-spacing:.65px;text-align:right;text-transform:uppercase}
+.loadout-redesign .loadout-item-card .item-fallback{z-index:1;color:#7894b9;font:italic 36px Barlow,sans-serif}
+.loadout-redesign .loadout-item-card .ob-item-copy{padding:13px 15px 14px}
+.loadout-redesign .loadout-item-card .ob-item-weapon{display:flex;align-items:center;gap:7px;color:#91a5c1;font:9px 'DM Mono',monospace;letter-spacing:.8px;text-transform:uppercase}
+.loadout-redesign .loadout-item-card .ob-item-copy>strong{display:block;margin:5px 0 12px;overflow:hidden;color:#eaf2ff;font:600 14px Barlow,sans-serif;text-overflow:ellipsis;white-space:nowrap}
+.loadout-redesign .loadout-item-card .ob-item-foot{display:flex;align-items:center;gap:18px;min-height:24px;padding-top:10px;border-top:1px solid #263a56;color:#8195b1;font:8px 'DM Mono',monospace;letter-spacing:.5px}
+.loadout-redesign .loadout-item-card .ob-item-foot b{margin-left:4px;color:#dbeafe;font-weight:500}
+.loadout-redesign .loadout-item-card .ob-item-foot .float-wear{margin-left:auto;color:#67e8f9;font-size:11px;font-weight:700;letter-spacing:.8px;text-align:right}
+.loadout-redesign .loadout-item-card .stattrak{padding:2px 4px;border:1px solid #80583c;border-radius:3px;background:#2b1d14;color:#e8a66e;font-size:8px}
+.loadout-redesign .loadout-item-card.is-empty .ob-item-art{background:radial-gradient(ellipse at 50% 58%,#4f8fe814,transparent 66%),linear-gradient(145deg,#151f2d,#0b111c 75%)}
+.loadout-redesign .loadout-item-card.is-empty .ob-item-copy>strong{color:#9fb4d0}
+.loadout-redesign .loadout-item-card:focus-visible{outline:2px solid #75aaff;outline-offset:3px}
+.loadout-redesign .lb-stattrak-toggle{display:flex;align-items:center;gap:11px;padding:12px 14px;border:1px solid #304866;border-radius:8px;background:#0a1422;color:#dbeafe;cursor:pointer}
+.loadout-redesign .lb-stattrak-toggle input{width:16px;height:16px;accent-color:#4f8fe8}
+.loadout-redesign .lb-stattrak-toggle span{display:grid;gap:3px}
+.loadout-redesign .lb-stattrak-toggle strong{font:600 12px Barlow,sans-serif}
+.loadout-redesign .lb-stattrak-toggle small{color:#91a5c1;font-size:10px}
+@media(max-width:760px){.loadout-redesign .loadout-item-card .ob-item-art{height:160px}.loadout-redesign .loadout-item-card .ob-item-copy{padding:11px 12px}}
