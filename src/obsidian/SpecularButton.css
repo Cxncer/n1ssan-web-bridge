@@ -12,14 +12,18 @@
   justify-content: center;
   gap: 0.5em;
   margin: 0;
-  border: 0;
+  appearance: none;
+  -webkit-appearance: none;
+  border: 1px solid rgba(128, 201, 144, 0.28);
   border-radius: var(--sb-radius);
+  background: #050706;
+  color: var(--sb-text-color, #f5f5f5);
   font: inherit;
   font-weight: 500;
   line-height: 1;
   letter-spacing: 0.01em;
   color: var(--sb-text-color);
-  background: color-mix(in srgb, var(--sb-tint) calc(var(--sb-tint-opacity) * 100%), transparent);
+  background: #050706;
   box-shadow: 0 10px 24px -14px rgba(0, 0, 0, 0.45);
   -webkit-backdrop-filter: blur(var(--sb-blur));
   backdrop-filter: blur(var(--sb-blur));
@@ -65,7 +69,7 @@
 .specular-button__light {
   position: absolute;
   inset: -24px;
-  z-index: 1;
+  z-index: 0;
   display: block;
   width: calc(100% + 48px);
   height: calc(100% + 48px);
@@ -74,7 +78,7 @@
 
 .specular-button__label {
   position: relative;
-  z-index: 2;
+  z-index: 1;
   display: inline-flex;
   align-items: center;
   gap: inherit;
