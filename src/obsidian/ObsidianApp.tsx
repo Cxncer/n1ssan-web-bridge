@@ -11,6 +11,8 @@ import { catalogueDefinitionId, toCatalogueDefinition } from '../armory/catalogu
 import skinData from '../skins.json'
 import knifeData from './knife-skins.json'
 import './obsidian.css'
+import rickshawImage from '../../assets/images/Rickshaw-clay.jpg'
+import n1ssanLogo from '../../assets/icons/n1ssan-icon-white.png'
 
 type ItemKind = 'skin' | 'sticker' | 'charm'
 type Skin = { id: number | string; weapon: string; name: string; type: string; rarity: string; color: string; art: string; description: string; image?: string; minFloat?: number | null; maxFloat?: number | null; kind?: ItemKind; phase?: string; patternId?: string; paintIndex?: string; paintKit?: number | string | null; gameDefinitionId?: number | null; stickerKitId?: number | null; keychainId?: number | null; legacyOnly?: boolean }
@@ -426,7 +428,7 @@ export default function ObsidianApp() {
   return <div className="obsidian-shell obsidian-shell-redesign">
     <aside className="ob-line-sidebar" aria-label="Main navigation">
       <a className="ob-line-brand" href="#home" onClick={e => { e.preventDefault(); setPage('home') }} aria-label="n1ssan Home">
-        <img src="/assets/icons/n1ssan-icon-white.png" alt="n1ssan" />
+        <img src={n1ssanLogo} alt="n1ssan" />
       </a>
       <nav className="ob-line-nav">
         <button className={page === 'home' ? 'active' : ''} onClick={() => setPage('home')}><span className="ob-line-index">01</span><span>Home</span></button>
@@ -453,7 +455,7 @@ export default function ObsidianApp() {
             <button className="ob-initiate-button" onClick={() => setPage('inventory')}><span>Initiate</span><i aria-hidden="true">↗</i></button>
           </div>
           <div className="ob-rickshaw-stage" aria-hidden="true">
-            <img src="/assets/images/Rickshaw-clay.jpg" alt="" />
+            <img src={rickshawImage} alt="" />
           </div>
           <div className="ob-home-index">N1 / ARMORY SYSTEM <span>—</span> 001</div>
         </section>
