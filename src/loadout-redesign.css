@@ -324,7 +324,7 @@
 .loadout-redesign .loadout-item-card .ob-item-foot b{color:hsl(var(--foreground))}
 .loadout-redesign .loadout-item-card .ob-item-foot .float-wear{font-size:11px;color:hsl(var(--ring))}
 .loadout-redesign .loadout-equipped-card-wrap{position:relative;min-width:0}
-.loadout-redesign .loadout-card-remove{position:absolute;z-index:10;top:9px;right:9px;display:grid;place-items:center;width:28px;height:28px;padding:0;border:1px solid hsl(var(--ring));border-radius:50%;background:#080a10eF;color:#f4f6fb;font:500 21px/1 sans-serif;opacity:0;pointer-events:none;transform:scale(.86);transition:opacity .15s ease,transform .15s ease,background .15s ease;cursor:pointer;box-shadow:0 3px 12px #0009}
+.loadout-redesign .loadout-card-remove{position:absolute;z-index:10;top:9px;left:9px;right:auto;display:grid;place-items:center;width:28px;height:28px;padding:0;border:1px solid hsl(var(--ring));border-radius:50%;background:#080a10eF;color:#f4f6fb;font:500 21px/1 sans-serif;opacity:0;pointer-events:none;transform:scale(.86);transition:opacity .15s ease,transform .15s ease,background .15s ease;cursor:pointer;box-shadow:0 3px 12px #0009}
 .loadout-redesign .loadout-equipped-card-wrap:hover .loadout-card-remove,
 .loadout-redesign .loadout-equipped-card-wrap:focus-within .loadout-card-remove{opacity:1;pointer-events:auto;transform:scale(1)}
 .loadout-redesign .loadout-card-remove:hover{background:hsl(var(--destructive));border-color:hsl(var(--destructive));color:white}
