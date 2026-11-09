@@ -1604,3 +1604,136 @@ body,button,input,select{font-family:'Barlow',sans-serif}
 }
 .ob-boot-screen > small { color: #a1a1aa; }
 .ob-boot-error > small { color: #fda4af; }
+
+
+/* Obsidian radio dropdowns — custom Radix/shadcn-inspired menu surface. */
+.obsidian-shell-redesign .ob-dropdown {
+  position: relative;
+  display: inline-flex;
+  min-width: 0;
+  font-family: var(--font-sans);
+  letter-spacing: 0;
+}
+.obsidian-shell-redesign .ob-dropdown-trigger {
+  display: inline-flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 22px;
+  min-width: 190px;
+  min-height: 40px;
+  padding: 0 12px 0 13px;
+  border: 1px solid #3f3f46;
+  border-radius: 7px;
+  background: linear-gradient(180deg, #171720, #101016);
+  color: #e4e4e7;
+  font: 500 12px var(--font-sans);
+  text-align: left;
+  cursor: pointer;
+  transition: border-color .16s ease, background .16s ease, box-shadow .16s ease;
+}
+.obsidian-shell-redesign .ob-dropdown-trigger:hover,
+.obsidian-shell-redesign .ob-dropdown-trigger[aria-expanded="true"] {
+  border-color: #a855f7aa;
+  background: #181522;
+  box-shadow: 0 0 0 3px #a855f714;
+}
+.obsidian-shell-redesign .ob-dropdown-trigger svg {
+  flex: 0 0 auto;
+  color: #a1a1aa;
+  opacity: .75;
+  transition: transform .18s ease, color .18s ease;
+}
+.obsidian-shell-redesign .ob-dropdown-trigger svg.is-open {
+  transform: rotate(180deg);
+  color: #67e8f9;
+}
+.obsidian-shell-redesign .ob-dropdown-content {
+  position: absolute;
+  z-index: 120;
+  top: calc(100% + 7px);
+  right: 0;
+  min-width: 100%;
+  width: max-content;
+  max-width: min(290px, calc(100vw - 32px));
+  padding: 5px;
+  border: 1px solid #3f3f46;
+  border-radius: 10px;
+  background: #0d0d12;
+  box-shadow: 0 18px 48px #000b, 0 0 22px #a855f714;
+  animation: ob-dropdown-enter .13s ease-out;
+  transform-origin: top right;
+}
+@keyframes ob-dropdown-enter {
+  from { opacity: 0; transform: translateY(-4px) scale(.985); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+.obsidian-shell-redesign .ob-dropdown-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  min-height: 36px;
+  padding: 7px 10px;
+  border: 0;
+  border-radius: 6px;
+  background: transparent;
+  color: #d4d4d8;
+  font: 400 12px var(--font-sans);
+  text-align: left;
+  white-space: nowrap;
+  cursor: pointer;
+  transition: color .14s ease, background .14s ease;
+}
+.obsidian-shell-redesign .ob-dropdown-item:hover,
+.obsidian-shell-redesign .ob-dropdown-item:focus-visible {
+  outline: none;
+  background: #1e1b4b99;
+  color: #f4f4f5;
+}
+.obsidian-shell-redesign .ob-dropdown-item.selected {
+  background: #1e1b4b66;
+  color: #e9d5ff;
+}
+.obsidian-shell-redesign .ob-dropdown-item:disabled {
+  opacity: .38;
+  cursor: not-allowed;
+}
+.obsidian-shell-redesign .ob-dropdown-radio {
+  display: grid;
+  place-items: center;
+  width: 15px;
+  height: 15px;
+  flex: 0 0 15px;
+  border: 1px solid #52525b;
+  border-radius: 50%;
+  background: #09090b;
+}
+.obsidian-shell-redesign .ob-dropdown-item.selected .ob-dropdown-radio {
+  border-color: #a855f7;
+  box-shadow: 0 0 0 2px #a855f71a;
+}
+.obsidian-shell-redesign .ob-dropdown-radio i {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: transparent;
+}
+.obsidian-shell-redesign .ob-dropdown-item.selected .ob-dropdown-radio i {
+  background: #a855f7;
+  box-shadow: 0 0 7px #a855f799;
+}
+.obsidian-shell-redesign .profile-dropdown .ob-dropdown-trigger { min-width: 190px; }
+.obsidian-shell-redesign .sort-dropdown .ob-dropdown-trigger { min-width: 172px; }
+@media (max-width: 760px) {
+  .obsidian-shell-redesign .ob-heading-actions { flex-wrap: wrap; align-items: stretch; }
+  .obsidian-shell-redesign .profile-select-label { flex: 1 1 100%; }
+  .obsidian-shell-redesign .profile-dropdown .ob-dropdown-trigger { width: 100%; }
+  .obsidian-shell-redesign .ob-sort { gap: 7px; }
+  .obsidian-shell-redesign .sort-dropdown .ob-dropdown-trigger { min-width: 150px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .obsidian-shell-redesign .ob-dropdown-content { animation: none; }
+  .obsidian-shell-redesign .ob-dropdown-trigger,
+  .obsidian-shell-redesign .ob-dropdown-trigger svg,
+  .obsidian-shell-redesign .ob-dropdown-item { transition: none; }
+}
