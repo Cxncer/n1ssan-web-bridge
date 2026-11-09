@@ -1241,3 +1241,317 @@ body,button,input,select{font-family:'Barlow',sans-serif}
     will-change: auto;
   }
 }
+
+
+/* Obsidian theme — scoped dark violet / cyan palette.
+   Kept inside the Obsidian shell so other application pages are untouched. */
+.obsidian-shell-redesign {
+  --card: #0d0d12;
+  --card-foreground: #f4f4f5;
+  --ring: #a855f7;
+  --input: #27272a;
+  --muted: #18181b;
+  --muted-foreground: #a1a1aa;
+  --accent: #06b6d4;
+  --accent-foreground: #083344;
+  --border: #27272a;
+  --radius: 0.75rem;
+  --chart-1: #a855f7;
+  --chart-2: #06b6d4;
+  --chart-3: #10b981;
+  --chart-4: #f59e0b;
+  --chart-5: #ec4899;
+  --popover: #0d0d12;
+  --popover-foreground: #f4f4f5;
+  --primary: #a855f7;
+  --primary-foreground: #ffffff;
+  --sidebar: #050508;
+  --sidebar-foreground: #f4f4f5;
+  --sidebar-primary: #a855f7;
+  --sidebar-primary-foreground: #ffffff;
+  --sidebar-accent: #18181b;
+  --sidebar-accent-foreground: #f4f4f5;
+  --sidebar-border: #27272a;
+  --sidebar-ring: #a855f7;
+  --secondary: #1e1b4b;
+  --secondary-foreground: #e0e7ff;
+  --background: #050508;
+  --foreground: #f4f4f5;
+  --destructive: #ef4444;
+  --destructive-foreground: #ffffff;
+  --font-mono: ui-monospace, SFMono-Regular, monospace;
+  --font-sans: ui-sans-serif, system-ui, sans-serif;
+  --font-serif: ui-serif, Georgia, serif;
+  --spacing: 0.25rem;
+  --shadow-blur: 8px;
+  --shadow-color: hsl(0 0% 0%);
+  --shadow-spread: -1px;
+  --shadow-opacity: 0.1;
+  --shadow-offset-x: 0px;
+  --shadow-offset-y: 4px;
+  --letter-spacing: 0em;
+  color: var(--foreground);
+  background:
+    radial-gradient(ellipse at 72% 0%, #1e1b4b55 0, transparent 42%),
+    radial-gradient(ellipse at 12% 42%, #06b6d411 0, transparent 36%),
+    var(--background);
+}
+
+/* Shared surfaces and typography */
+.obsidian-shell-redesign,
+.obsidian-shell-redesign .ob-main {
+  color: var(--foreground);
+}
+.obsidian-shell-redesign .ob-line-sidebar {
+  background: color-mix(in srgb, var(--sidebar) 94%, transparent);
+  border-color: var(--sidebar-border);
+}
+.obsidian-shell-redesign .ob-line-nav {
+  --accent-color: var(--sidebar-primary);
+  --text-color: var(--muted-foreground);
+  --marker-color: #3f3f46;
+}
+.obsidian-shell-redesign .ob-line-sidebar-foot {
+  color: var(--muted-foreground);
+}
+.obsidian-shell-redesign .ob-cinematic-home {
+  background:
+    radial-gradient(ellipse at 78% 46%, #1e1b4b88 0, transparent 48%),
+    radial-gradient(ellipse at 28% 82%, #06b6d414 0, transparent 46%),
+    linear-gradient(115deg, #050508 0%, #090910 58%, #0d0d16 100%);
+  border-color: #27272a;
+}
+.obsidian-shell-redesign .ob-cinematic-kicker {
+  color: #67d6e8;
+}
+.obsidian-shell-redesign .ob-cinematic-kicker > span {
+  background: var(--accent);
+  box-shadow: 0 0 12px #06b6d477;
+}
+.obsidian-shell-redesign .ob-cinematic-copy h1 span {
+  color: var(--primary);
+  text-shadow: 0 0 32px #a855f733;
+}
+.obsidian-shell-redesign .ob-home-index {
+  color: #71717a;
+}
+
+/* Workspace headers, metrics and separators */
+.obsidian-shell-redesign .ob-breadcrumb { color: #71717a; }
+.obsidian-shell-redesign .ob-breadcrumb strong { color: #d4d4d8; }
+.obsidian-shell-redesign .ob-heading h1,
+.obsidian-shell-redesign .ob-section-head h2,
+.obsidian-shell-redesign .overview-total strong,
+.obsidian-shell-redesign .overview-stat strong {
+  color: var(--foreground);
+}
+.obsidian-shell-redesign .ob-heading h1 span,
+.obsidian-shell-redesign .ob-section-head h2 span,
+.obsidian-shell-redesign .dialog-head h2 span {
+  color: var(--primary);
+}
+.obsidian-shell-redesign .ob-heading p,
+.obsidian-shell-redesign .overview-total small,
+.obsidian-shell-redesign .overview-status small,
+.obsidian-shell-redesign .metric-label,
+.obsidian-shell-redesign .overview-stat small,
+.obsidian-shell-redesign .ob-section-meta,
+.obsidian-shell-redesign .ob-sort {
+  color: var(--muted-foreground);
+}
+.obsidian-shell-redesign .ob-overview {
+  border-color: #3b2860 !important;
+  background: linear-gradient(110deg, #151020, #0d0d14) !important;
+}
+.obsidian-shell-redesign .ob-overview:before {
+  background: conic-gradient(from var(--beam-angle,0deg), transparent 0deg, transparent 245deg, #a855f7 276deg, #06b6d4 294deg, #a855f7 315deg, transparent 350deg);
+}
+.obsidian-shell-redesign .ob-overview:after {
+  background: radial-gradient(ellipse at 0% 0%, #a855f71c, transparent 55%);
+}
+.obsidian-shell-redesign .overview-total:after,
+.obsidian-shell-redesign .overview-stat:after {
+  background: var(--border);
+}
+.obsidian-shell-redesign .status-ring {
+  border-color: #a855f766;
+  color: #d8b4fe;
+}
+
+/* Search, filters, selects and editable fields */
+.obsidian-shell-redesign .ob-toolbar:before,
+.obsidian-shell-redesign .ob-toolbar:after {
+  background: linear-gradient(90deg, #a855f7 0%, #a855f7 43%, #06b6d4 58%, #27272a 70%, #09090b 100%);
+}
+.obsidian-shell-redesign .ob-search,
+.obsidian-shell-redesign .ob-sort select,
+.obsidian-shell-redesign .profile-select-label select,
+.obsidian-shell-redesign .ob-fields input,
+.obsidian-shell-redesign .new-profile input,
+.obsidian-shell-redesign .attachment-form input,
+.obsidian-shell-redesign .attachment-form select,
+.obsidian-shell-redesign .ob-customize-dialog .float-slider-wrap {
+  background: #101016 !important;
+  border-color: var(--border) !important;
+  color: var(--foreground) !important;
+}
+.obsidian-shell-redesign .ob-search input { color: var(--foreground); }
+.obsidian-shell-redesign .ob-search input::placeholder,
+.obsidian-shell-redesign .ob-search kbd { color: #71717a; }
+.obsidian-shell-redesign .ob-sort select option,
+.obsidian-shell-redesign .profile-select-label select option {
+  background: #0d0d12 !important;
+  color: var(--foreground) !important;
+}
+.obsidian-shell-redesign .ob-search:focus-within,
+.obsidian-shell-redesign .ob-sort select:focus,
+.obsidian-shell-redesign .profile-select-label select:focus,
+.obsidian-shell-redesign .ob-fields input:focus,
+.obsidian-shell-redesign .new-profile input:focus,
+.obsidian-shell-redesign .attachment-form input:focus,
+.obsidian-shell-redesign .attachment-form select:focus {
+  border-color: var(--ring) !important;
+  outline: 1px solid color-mix(in srgb, var(--ring) 45%, transparent);
+}
+.obsidian-shell-redesign .ob-filters button { color: var(--muted-foreground); }
+.obsidian-shell-redesign .ob-filters button.selected {
+  border-color: #a855f766;
+  background: #1e1b4b;
+  color: #f4f4f5;
+  box-shadow: 0 5px 18px #0007, 0 0 16px #a855f71a;
+}
+.obsidian-shell-redesign .ob-filters button.selected small { color: #c4b5fd; }
+
+/* Inventory cards use the supplied dark card/border tokens while retaining rarity colors. */
+.obsidian-shell-redesign .ob-item-card {
+  border-color: var(--border) !important;
+  background: linear-gradient(155deg, #171720, var(--card) 68%) !important;
+  color: var(--card-foreground);
+}
+.obsidian-shell-redesign .ob-item-card:hover {
+  border-color: color-mix(in srgb, var(--primary) 70%, var(--border)) !important;
+  box-shadow: 0 14px 32px #0008, 0 0 20px #a855f71c;
+}
+.obsidian-shell-redesign .ob-item-art {
+  background: radial-gradient(ellipse at 50% 58%, #a855f71c, transparent 66%), linear-gradient(145deg, #20202c, #101016 75%);
+  border-bottom-color: var(--border);
+}
+.obsidian-shell-redesign .ob-item-copy > strong { color: var(--foreground); }
+.obsidian-shell-redesign .ob-item-weapon,
+.obsidian-shell-redesign .ob-item-foot { color: var(--muted-foreground); }
+.obsidian-shell-redesign .ob-item-foot { border-top-color: var(--border); }
+.obsidian-shell-redesign .ob-item-foot b { color: #e4e4e7; }
+
+/* Buttons and focus states */
+.obsidian-shell-redesign .ob-button {
+  background: #181821;
+  color: var(--foreground);
+  border-color: var(--border);
+}
+.obsidian-shell-redesign .ob-button:hover {
+  background: #222131;
+  border-color: #a855f7aa;
+  box-shadow: 0 8px 22px #0008, 0 0 16px #a855f71c;
+}
+.obsidian-shell-redesign .ob-button.primary:not(.shimmer-button) {
+  background: var(--primary);
+  border-color: var(--primary);
+  color: var(--primary-foreground);
+}
+.obsidian-shell-redesign .ob-button.danger {
+  background: #2a151b;
+  color: #fecdd3;
+  border-color: #7f1d35;
+}
+.obsidian-shell-redesign .shimmer-button {
+  --shimmer-color: var(--accent);
+  --shimmer-background: #08080e;
+  border-color: #06b6d466;
+}
+.obsidian-shell-redesign .shimmer-button::before {
+  background: conic-gradient(from var(--shimmer-angle), #06b6d422 0deg, #06b6d422 225deg, #cffafe 264deg, var(--accent) 282deg, #06b6d428 312deg, #06b6d422 360deg);
+}
+.obsidian-shell-redesign .shimmer-button::after {
+  background: linear-gradient(110deg, transparent 25%, #06b6d422 48%, transparent 68%);
+}
+.obsidian-shell-redesign .shimmer-button:hover {
+  border-color: #06b6d4cc;
+  box-shadow: 0 0 22px #06b6d433, 0 10px 28px -16px #000;
+}
+.obsidian-shell-redesign :is(button, a, input, select):focus-visible {
+  outline-color: var(--ring);
+}
+
+/* Dialogs, profile rows, attachment editor and status feedback */
+.obsidian-shell-redesign .ob-overlay { background: #050508c9; }
+.obsidian-shell-redesign .ob-dialog {
+  border-color: #3b2860;
+  background: #0d0d12;
+  color: var(--foreground);
+  box-shadow: 0 25px 100px #000c, 0 0 32px #a855f71a;
+}
+.obsidian-shell-redesign .dialog-head,
+.obsidian-shell-redesign .dialog-actions,
+.obsidian-shell-redesign .dialog-foot,
+.obsidian-shell-redesign .profile-row,
+.obsidian-shell-redesign .detail-preview {
+  border-color: var(--border);
+}
+.obsidian-shell-redesign .dialog-head h2 { color: var(--foreground); }
+.obsidian-shell-redesign .dialog-head p,
+.obsidian-shell-redesign .dialog-foot,
+.obsidian-shell-redesign .profile-load small,
+.obsidian-shell-redesign .ob-catalogue-list small { color: var(--muted-foreground); }
+.obsidian-shell-redesign .dialog-close,
+.obsidian-shell-redesign .profile-delete { color: #d4d4d8 !important; }
+.obsidian-shell-redesign .profile-row.current { background: #1e1b4b66; }
+.obsidian-shell-redesign .profile-radio { border-color: var(--primary); }
+.obsidian-shell-redesign .profile-radio i { background: var(--primary); }
+.obsidian-shell-redesign .catalogue-thumb,
+.obsidian-shell-redesign .detail-preview-art { background: #181821; }
+.obsidian-shell-redesign .ob-catalogue-list button { border-bottom-color: var(--border); color: var(--foreground); }
+.obsidian-shell-redesign .attachment-section,
+.obsidian-shell-redesign .charm-current {
+  border-color: var(--border);
+  background: linear-gradient(145deg, #171720, #0d0d12);
+}
+.obsidian-shell-redesign .sticker-slot {
+  border-color: #3f3f46;
+  background: #101016;
+}
+.obsidian-shell-redesign .sticker-slot.filled {
+  border-color: #a855f777;
+  background: #1e1b4b66;
+}
+.obsidian-shell-redesign .attachment-form button,
+.obsidian-shell-redesign .charm-current > button {
+  border-color: #a855f799;
+  background: #1e1b4b;
+  color: #e9d5ff;
+}
+.obsidian-shell-redesign .ob-toast {
+  border-color: #155e75;
+  background: #0c1c22;
+  color: #cffafe;
+}
+.obsidian-shell-redesign .ob-armory-save-error {
+  border-color: #9f1239;
+  background: #1c0b12;
+  color: #ffe4e6;
+}
+.obsidian-shell-redesign .ob-armory-save-error strong { color: #fda4af; }
+.obsidian-shell-redesign .ob-armory-save-error span { color: #fecdd3; }
+.obsidian-shell-redesign .ob-armory-save-error button {
+  border-color: #9f1239;
+  background: #3f0d1d;
+  color: #ffe4e6;
+}
+.obsidian-shell-redesign .ob-footer { border-top-color: var(--border); }
+.obsidian-shell-redesign .ob-footer b { color: #c4b5fd; }
+.obsidian-shell-redesign .ob-footer i,
+.obsidian-shell-redesign .connection-dot,
+.obsidian-shell-redesign .live-dot,
+.obsidian-shell-redesign .armory-status-dot { background: var(--accent); box-shadow: 0 0 10px #06b6d466; }
+.obsidian-shell-redesign .cs2-status-text { color: #fda4af; }
+.obsidian-shell-redesign .cs2-status-dot { background: #ef4444; box-shadow: 0 0 11px #ef444466; }
+.obsidian-shell-redesign .diagnostic-state.online { background: #10b981; box-shadow: 0 0 9px #10b98177; }
