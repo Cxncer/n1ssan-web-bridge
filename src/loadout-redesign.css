@@ -345,25 +345,6 @@
 @media(max-width:560px){.loadout-redesign .loadout-item-card .ob-item-foot{gap:7px;font-size:10px}.loadout-redesign .loadout-item-card .ob-item-foot>span,.loadout-redesign .loadout-item-card .ob-item-foot b{font-size:10px}}
 
 
-/* Restore the original Loadout Item Details presentation; Configure Item is a separate dialog. */
-.loadout-redesign .lb-settings-modal{width:min(720px,100%);max-height:calc(100dvh - 40px);overflow-y:auto}
-.loadout-redesign .lb-settings-modal .lb-modal-header h3{color:#a9c3ff}
-.loadout-redesign .lb-settings-modal .lb-settings-summary{align-items:center;gap:20px;padding:16px;border:1px solid hsl(var(--border));border-radius:10px;background:linear-gradient(135deg,hsl(var(--secondary)),hsl(var(--card)))}
-.loadout-redesign .lb-settings-modal .lb-settings-summary>div{display:grid;gap:7px;min-width:0}
-.loadout-redesign .lb-settings-modal .lb-settings-summary>div strong{color:hsl(var(--foreground));font:600 20px Barlow,sans-serif}
-.loadout-redesign .lb-settings-modal .lb-settings-summary>div span{color:hsl(var(--ring));font:600 11px Barlow,sans-serif}
-.loadout-redesign .lb-settings-modal .lb-settings-summary>div small{color:hsl(var(--muted-foreground));font-size:10px}
-.loadout-redesign .lb-settings-modal .lb-setting-field{margin:0 0 23px}
-.loadout-redesign .lb-settings-modal .lb-setting-label label{color:hsl(var(--foreground));font-size:12px;font-weight:700}
-.loadout-redesign .lb-settings-modal .lb-setting-label strong{color:hsl(var(--ring));font-size:13px}
-.loadout-redesign .lb-settings-modal .lb-float-slider,
-.loadout-redesign .lb-settings-modal .lb-seed-slider{accent-color:hsl(var(--primary))}
-.loadout-redesign .lb-settings-modal .lb-number-input{border-color:hsl(var(--border));background:hsl(var(--card));color:hsl(var(--foreground));font-size:12px!important}
-.loadout-redesign .lb-settings-modal .lb-number-input:focus{border-color:hsl(var(--ring))}
-.loadout-redesign .lb-settings-modal .lb-field-help,
-.loadout-redesign .lb-settings-modal .lb-range-labels{color:hsl(var(--muted-foreground))}
-.loadout-redesign .lb-settings-modal .lb-save-settings-button{background:hsl(var(--primary));border-color:hsl(var(--primary));color:white}
-.loadout-redesign .lb-settings-modal .lb-save-settings-button:hover{background:hsl(var(--ring));border-color:hsl(var(--ring))}
 .loadout-redesign .loadout-configure-dialog{width:min(560px,100%);max-height:min(84vh,760px);overflow-y:auto;border:1px solid hsl(var(--border));border-radius:14px;background:hsl(var(--card))!important;color:hsl(var(--foreground));box-shadow:0 30px 110px #000e}
 .loadout-redesign .loadout-configure-dialog .dialog-head{padding:23px 25px 18px;border-bottom:1px solid hsl(var(--border))}
 .loadout-redesign .loadout-configure-dialog .dialog-head h2,
