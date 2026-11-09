@@ -1737,3 +1737,156 @@ body,button,input,select{font-family:'Barlow',sans-serif}
   .obsidian-shell-redesign .ob-dropdown-trigger svg,
   .obsidian-shell-redesign .ob-dropdown-item { transition: none; }
 }
+
+
+/* Armory polish: clearer type, roomier dialogs and native-style attachment previews. */
+.obsidian-shell-redesign .ob-dialog {
+  width: min(682px, calc(100vw - 36px)) !important;
+  max-height: min(90vh, 858px) !important;
+  border-radius: 12px;
+}
+.obsidian-shell-redesign .dialog-head { padding: 25px 28px 20px; }
+.obsidian-shell-redesign .dialog-head h2 { font-size: 27px; }
+.obsidian-shell-redesign .dialog-head p { font-size: 13px; }
+.obsidian-shell-redesign .dialog-foot { font-size: 12px; }
+.obsidian-shell-redesign .ob-kicker { font-size: 10px; }
+.obsidian-shell-redesign .ob-heading p,
+.obsidian-shell-redesign .profile-select-label > span,
+.obsidian-shell-redesign .ob-sort > span,
+.obsidian-shell-redesign .ob-section-meta,
+.obsidian-shell-redesign .ob-item-weapon,
+.obsidian-shell-redesign .ob-item-foot,
+.obsidian-shell-redesign .overview-total small,
+.obsidian-shell-redesign .overview-stat small,
+.obsidian-shell-redesign .metric-label,
+.obsidian-shell-redesign .profile-load small,
+.obsidian-shell-redesign .ob-catalogue-list small,
+.obsidian-shell-redesign .detail-preview small,
+.obsidian-shell-redesign .detail-preview span,
+.obsidian-shell-redesign .ob-fields label,
+.obsidian-shell-redesign .dialog-foot {
+  font-size: 11px;
+}
+.obsidian-shell-redesign .ob-item-copy > strong { font-size: 15px; }
+.obsidian-shell-redesign .ob-filters button { font-size: 13px; }
+.obsidian-shell-redesign .ob-filters button small { font-size: 11px; }
+.obsidian-shell-redesign .ob-search input,
+.obsidian-shell-redesign .ob-dropdown-trigger,
+.obsidian-shell-redesign .ob-dropdown-item { font-size: 13px; }
+.obsidian-shell-redesign .profile-load strong { font-size: 13px; }
+.obsidian-shell-redesign .profile-load small { font-size: 11px; }
+.obsidian-shell-redesign .profile-rename-trigger,
+.obsidian-shell-redesign .profile-delete {
+  width: 34px;
+  height: 34px;
+  display: grid;
+  place-items: center;
+  flex: 0 0 34px;
+  border: 1px solid #3f3f46;
+  border-radius: 8px;
+  background: #15151d;
+  color: #c4b5fd !important;
+  font-size: 16px;
+  transition: border-color .16s ease, background .16s ease;
+}
+.obsidian-shell-redesign .profile-rename-trigger:hover,
+.obsidian-shell-redesign .profile-delete:hover:not(:disabled) {
+  border-color: #a855f7;
+  background: #1e1b4b;
+}
+.obsidian-shell-redesign .profile-delete:disabled { opacity: .25; }
+.obsidian-shell-redesign .profile-rename {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 9px;
+}
+.obsidian-shell-redesign .profile-rename input {
+  flex: 1;
+  min-width: 0;
+  height: 38px;
+  padding: 0 12px;
+  border: 1px solid #a855f766;
+  border-radius: 8px;
+  outline: none;
+  background: #101016;
+  color: #f4f4f5;
+  font: 13px var(--font-sans);
+}
+.obsidian-shell-redesign .profile-action-save,
+.obsidian-shell-redesign .profile-action-cancel {
+  min-height: 36px;
+  padding: 0 12px;
+  border: 1px solid #3f3f46;
+  border-radius: 8px;
+  background: #181821;
+  color: #e4e4e7;
+  font-size: 12px;
+}
+.obsidian-shell-redesign .profile-action-save {
+  border-color: #7c3aed;
+  background: #3b1768;
+  color: #f5eaff;
+}
+.obsidian-shell-redesign .profile-action-save:disabled { opacity: .4; cursor: not-allowed; }
+.obsidian-shell-redesign .item-attachment-stack {
+  position: absolute;
+  z-index: 4;
+  top: 50%;
+  right: 9px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 5px;
+  max-height: calc(100% - 42px);
+  overflow: hidden;
+  transform: translateY(-50%);
+  pointer-events: none;
+}
+.obsidian-shell-redesign .item-attachment-thumb {
+  width: 36px;
+  height: 36px;
+  flex: 0 0 36px;
+  display: grid;
+  place-items: center;
+  overflow: hidden;
+  border: 1px solid #a855f788;
+  border-radius: 9px;
+  background: linear-gradient(145deg, #1e1b4b, #101016 75%);
+  box-shadow: 0 4px 12px #000a, 0 0 12px #a855f722;
+  backdrop-filter: blur(8px);
+}
+.obsidian-shell-redesign .item-attachment-thumb.charm {
+  border-color: #06b6d488;
+  background: linear-gradient(145deg, #12313a, #101016 75%);
+  box-shadow: 0 4px 12px #000a, 0 0 12px #06b6d422;
+}
+.obsidian-shell-redesign .item-attachment-thumb img {
+  position: relative;
+  z-index: 1;
+  width: 100%;
+  height: 100%;
+  padding: 3px;
+  object-fit: contain;
+  filter: drop-shadow(0 2px 4px #000b);
+}
+.obsidian-shell-redesign .item-attachment-thumb i {
+  color: #e9d5ff;
+  font: 600 10px var(--font-mono);
+  font-style: normal;
+}
+.obsidian-shell-redesign .item-attachment-thumb.charm i { color: #a5f3fc; }
+@media (max-width: 680px) {
+  .obsidian-shell-redesign .ob-dialog {
+    width: calc(100vw - 28px) !important;
+    max-height: 90vh !important;
+  }
+  .obsidian-shell-redesign .profile-rename { flex-wrap: wrap; }
+  .obsidian-shell-redesign .profile-rename input { flex-basis: 100%; }
+  .obsidian-shell-redesign .item-attachment-thumb {
+    width: 30px;
+    height: 30px;
+    flex-basis: 30px;
+  }
+}
