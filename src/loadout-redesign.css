@@ -186,3 +186,50 @@
 .loadout-redesign .lb-stattrak-toggle strong{font:600 12px Barlow,sans-serif}
 .loadout-redesign .lb-stattrak-toggle small{color:#91a5c1;font-size:10px}
 @media(max-width:760px){.loadout-redesign .loadout-item-card .ob-item-art{height:160px}.loadout-redesign .loadout-item-card .ob-item-copy{padding:11px 12px}}
+
+
+/* Unified picker header, animated search, three-column catalogue, and hover removal. */
+.loadout-redesign .lb-skin-picker-modal>.lb-picker-header{
+  display:grid;grid-template-columns:minmax(145px,1fr) minmax(320px,1.55fr) auto;
+  align-items:center;gap:18px;margin:0 0 14px;padding:0 0 16px;
+}
+.loadout-redesign .lb-picker-heading{min-width:0}
+.loadout-redesign .lb-picker-heading .lb-modal-subtitle{margin-top:6px}
+.loadout-redesign .lb-picker-header-controls{display:flex;align-items:center;justify-content:flex-end;gap:12px;min-width:0}
+.loadout-redesign .suggestive-search{position:relative;display:flex;align-items:center;flex:1 1 260px;min-width:130px;max-width:420px}
+.loadout-redesign .suggestive-search-icon{position:absolute;left:13px;z-index:1;width:13px;height:13px;border:1.7px solid #8ca8cc;border-radius:50%;pointer-events:none}
+.loadout-redesign .suggestive-search-icon:after{position:absolute;right:-5px;bottom:-3px;width:6px;height:1.7px;border-radius:2px;background:#8ca8cc;content:"";transform:rotate(45deg);transform-origin:left center}
+.loadout-redesign .suggestive-search .suggestive-search-input{width:100%;min-width:0;height:40px;margin:0;padding:0 12px 0 38px;border:1px solid #304866;border-radius:9px;background:#09111e;color:#eaf2ff;font-size:12px;outline:none;box-shadow:inset 0 1px 2px #0005;transition:border-color .18s,box-shadow .18s}
+.loadout-redesign .suggestive-search .suggestive-search-input:focus{border-color:#75aaff;box-shadow:0 0 0 3px #4f8fe822}
+.loadout-redesign .suggestive-search .suggestive-search-input::placeholder{color:#7890af;opacity:1}
+.loadout-redesign .lb-picker-header-controls .lb-sort-control{gap:8px;margin:0}
+.loadout-redesign .lb-picker-header-controls .lb-sort-control select{min-width:112px;height:40px;padding:0 28px 0 10px;border:1px solid #304866;border-radius:9px;background:#09111e;color:#eaf2ff;font-size:11px}
+.loadout-redesign .lb-picker-header>.lb-close-button{align-self:start}
+.loadout-redesign .lb-skin-picker-modal>.lb-picker-grid{grid-template-columns:repeat(3,minmax(0,1fr));grid-auto-rows:minmax(190px,auto);gap:13px;padding:3px 9px 10px 3px}
+.loadout-redesign .lb-picker-card-wrap{position:relative;min-width:0;min-height:190px;border:1px solid #263a56;border-radius:11px;background:linear-gradient(145deg,#111d30,#0b1422);transition:border-color .16s,background .16s,transform .16s,box-shadow .16s}
+.loadout-redesign .lb-picker-card-wrap:hover,.loadout-redesign .lb-picker-card-wrap.selected{border-color:#75aaff;background:linear-gradient(145deg,#172943,#0e1a2c);box-shadow:0 7px 20px #0004}
+.loadout-redesign .lb-picker-card-main{display:flex;width:100%;height:100%;min-height:188px;flex-direction:column;align-items:stretch;gap:8px;padding:10px;border:0;border-radius:inherit;background:transparent;color:#eaf2ff;text-align:left;cursor:pointer}
+.loadout-redesign .lb-picker-card-main:focus-visible{outline:2px solid #75aaff;outline-offset:-3px}
+.loadout-redesign .lb-picker-card-main .lb-picker-image{width:100%;height:116px;min-height:116px;padding:5px;border-radius:7px;background:radial-gradient(ellipse at center,#1d304b 0%,#0a1422 78%)}
+.loadout-redesign .lb-picker-card-main .lb-picker-image img{width:100%;height:100%;object-fit:contain}
+.loadout-redesign .lb-picker-card-main strong{display:-webkit-box;min-height:32px;overflow:visible;color:#eaf2ff;font-size:12px;line-height:1.35;overflow-wrap:anywhere;white-space:normal;-webkit-box-orient:vertical;-webkit-line-clamp:2}
+.loadout-redesign .lb-picker-card-main>small:not(.lb-rarity-label){overflow:visible;color:#9eb4d1;font-size:10px;line-height:1.3;text-overflow:clip;white-space:normal;overflow-wrap:anywhere}
+.loadout-redesign .lb-picker-card-main .lb-rarity-label{align-self:flex-start;max-width:100%;overflow:hidden;padding:3px 6px;border:1px solid;border-radius:5px;font-size:9px;line-height:1.2;text-overflow:ellipsis;white-space:nowrap}
+.loadout-redesign .lb-picker-remove{position:absolute;top:7px;right:7px;display:flex;width:27px;height:27px;align-items:center;justify-content:center;padding:0;border:1px solid #75aaff;border-radius:50%;background:#09111eeb;color:#dceaff;font-size:20px;line-height:1;opacity:0;pointer-events:none;transform:scale(.88);transition:opacity .14s,transform .14s,background .14s;cursor:pointer}
+.loadout-redesign .lb-picker-card-wrap:hover .lb-picker-remove,.loadout-redesign .lb-picker-card-wrap:focus-within .lb-picker-remove{opacity:1;pointer-events:auto;transform:scale(1)}
+.loadout-redesign .lb-picker-remove:hover{background:#4f8fe8;color:#06101f}
+@media(max-width:700px){
+  .loadout-redesign .lb-skin-picker-modal>.lb-picker-header{grid-template-columns:minmax(0,1fr) auto;gap:12px}
+  .loadout-redesign .lb-picker-header-controls{grid-column:1/-1;grid-row:2;justify-content:stretch}
+  .loadout-redesign .lb-picker-header-controls .suggestive-search{max-width:none}
+  .loadout-redesign .lb-picker-header-controls .lb-sort-control{flex:0 0 auto}
+  .loadout-redesign .lb-picker-header-controls .lb-sort-control select{min-width:96px}
+  .loadout-redesign .lb-skin-picker-modal>.lb-picker-grid{grid-template-columns:repeat(3,minmax(0,1fr));grid-auto-rows:minmax(158px,auto);height:min(520px,52vh);max-height:min(520px,52vh);gap:8px}
+  .loadout-redesign .lb-picker-card-wrap{min-height:158px}
+  .loadout-redesign .lb-picker-card-main{min-height:156px;padding:7px;gap:6px}
+  .loadout-redesign .lb-picker-card-main .lb-picker-image{height:84px;min-height:84px}
+  .loadout-redesign .lb-picker-card-main strong{font-size:10px;min-height:27px}
+}
+@media(prefers-reduced-motion:reduce){
+  .loadout-redesign .suggestive-search .suggestive-search-input,.loadout-redesign .lb-picker-card-wrap,.loadout-redesign .lb-picker-remove{transition:none}
+}
