@@ -1071,3 +1071,129 @@ body,button,input,select{font-family:'Barlow',sans-serif}
 .obsidian-shell-redesign .ob-main#inventory{padding-top:30px}
 .obsidian-shell-redesign .ob-line-sidebar{z-index:15}
 @media(max-width:600px){.obsidian-shell-redesign .ob-main#inventory{padding-top:24px}}
+
+
+/* React Bits LineSidebar integration: animated proximity response on the nav rail. */
+.obsidian-shell-redesign .ob-line-nav {
+  width: 100%;
+  padding: 0;
+  overflow: visible;
+}
+.obsidian-shell-redesign .ob-line-nav.line-sidebar--markers {
+  padding-left: calc(var(--marker-length) + var(--marker-gap));
+}
+.obsidian-shell-redesign .ob-line-nav .line-sidebar__list {
+  width: 100%;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: var(--item-gap);
+}
+.obsidian-shell-redesign .ob-line-nav .line-sidebar__item {
+  position: relative;
+  width: 100%;
+  min-height: 28px;
+  cursor: pointer;
+}
+.obsidian-shell-redesign .ob-line-nav .line-sidebar__label {
+  display: inline-flex;
+  align-items: baseline;
+  white-space: nowrap;
+  font: 400 var(--font-size) / 1.2 'DM Sans', sans-serif;
+  letter-spacing: .1px;
+  color: color-mix(in srgb, var(--accent-color) calc(var(--effect, 0) * 100%), var(--text-color));
+  transform: translateX(calc(var(--effect, 0) * var(--max-shift)));
+}
+.obsidian-shell-redesign .ob-line-nav .line-sidebar__index {
+  margin-right: 13px;
+  color: color-mix(in srgb, var(--accent-color) calc(var(--effect, 0) * 100%), #59645c);
+  font: 10px 'DM Mono', monospace;
+  letter-spacing: .5px;
+}
+.obsidian-shell-redesign .ob-line-nav .line-sidebar__marker {
+  position: absolute;
+  top: 50%;
+  left: calc(-1 * var(--marker-length) - var(--marker-gap));
+  width: var(--marker-length);
+  height: 1px;
+  background: color-mix(in srgb, var(--accent-color) calc(var(--effect, 0) * 100%), var(--marker-color));
+  transform: translateY(-50%) scaleX(calc(.7 + var(--effect, 0) * .5));
+  transform-origin: left center;
+}
+.obsidian-shell-redesign .ob-line-nav .line-sidebar__item:not(:last-child)::after {
+  content: '';
+  position: absolute;
+  top: calc(100% + var(--item-gap) / 2);
+  left: calc(-1 * var(--marker-length) - var(--marker-gap));
+  width: calc(var(--marker-length) * var(--tick-scale));
+  height: 1px;
+  background: var(--marker-color);
+  opacity: .5;
+  transform: translateY(-50%) scaleX(calc(.7 + var(--effect, 0) * .6));
+  transform-origin: left center;
+}
+.obsidian-shell-redesign .ob-line-nav .line-sidebar__item:focus-visible .line-sidebar__label {
+  outline: 1px solid var(--accent-color);
+  outline-offset: 5px;
+  border-radius: 2px;
+}
+@media(max-width:900px) {
+  .obsidian-shell-redesign .ob-line-sidebar {
+    width: 194px;
+    padding: 22px 18px 18px;
+    align-items: stretch;
+  }
+  .obsidian-shell-redesign .ob-main {
+    margin-left: 194px;
+  }
+}
+@media(max-width:600px) {
+  .obsidian-shell-redesign .ob-line-sidebar {
+    width: auto;
+    padding: 0 12px;
+    align-items: center;
+  }
+  .obsidian-shell-redesign .ob-line-nav {
+    flex: 1;
+    width: 100%;
+    flex-direction: row;
+    justify-content: center;
+    padding: 0 !important;
+    --max-shift: 8px !important;
+  }
+  .obsidian-shell-redesign .ob-line-nav .line-sidebar__list {
+    width: 100%;
+    flex-direction: row;
+    justify-content: space-around;
+    align-items: center;
+    gap: 8px;
+    padding: 0;
+  }
+  .obsidian-shell-redesign .ob-line-nav .line-sidebar__item {
+    width: auto;
+    min-height: 0;
+    padding: 8px 5px;
+    border-top: 1px solid #28312b;
+  }
+  .obsidian-shell-redesign .ob-line-nav .line-sidebar__item[aria-current='page'] {
+    border-top: 2px solid #8dbb91;
+  }
+  .obsidian-shell-redesign .ob-line-nav .line-sidebar__label {
+    font-size: 10px;
+  }
+  .obsidian-shell-redesign .ob-line-nav .line-sidebar__index {
+    display: block;
+    margin: 0 0 3px;
+    font-size: 8px;
+    text-align: center;
+  }
+  .obsidian-shell-redesign .ob-line-nav.line-sidebar--markers {
+    padding-left: 0;
+  }
+  .obsidian-shell-redesign .ob-line-nav .line-sidebar__marker,
+  .obsidian-shell-redesign .ob-line-nav .line-sidebar__item::after {
+    display: none;
+  }
+}
