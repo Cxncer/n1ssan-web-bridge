@@ -455,6 +455,7 @@ export default function LoadoutApp({ skins }: LoadoutBuilderProps) {
         const nextSettings = { ...skinSettings, [team]: { ...skinSettings[team], [settingsKey(chosen.weapon, chosen.id)]: value } }
         setSkinSettings(nextSettings)
         syncActiveProfile({ loadouts, skinSettings: nextSettings, equipment: nextEquipment })
+        setActiveEquipment(slot)
         setActiveWeapon(chosen.weapon)
         setFloatDraft(value.float.toFixed(6)); setSeedDraft(String(value.seed)); setStattrakDraft(value.stattrak ?? false); setCustomNameDraft(value.customName ?? '')
         setConfigureMode(true); setSettingsOpen(true)
@@ -508,13 +509,13 @@ export default function LoadoutApp({ skins }: LoadoutBuilderProps) {
   return <div className="obsidian-shell obsidian-shell-redesign loadout-redesign">
     <aside className="ob-line-sidebar" aria-label="Loadout navigation">
       <a className="ob-line-brand" href="#home" onClick={event => { event.preventDefault(); setPage('home'); setActiveNavIndex(0) }} aria-label="n1ssan Home"><img src={n1ssanLogo} alt="n1ssan" /></a>
-      <LineSidebar key={activeNavIndex} className="ob-line-nav" items={['Home','Loadout','Diagnostics']} accentColor="#4f8fe8" textColor="#a1a1aa" markerColor="#34445d" showIndex showMarker proximityRadius={100} maxShift={30} falloff="smooth" markerLength={60} markerGap={0} tickScale={0.5} scaleTick itemGap={20} fontSize={1.1} smoothing={100} defaultActive={activeNavIndex} onItemClick={index => { setActiveNavIndex(index); setPage(index === 0 ? 'home' : index === 1 ? 'loadout' : 'diagnostics') }} />
+      <LineSidebar key={activeNavIndex} className="ob-line-nav" items={['Home','Loadout','Diagnostics']} accentColor="#3677ef" textColor="#8b909e" markerColor="#272b36" showIndex showMarker proximityRadius={100} maxShift={30} falloff="smooth" markerLength={60} markerGap={0} tickScale={0.5} scaleTick itemGap={20} fontSize={1.1} smoothing={100} defaultActive={activeNavIndex} onItemClick={index => { setActiveNavIndex(index); setPage(index === 0 ? 'home' : index === 1 ? 'loadout' : 'diagnostics') }} />
       <div className="ob-line-sidebar-foot"><span className="armory-status-dot" /><span>{runtimeStatus.tone === 'error' ? 'ATTENTION' : 'LOADOUT READY'}</span></div>
     </aside>
     <main className={`ob-main loadout-main ${page === 'home' ? 'home-mode' : ''}`} id={page}>
       {page === 'home' ? <section className="ob-cinematic-home loadout-cinematic-home">
         <div className="ob-cinematic-copy"><div className="ob-cinematic-kicker"><span /> COUNTER-STRIKE 2 · PERSONAL LOADOUT</div><h1>Every CS2 skin.<br/><span>In a click.</span></h1>
-          <ShimmerButton shimmerColor="#75aaff" shimmerSize="0.08em" shimmerDuration="3s" borderRadius="9999px" background="#050508" onClick={() => { setPage('loadout'); setActiveNavIndex(1) }} className="ob-initiate-specular"><span>Initiate</span><span aria-hidden="true" className="ob-initiate-arrow">↗</span></ShimmerButton>
+          <ShimmerButton shimmerColor="#3677ef" shimmerSize="0.08em" shimmerDuration="3s" borderRadius="9999px" background="#050508" onClick={() => { setPage('loadout'); setActiveNavIndex(1) }} className="ob-initiate-specular"><span>Initiate</span><span aria-hidden="true" className="ob-initiate-arrow">↗</span></ShimmerButton>
         </div>
         <div className="ob-rickshaw-stage" aria-hidden="true"><img src={rickshawImage} alt="" /></div><div className="ob-home-index">N1 / LOADOUT SYSTEM <span>—</span> 001</div>
       </section> : page === 'loadout' ? <>
@@ -550,7 +551,7 @@ export default function LoadoutApp({ skins }: LoadoutBuilderProps) {
       {!equipmentChoices.length && <div className="lb-empty"><h3>No matching items</h3><p>Try another search or check the generated catalogue's item categories.</p></div>}
     </div></div>}
 
-    {settingsOpen && activeWeapon && activeSkin && activeSettings && <div className="lb-modal-backdrop ob-detail-overlay" onClick={() => setSettingsOpen(false)}><section className="ob-dialog ob-detail-dialog loadout-item-details" role="dialog" aria-modal="true" aria-label={`Item details for ${activeWeapon}`} onClick={e => e.stopPropagation()}>
+    {settingsOpen && activeWeapon && activeSkin && activeSettings && <div className="lb-modal-backdrop ob-detail-overlay" onClick={() => { setSettingsOpen(false); setActiveEquipment(null); setActiveWeapon(null); setConfigureMode(false) }}><section className="ob-dialog ob-detail-dialog loadout-item-details" role="dialog" aria-modal="true" aria-label={`Item details for ${activeWeapon}`} onClick={e => e.stopPropagation()}>
       <div className="dialog-head"><div><h2>{configureMode ? <>Configure <span>item.</span></> : <>Item <span>details.</span></>}</h2></div><button className="dialog-close" type="button" onClick={() => { setSettingsOpen(false); setActiveEquipment(null); setActiveWeapon(null); setConfigureMode(false) }} aria-label="Close item details">×</button></div>
       <div className="detail-preview"><div className="detail-preview-art">{imageOf(activeSkin) && <img src={imageOf(activeSkin)} alt="" />}</div><div><small>{activeSkin.weapon}</small><h3>{activeSkin.name}</h3><span className="detail-rarity-line"><b style={{ color: rarityColor(activeSkin.rarity) }}>{activeSkin.rarity}</b><i>·</i>{activeEquipment === 'agent' ? 'Agents' : activeEquipment === 'knife' ? 'Knives' : activeEquipment === 'gloves' ? 'Gloves' : activeSkin.type || activeSlotContext?.category || 'Weapon skin'}</span></div></div>
       <div className="ob-fields loadout-configure-fields">
