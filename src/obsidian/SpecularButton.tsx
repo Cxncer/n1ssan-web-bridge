@@ -66,7 +66,7 @@ void main() {
   vec2 pool = (p - uEntry) / (uHalf.y * vec2(1.6, 1.1));
   float glow = streak * 0.2 * exp(-abs(d + width * 0.5) / (5.0 * uPx)) + inside * 0.08 * exp(-dot(pool, pool));
   float light = clamp((band * streak + glow * uGlow) * uIntensity, 0.0, 1.0);
-  vec4 base = vec4(uBaseColor, 1.0) * hair * 0.6;
+  vec4 base = vec4(uBaseColor, 1.0) * inside;
   outColor = vec4(uLineColor, 1.0) * light + base * (1.0 - light);
 }`;
 
