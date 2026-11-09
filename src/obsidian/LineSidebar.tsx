@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
-import type { PointerEvent as ReactPointerEvent } from 'react'
+import type { CSSProperties, PointerEvent as ReactPointerEvent } from 'react'
+import './LineSidebar.css'
 
 type Falloff = 'linear' | 'smooth' | 'sharp'
 
@@ -143,7 +144,7 @@ export default function LineSidebar({
         '--item-gap': `${itemGap}px`,
         '--font-size': `${fontSize}rem`,
         '--smoothing': `${smoothing}ms`,
-      } as React.CSSProperties}
+      } as CSSProperties}
     >
       <ul
         ref={listRef}
