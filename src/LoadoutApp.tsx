@@ -16,7 +16,7 @@ export type Skin = {
 type SkinId = number | string
 type Team = 'T' | 'CT'
 type SavedLoadouts = Record<Team, Record<string, SkinId | null>>
-type SkinSettings = { seed: number; float: number }
+type SkinSettings = { seed: number; float: number; stattrak?: boolean }
 type SavedSkinSettings = Record<Team, Record<string, SkinSettings>>
 type EquipmentSlot = 'agent' | 'knife' | 'gloves' | 'zeus'
 type TeamEquipment = Record<EquipmentSlot, SkinId | null>
@@ -212,6 +212,7 @@ export default function LoadoutApp({ skins }: LoadoutBuilderProps) {
   const [activeNavIndex, setActiveNavIndex] = useState(0)
   const [floatDraft, setFloatDraft] = useState('0.000000')
   const [seedDraft, setSeedDraft] = useState('0')
+  const [stattrakDraft, setStattrakDraft] = useState(false)
   const [dialog, setDialog] = useState<DialogState>(null)
   const [profileManagerOpen, setProfileManagerOpen] = useState(false)
   const [activeSlotContext, setActiveSlotContext] = useState<{ category: string; index: number } | null>(null)
@@ -435,6 +436,7 @@ export default function LoadoutApp({ skins }: LoadoutBuilderProps) {
       setActiveWeapon(weapon)
       setFloatDraft(configured.float.toFixed(6))
       setSeedDraft(String(configured.seed))
+      setStattrakDraft(configured.stattrak ?? false)
       setPickerOpen(false)
       setSettingsOpen(true)
     } else {
@@ -450,7 +452,7 @@ export default function LoadoutApp({ skins }: LoadoutBuilderProps) {
     setActiveEquipment(null); setEquipmentSearch('')
   }
   function openPicker(weapon: string, category?: string, index?: number) { setActiveWeapon(weapon); setActiveSlotContext(category && index !== undefined ? { category, index } : null); setPickerSearch(''); setSkinSort('popular'); setPickerOpen(true); setSettingsOpen(false); setActiveEquipment(null) }
-  function openItemDetails(weapon: string, category?: string, index?: number) { const skin = selectedSkin(weapon); if (!skin) { openPicker(weapon); return } const value = skinSettings[team][settingsKey(weapon, skin.id)] ?? defaults(skin); setActiveWeapon(weapon); setActiveSlotContext(category && index !== undefined ? { category, index } : null); setFloatDraft(value.float.toFixed(6)); setSeedDraft(String(value.seed)); setSettingsOpen(true); setPickerOpen(false); setActiveEquipment(null) }
+  function openItemDetails(weapon: string, category?: string, index?: number) { const skin = selectedSkin(weapon); if (!skin) { openPicker(weapon); return } const value = skinSettings[team][settingsKey(weapon, skin.id)] ?? defaults(skin); setActiveWeapon(weapon); setActiveSlotContext(category && index !== undefined ? { category, index } : null); setFloatDraft(value.float.toFixed(6)); setSeedDraft(String(value.seed)); setStattrakDraft(value.stattrak ?? false); setSettingsOpen(true); setPickerOpen(false); setActiveEquipment(null) }
   function openEquipmentPicker(slot: EquipmentSlot) { setEquipmentSearch(''); setEquipmentSort('popular'); setEquipmentWeaponFilter('All'); setActiveEquipment(slot); setPickerOpen(false); setSettingsOpen(false) }
   function saveSettings() {
     if (!activeWeapon) return
@@ -460,7 +462,7 @@ export default function LoadoutApp({ skins }: LoadoutBuilderProps) {
     if (!Number.isFinite(f) || !Number.isFinite(rawSeed)) return
     const value = Math.min(l.max, Math.max(l.min, f)), seed = Math.min(1000, Math.max(0, Math.round(rawSeed)))
     const key = settingsKey(activeWeapon, s.id)
-    const nextSkinSettings = { ...skinSettings, [team]: { ...skinSettings[team], [key]: { float: Number(value.toFixed(6)), seed } } }
+    const nextSkinSettings = { ...skinSettings, [team]: { ...skinSettings[team], [key]: { float: Number(value.toFixed(6)), seed, stattrak: stattrakDraft } } }
     setSkinSettings(nextSkinSettings)
     syncActiveProfile({ loadouts, skinSettings: nextSkinSettings, equipment })
     setSettingsOpen(false)
@@ -529,6 +531,7 @@ export default function LoadoutApp({ skins }: LoadoutBuilderProps) {
       <div className="lb-settings-summary"><img src={imageOf(activeSkin)} alt={activeSkin.name} /><div><strong>{activeSkin.name}</strong><span>{activeSkin.weapon} · <b style={{ color: rarityColor(activeSkin.rarity) }}>{activeSkin.rarity}</b></span><small>Wear: {wear(Number(floatDraft) || activeSettings.float)} · Pattern seed {Math.max(0, Math.min(1000, Math.round(Number(seedDraft) || 0)))}</small></div></div>
       <div className="lb-setting-field"><div className="lb-setting-label"><label htmlFor="lb-float">Float value</label><strong>{Number(floatDraft || 0).toFixed(6)}</strong></div><input id="lb-float" className="lb-float-slider" type="range" min={activeLimits.min} max={activeLimits.max} step="0.000001" value={Math.min(activeLimits.max, Math.max(activeLimits.min, Number(floatDraft) || activeLimits.min))} onChange={e => setFloatDraft(e.target.value)} /><div className="lb-range-labels"><span>Min {activeLimits.min.toFixed(6)}</span><span>Max {activeLimits.max.toFixed(6)}</span></div><input className="lb-number-input" aria-label="Exact float value" type="number" min={activeLimits.min} max={activeLimits.max} step="0.000001" value={floatDraft} onChange={e => setFloatDraft(e.target.value)} /><small className="lb-field-help">Float limits are specific to each finish when available. Missing limits fall back to 0.000000–1.000000.</small></div>
       <div className="lb-setting-field"><div className="lb-setting-label"><label htmlFor="lb-seed">Pattern seed</label><strong>{Math.max(0, Math.min(1000, Math.round(Number(seedDraft) || 0)))}</strong></div><input id="lb-seed" className="lb-number-input" type="number" min="0" max="1000" step="1" value={seedDraft} onChange={e => setSeedDraft(e.target.value)} /><input className="lb-seed-slider" aria-label="Pattern seed slider" type="range" min="0" max="1000" step="1" value={Math.max(0, Math.min(1000, Math.round(Number(seedDraft) || 0)))} onChange={e => setSeedDraft(e.target.value)} /><div className="lb-range-labels"><span>Seed 0</span><span>Seed 1000</span></div><small className="lb-field-help">Seed is stored for this skin, but does not change its static image.</small></div>
+      <label className="lb-stattrak-toggle"><input type="checkbox" checked={stattrakDraft} onChange={e => setStattrakDraft(e.target.checked)}/><span><strong>StatTrak™</strong><small>Display the StatTrak finish indicator on this card.</small></span></label>
       <div className="lb-settings-actions"><button type="button" className="lb-unequip-button" onClick={() => { setSettingsOpen(false); openPicker(activeWeapon, activeSlotContext?.category, activeSlotContext?.index) }}>Change skin</button><button type="button" className="lb-save-settings-button" onClick={saveSettings}>Done</button></div>
     </div></div>}
 
