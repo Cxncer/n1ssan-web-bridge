@@ -77,7 +77,7 @@ function defaultWeaponSlots(side: Team): Record<string, (string | null)[]> {
 }
 function weaponSlotsForProfile(profile: LoadoutProfile): SavedWeaponSlots {
   const sideSlots = (side: Team) => Object.fromEntries(TEAM_WEAPONS[side].map(column => {
-    const previouslyEquipped = column.weapons.filter(weapon => profile.loadouts?.[side]?.[weapon] != null).slice(0, 5)
+    const previouslyEquipped = column.weapons.filter((weapon): weapon is string => typeof weapon === 'string' && profile.loadouts?.[side]?.[weapon] != null).slice(0, 5)
     const preferred = defaultWeaponSlots(side)[column.title] ?? []
     const remaining = preferred.filter(weapon => !previouslyEquipped.includes(weapon)).concat(column.weapons.filter(weapon => !previouslyEquipped.includes(weapon) && !preferred.includes(weapon)))
     return [column.title, [...previouslyEquipped, ...remaining].slice(0, 5)]
@@ -487,13 +487,6 @@ export default function LoadoutApp({ skins }: LoadoutBuilderProps) {
   }
   function openPicker(weapon: string) { setActiveWeapon(weapon); setPickerSearch(''); setPickerColorFilter(''); setSkinSort('popular'); setPickerOpen(true); setSettingsOpen(false); setActiveEquipment(null) }
   function openEquipmentPicker(slot: EquipmentSlot) { setEquipmentSearch(''); setEquipmentColorFilter(''); setEquipmentSort('popular'); setActiveEquipment(slot); setPickerOpen(false); setSettingsOpen(false) }
-  function openSettings(weapon: string) {
-    const s = selectedSkin(weapon)
-    if (!s) { openPicker(weapon); return }
-    const current = skinSettings[team][settingsKey(weapon, s.id)] ?? defaults(s)
-    setActiveWeapon(weapon); setFloatDraft(current.float.toFixed(6)); setSeedDraft(String(current.seed))
-    setSettingsOpen(true); setPickerOpen(false); setActiveEquipment(null)
-  }
   function saveSettings() {
     if (!activeWeapon) return
     const s = selectedSkin(activeWeapon)
