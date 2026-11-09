@@ -505,7 +505,6 @@ export default function LoadoutApp({ skins }: LoadoutBuilderProps) {
   const activeSkin = activeEquipment ? selectedItem(activeEquipment) : activeWeapon ? selectedSkin(activeWeapon) : undefined
   const activeSettingsKey = activeWeapon && activeSkin ? settingsKey(activeWeapon, activeSkin.id) : ''
   const activeSettings = activeSkin ? skinSettings[team][activeSettingsKey] ?? defaults(activeSkin) : null
-  const activeLimits = activeSkin ? limits(activeSkin) : { min: 0, max: 1 }
   const activeEquipmentTitle = activeEquipment ? EQUIPMENT_INFO[activeEquipment].title : ''
   const totalEquipped = equippedCountT + equippedCountCT
   const savedFloatSeedCount = Object.keys(skinSettings.T).length + Object.keys(skinSettings.CT).length
