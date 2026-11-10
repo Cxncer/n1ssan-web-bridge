@@ -55,12 +55,17 @@ function publishArmoryEvent(event: string, payload: Record<string, unknown>): vo
 const PORT = Number(process.env.N1SSAN_PORT ?? 3210)
 const HOST = '127.0.0.1'
 const MAX_ITEMS = 100
+const DATA_DIRECTORY = process.env.N1SSAN_DATA_DIR
+  ? path.resolve(process.env.N1SSAN_DATA_DIR)
+  : null
 const DATA_FILE = process.env.N1SSAN_DATA_FILE
   ? path.resolve(process.env.N1SSAN_DATA_FILE)
-  : path.join(process.cwd(), 'n1ssan-data.json')
+  : DATA_DIRECTORY
+    ? path.join(DATA_DIRECTORY, 'n1ssan-data.json')
+    : path.join(process.cwd(), 'n1ssan-data.json')
 const ARMORY_FILE = process.env.N1SSAN_ARMORY_FILE
   ? path.resolve(process.env.N1SSAN_ARMORY_FILE)
-  : path.join(process.cwd(), 'armory-data.json')
+  : path.join(DATA_DIRECTORY ?? process.cwd(), 'armory-data.json')
 const armoryStore = new ArmoryStore(ARMORY_FILE)
 const EQUIPMENT_FILE = process.env.N1SSAN_EQUIPMENT_FILE
   ? path.resolve(process.env.N1SSAN_EQUIPMENT_FILE)
@@ -1104,6 +1109,22 @@ app.post('/skins', async (req: Request, res: Response) => {
   }
 })
 
+if (process.env.N1SSAN_WEB_DIST) {
+  const webDistDirectory = path.resolve(process.env.N1SSAN_WEB_DIST)
+  const webIndexFile = path.join(webDistDirectory, 'index.html')
+
+  app.get('/loadout', (_req, res, next) => {
+    res.sendFile(webIndexFile, err => {
+      if (err) next(err)
+    })
+  })
+
+  app.use(express.static(webDistDirectory, {
+    fallthrough: true,
+    index: ['index.html'],
+  }))
+  console.log('Production web assets:', webDistDirectory)
+}
 app.use(
   (
     err: Error & { status?: number },
