@@ -1,6 +1,6 @@
 import express from 'express'
 import type { Request, Response, NextFunction } from 'express'
-import { copyFile, readFile, writeFile, rename, mkdir, rm, readdir, access } from 'node:fs/promises'
+import { copyFile, readFile, writeFile, rename, mkdir, rm, access, cp } from 'node:fs/promises'
 import path from 'node:path'
 import os from 'node:os'
 import {
@@ -88,6 +88,7 @@ const LEGACY_CONFIG_FILES = [
   'armory-inventory.json',
   'armory-native-equipment.json',
   'runtime-mode.json',
+  'runtime-mode-active.json',
   'loadout-profiles.json',
   'loadout-profiles.json.bak',
   'armory-detected-attachments.json',
@@ -110,9 +111,7 @@ async function migrateLegacyConfigurations(): Promise<void> {
   const archivedConfigsDirectory = path.join(backupRoot, 'bridge-configs')
   if (await fileExists(legacyConfigsDirectory)) {
     await mkdir(backupRoot, { recursive: true })
-    await import('node:fs/promises').then(({ cp }) =>
-      cp(legacyConfigsDirectory, archivedConfigsDirectory, { recursive: true, errorOnExist: false, force: false }),
-    )
+    await cp(legacyConfigsDirectory, archivedConfigsDirectory, { recursive: true, errorOnExist: false, force: false })
     await rm(legacyConfigsDirectory, { recursive: true, force: true })
     console.log('Archived and retired legacy Bridge configs directory')
   }
