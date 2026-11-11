@@ -1,11 +1,93 @@
 // bridge/server.ts
 import express from "express";
-import { copyFile as copyFile4, readFile as readFile5, writeFile as writeFile5, rename as rename5 } from "node:fs/promises";
-import path3 from "node:path";
+import { copyFile as copyFile5, readFile as readFile6, writeFile as writeFile5, rename as rename5, mkdir as mkdir4 } from "node:fs/promises";
+import path4 from "node:path";
+import os from "node:os";
+
+// bridge/config-migration.ts
+import { copyFile, readFile, mkdir, rm, rmdir, access, readdir, stat } from "node:fs/promises";
+import { createHash } from "node:crypto";
+import path from "node:path";
+var LEGACY_FILES = [
+  "n1ssan-data.json",
+  "n1ssan-data.json.bak",
+  "armory-data.json",
+  "armory-data.json.bak",
+  "armory-equipment.json",
+  "armory-equipment.json.bak",
+  "armory-inventory.json",
+  "armory-native-equipment.json",
+  "runtime-mode.json",
+  "loadout-profiles.json",
+  "loadout-profiles.json.bak",
+  "armory-detected-attachments.json",
+  "armory-attachments-ack.json"
+];
+async function exists(file) {
+  try {
+    await access(file);
+    return true;
+  } catch {
+    return false;
+  }
+}
+async function hash(file) {
+  return createHash("sha256").update(await readFile(file)).digest("hex");
+}
+async function migrateLegacyConfigurations(options) {
+  const { dataDirectory, legacyRoot } = options;
+  const backupRoot = options.backupRoot ?? path.join(
+    path.dirname(dataDirectory),
+    "backups",
+    `operation-reforge-${(/* @__PURE__ */ new Date()).toISOString().replace(/[:.]/g, "-")}`
+  );
+  await mkdir(dataDirectory, { recursive: true });
+  const sources = [
+    ...LEGACY_FILES.map((name) => ({
+      file: path.join(legacyRoot, name),
+      relative: `bridge-root/${name}`
+    })),
+    ...LEGACY_FILES.map((name) => ({
+      file: path.join(legacyRoot, "configs", name),
+      relative: `bridge-configs/${name}`
+    }))
+  ];
+  for (const source of sources) {
+    if (!await exists(source.file)) continue;
+    if (!(await stat(source.file)).isFile()) {
+      throw new Error(`Legacy configuration is not a regular file: ${source.file}`);
+    }
+    const backupFile = path.join(backupRoot, source.relative);
+    await mkdir(path.dirname(backupFile), { recursive: true });
+    if (await exists(backupFile)) {
+      if (await hash(source.file) !== await hash(backupFile)) {
+        throw new Error(`Backup verification failed: ${backupFile}`);
+      }
+    } else {
+      await copyFile(source.file, backupFile);
+      if (await hash(source.file) !== await hash(backupFile)) {
+        throw new Error(`Backup verification failed: ${backupFile}`);
+      }
+    }
+    const canonicalFile = path.join(dataDirectory, path.basename(source.file));
+    if (!await exists(canonicalFile)) {
+      await copyFile(source.file, canonicalFile);
+      if (await hash(source.file) !== await hash(canonicalFile)) {
+        throw new Error(`Migration verification failed: ${canonicalFile}`);
+      }
+    }
+    await rm(source.file);
+  }
+  const legacyDirectory = path.join(legacyRoot, "configs");
+  if (await exists(legacyDirectory)) {
+    const remaining = await readdir(legacyDirectory);
+    if (remaining.length === 0) await rmdir(legacyDirectory);
+  }
+}
 
 // bridge/armory-store.ts
-import { copyFile, mkdir, readFile, rename, writeFile } from "node:fs/promises";
-import path from "node:path";
+import { copyFile as copyFile2, mkdir as mkdir2, readFile as readFile2, rename, writeFile } from "node:fs/promises";
+import path2 from "node:path";
 
 // src/armory/contracts.ts
 var ARMORY_SCHEMA_VERSION = 1;
@@ -232,7 +314,7 @@ var ArmoryStore = class {
     this.filePath = filePath;
   }
   async initialize() {
-    await mkdir(path.dirname(this.filePath), { recursive: true });
+    await mkdir2(path2.dirname(this.filePath), { recursive: true });
     try {
       this.document = await this.readDocument(this.filePath);
       return;
@@ -261,7 +343,7 @@ var ArmoryStore = class {
         });
       }
       const damagedPath = `${this.filePath}.corrupt-${Date.now()}`;
-      await copyFile(this.filePath, damagedPath);
+      await copyFile2(this.filePath, damagedPath);
       await this.persist(this.document, false);
     }
   }
@@ -297,7 +379,7 @@ var ArmoryStore = class {
     return operation;
   }
   async readDocument(filePath) {
-    const contents = await readFile(filePath, "utf8");
+    const contents = await readFile2(filePath, "utf8");
     const parsed = JSON.parse(contents);
     const errors = validateArmoryDocument(parsed);
     if (errors.length > 0) {
@@ -312,7 +394,7 @@ var ArmoryStore = class {
 `, "utf8");
     if (backupCurrent) {
       try {
-        await copyFile(this.filePath, backupPath);
+        await copyFile2(this.filePath, backupPath);
       } catch (error) {
         if (error.code !== "ENOENT") throw error;
       }
@@ -435,8 +517,8 @@ function createLocalIntegrationSnapshot(armory, selectedItems, loadout, generate
 }
 
 // bridge/armory-equipment-store.ts
-import { copyFile as copyFile2, mkdir as mkdir2, readFile as readFile2, rename as rename2, writeFile as writeFile2 } from "node:fs/promises";
-import path2 from "node:path";
+import { copyFile as copyFile3, mkdir as mkdir3, readFile as readFile3, rename as rename2, writeFile as writeFile2 } from "node:fs/promises";
+import path3 from "node:path";
 var EquipmentRevisionConflictError = class extends Error {
   constructor() {
     super("Armory inventory changed since equipment was last read");
@@ -462,9 +544,9 @@ var ArmoryEquipmentStore = class {
     this.filePath = filePath;
   }
   async initialize(armory) {
-    await mkdir2(path2.dirname(this.filePath), { recursive: true });
+    await mkdir3(path3.dirname(this.filePath), { recursive: true });
     try {
-      const parsed = JSON.parse(await readFile2(this.filePath, "utf8"));
+      const parsed = JSON.parse(await readFile3(this.filePath, "utf8"));
       if (!isEquipmentDocumentShape(parsed)) {
         throw new Error("Invalid Armory equipment file structure");
       }
@@ -473,7 +555,7 @@ var ArmoryEquipmentStore = class {
       const primaryMissing = error.code === "ENOENT";
       let backup;
       try {
-        backup = JSON.parse(await readFile2(`${this.filePath}.bak`, "utf8"));
+        backup = JSON.parse(await readFile3(`${this.filePath}.bak`, "utf8"));
       } catch (backupError) {
         if (primaryMissing && backupError.code === "ENOENT") {
           this.document = createEmptyEquipmentDocument(armory);
@@ -488,7 +570,7 @@ var ArmoryEquipmentStore = class {
       this.document = backup;
       if (!primaryMissing) {
         const damagedPath = `${this.filePath}.corrupt-${Date.now()}`;
-        await copyFile2(this.filePath, damagedPath);
+        await copyFile3(this.filePath, damagedPath);
       }
       await this.persist(this.document, false);
     }
@@ -522,7 +604,7 @@ var ArmoryEquipmentStore = class {
 `, "utf8");
     if (backupCurrent) {
       try {
-        await copyFile2(this.filePath, `${this.filePath}.bak`);
+        await copyFile3(this.filePath, `${this.filePath}.bak`);
       } catch (error) {
         if (error.code !== "ENOENT") throw error;
       }
@@ -532,7 +614,7 @@ var ArmoryEquipmentStore = class {
 };
 
 // bridge/attachments-sync.ts
-import { readFile as readFile3, rename as rename3, writeFile as writeFile3 } from "node:fs/promises";
+import { readFile as readFile4, rename as rename3, writeFile as writeFile3 } from "node:fs/promises";
 function isRecord3(value) {
   return typeof value === "object" && value !== null && !Array.isArray(value);
 }
@@ -668,7 +750,7 @@ var AttachmentsSync = class {
   }
   async readDetection() {
     try {
-      const text = await readFile3(this.options.detectionPath, "utf8");
+      const text = await readFile4(this.options.detectionPath, "utf8");
       const parsed = JSON.parse(text);
       return isRecord3(parsed) ? parsed : null;
     } catch {
@@ -37660,7 +37742,7 @@ var n1ssan_cs2_schema_default = {
 };
 
 // bridge/loadout-profiles-store.ts
-import { copyFile as copyFile3, readFile as readFile4, rename as rename4, writeFile as writeFile4 } from "node:fs/promises";
+import { copyFile as copyFile4, readFile as readFile5, rename as rename4, writeFile as writeFile4 } from "node:fs/promises";
 var LoadoutValidationError = class extends Error {
   details;
   constructor(details) {
@@ -37748,7 +37830,7 @@ var LoadoutProfilesStore = class {
   }
   async initialize() {
     try {
-      const parsed = JSON.parse(await readFile4(this.filePath, "utf8"));
+      const parsed = JSON.parse(await readFile5(this.filePath, "utf8"));
       if (isRecord5(parsed) && parsed.schemaVersion === 1 && typeof parsed.activeProfileId === "string" && Array.isArray(parsed.profiles)) {
         this.document = parsed;
         return;
@@ -37757,7 +37839,7 @@ var LoadoutProfilesStore = class {
     } catch (error) {
       if (error.code !== "ENOENT") {
         try {
-          const backup = JSON.parse(await readFile4(`${this.filePath}.bak`, "utf8"));
+          const backup = JSON.parse(await readFile5(`${this.filePath}.bak`, "utf8"));
           if (isRecord5(backup) && backup.schemaVersion === 1 && Array.isArray(backup.profiles)) {
             this.document = backup;
             return;
@@ -37806,7 +37888,7 @@ var LoadoutProfilesStore = class {
     await writeFile4(temporaryPath, `${JSON.stringify(this.document, null, 2)}
 `, "utf8");
     try {
-      await copyFile3(this.filePath, `${this.filePath}.bak`);
+      await copyFile4(this.filePath, `${this.filePath}.bak`);
     } catch (error) {
       if (error.code !== "ENOENT") throw error;
     }
@@ -38440,18 +38522,22 @@ function publishArmoryEvent(event, payload) {
 var PORT = Number(process.env.N1SSAN_PORT ?? 3210);
 var HOST = "127.0.0.1";
 var MAX_ITEMS = 100;
-var DATA_DIRECTORY = process.env.N1SSAN_DATA_DIR ? path3.resolve(process.env.N1SSAN_DATA_DIR) : null;
-var DATA_FILE = process.env.N1SSAN_DATA_FILE ? path3.resolve(process.env.N1SSAN_DATA_FILE) : DATA_DIRECTORY ? path3.join(DATA_DIRECTORY, "n1ssan-data.json") : path3.join(process.cwd(), "n1ssan-data.json");
-var ARMORY_FILE = process.env.N1SSAN_ARMORY_FILE ? path3.resolve(process.env.N1SSAN_ARMORY_FILE) : path3.join(DATA_DIRECTORY ?? process.cwd(), "armory-data.json");
+var DATA_DIRECTORY = process.env.NODE_ENV === "test" && process.env.N1SSAN_TEST_CONFIG_DIR ? path4.resolve(process.env.N1SSAN_TEST_CONFIG_DIR) : path4.join(
+  process.env.LOCALAPPDATA ?? path4.join(os.homedir(), "AppData", "Local"),
+  "n1ssan",
+  "configs"
+);
+var DATA_FILE = path4.join(DATA_DIRECTORY, "n1ssan-data.json");
+var ARMORY_FILE = path4.join(DATA_DIRECTORY, "armory-data.json");
 var armoryStore = new ArmoryStore(ARMORY_FILE);
-var EQUIPMENT_FILE = process.env.N1SSAN_EQUIPMENT_FILE ? path3.resolve(process.env.N1SSAN_EQUIPMENT_FILE) : path3.join(path3.dirname(ARMORY_FILE), "armory-equipment.json");
+var EQUIPMENT_FILE = path4.join(DATA_DIRECTORY, "armory-equipment.json");
 var equipmentStore = new ArmoryEquipmentStore(EQUIPMENT_FILE);
-var ARMORY_INVENTORY_FILE = process.env.N1SSAN_ARMORY_INVENTORY_FILE ? path3.resolve(process.env.N1SSAN_ARMORY_INVENTORY_FILE) : path3.join(path3.dirname(ARMORY_FILE), "armory-inventory.json");
-var MODE_FILE = process.env.N1SSAN_MODE_FILE ? path3.resolve(process.env.N1SSAN_MODE_FILE) : path3.join(path3.dirname(ARMORY_FILE), "runtime-mode.json");
-var LOADOUT_FILE = process.env.N1SSAN_LOADOUT_FILE ? path3.resolve(process.env.N1SSAN_LOADOUT_FILE) : path3.join(path3.dirname(ARMORY_FILE), "loadout-profiles.json");
+var ARMORY_INVENTORY_FILE = path4.join(DATA_DIRECTORY, "armory-inventory.json");
+var MODE_FILE = path4.join(DATA_DIRECTORY, "runtime-mode.json");
+var LOADOUT_FILE = path4.join(DATA_DIRECTORY, "loadout-profiles.json");
 var loadoutStore = new LoadoutProfilesStore(LOADOUT_FILE);
-var ATTACHMENTS_FILE = process.env.N1SSAN_ATTACHMENTS_FILE ? path3.resolve(process.env.N1SSAN_ATTACHMENTS_FILE) : path3.join(path3.dirname(ARMORY_FILE), "armory-detected-attachments.json");
-var ATTACHMENTS_ACK_FILE = process.env.N1SSAN_ATTACHMENTS_ACK_FILE ? path3.resolve(process.env.N1SSAN_ATTACHMENTS_ACK_FILE) : path3.join(path3.dirname(ARMORY_FILE), "armory-attachments-ack.json");
+var ATTACHMENTS_FILE = path4.join(DATA_DIRECTORY, "armory-detected-attachments.json");
+var ATTACHMENTS_ACK_FILE = path4.join(DATA_DIRECTORY, "armory-attachments-ack.json");
 var runtimeCatalogue = buildLoadoutRuntimeCatalogue([
   ...skins_default,
   ...knife_skins_default
@@ -38555,7 +38641,7 @@ async function writeRuntimeMode(mode) {
 }
 async function readRuntimeMode() {
   try {
-    const parsed = JSON.parse(await readFile5(MODE_FILE, "utf8"));
+    const parsed = JSON.parse(await readFile6(MODE_FILE, "utf8"));
     if (parsed && typeof parsed === "object" && (parsed.mode === "loadout" || parsed.mode === "armory")) {
       return parsed.mode;
     }
@@ -38712,7 +38798,7 @@ async function saveState(state) {
 `;
   await writeFile5(temporaryFile, contents, "utf8");
   try {
-    await copyFile4(DATA_FILE, backupFile);
+    await copyFile5(DATA_FILE, backupFile);
   } catch (error) {
     if (error.code !== "ENOENT") {
       throw error;
@@ -38726,7 +38812,7 @@ function queueSave(state) {
   return operation;
 }
 async function readValidState(filePath) {
-  const contents = await readFile5(filePath, "utf8");
+  const contents = await readFile6(filePath, "utf8");
   const saved = JSON.parse(contents);
   if (!isObject(saved) || saved.version !== 1 || !Array.isArray(saved.skins) || !(saved.loadout === null || isObject(saved.loadout) && Number.isSafeInteger(saved.loadout.id) && saved.loadout.id >= 1 && typeof saved.loadout.profile === "string" && isTeam2(saved.loadout.team) && (saved.loadout.teams === void 0 || Array.isArray(saved.loadout.teams) && saved.loadout.teams.every(isTeam2)) && typeof saved.loadout.receivedAt === "string" && Number.isSafeInteger(saved.loadout.itemCount) && saved.loadout.itemCount >= 0) || !Number.isSafeInteger(saved.nextLoadoutId) || saved.nextLoadoutId < 1) {
     throw new Error(`Invalid saved-data structure in ${filePath}`);
@@ -38769,7 +38855,7 @@ async function restoreState() {
   } catch (primaryError) {
     if (primaryError.code === "ENOENT") {
       try {
-        await readFile5(backupFile, "utf8");
+        await readFile6(backupFile, "utf8");
       } catch (backupError) {
         if (backupError.code === "ENOENT") {
           console.log("No saved loadout yet. Starting with an empty Bridge.");
@@ -38794,9 +38880,9 @@ Backup error: ${String(backupError)}`,
     );
   }
   try {
-    await readFile5(DATA_FILE, "utf8");
+    await readFile6(DATA_FILE, "utf8");
     const damagedCopy = `${DATA_FILE}.corrupt-${Date.now()}`;
-    await copyFile4(DATA_FILE, damagedCopy);
+    await copyFile5(DATA_FILE, damagedCopy);
     console.error(`Preserved the original primary save as: ${damagedCopy}`);
   } catch (error) {
     if (error.code !== "ENOENT") {
@@ -39171,8 +39257,8 @@ app.post("/skins", async (req, res) => {
   }
 });
 if (process.env.N1SSAN_WEB_DIST) {
-  const webDistDirectory = path3.resolve(process.env.N1SSAN_WEB_DIST);
-  const webIndexFile = path3.join(webDistDirectory, "index.html");
+  const webDistDirectory = path4.resolve(process.env.N1SSAN_WEB_DIST);
+  const webIndexFile = path4.join(webDistDirectory, "index.html");
   app.get("/loadout", (_req, res, next) => {
     res.sendFile(webIndexFile, (err) => {
       if (err) next(err);
@@ -39200,6 +39286,14 @@ app.use(
   }
 );
 async function start() {
+  await mkdir4(DATA_DIRECTORY, { recursive: true });
+  console.log("Canonical configuration directory:", DATA_DIRECTORY);
+  if (process.env.NODE_ENV !== "test") {
+    await migrateLegacyConfigurations({
+      dataDirectory: DATA_DIRECTORY,
+      legacyRoot: process.cwd()
+    });
+  }
   await restoreState();
   await armoryStore.initialize();
   await equipmentStore.initialize(armoryStore.read());
