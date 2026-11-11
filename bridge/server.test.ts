@@ -85,7 +85,7 @@ async function stopServer(): Promise<void> {
 
 before(async () => {
   tempDir = await mkdtemp(path.join(os.tmpdir(), 'n1ssan-bridge-test-'))
-  dataFile = path.join(tempDir, 'test-data.json')
+  dataFile = path.join(tempDir, 'n1ssan-data.json')
   await startServer()
 })
 
