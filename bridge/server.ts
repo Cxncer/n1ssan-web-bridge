@@ -58,11 +58,13 @@ const HOST = '127.0.0.1'
 const MAX_ITEMS = 100
 // All persistent user data has one canonical location. Environment overrides
 // are intentionally not supported: Bridge, Launcher and DLL must agree.
-const DATA_DIRECTORY = path.join(
-  process.env.LOCALAPPDATA ?? path.join(os.homedir(), 'AppData', 'Local'),
-  'n1ssan',
-  'configs',
-)
+const DATA_DIRECTORY = process.env.NODE_ENV === 'test' && process.env.N1SSAN_TEST_CONFIG_DIR
+  ? path.resolve(process.env.N1SSAN_TEST_CONFIG_DIR)
+  : path.join(
+      process.env.LOCALAPPDATA ?? path.join(os.homedir(), 'AppData', 'Local'),
+      'n1ssan',
+      'configs',
+    )
 const DATA_FILE = path.join(DATA_DIRECTORY, 'n1ssan-data.json')
 const ARMORY_FILE = path.join(DATA_DIRECTORY, 'armory-data.json')
 const armoryStore = new ArmoryStore(ARMORY_FILE)
@@ -100,6 +102,8 @@ async function fileExists(filePath: string): Promise<boolean> {
 }
 
 async function migrateLegacyConfigurations(): Promise<void> {
+  if (process.env.NODE_ENV === 'test') return
+
   const backupRoot = path.join(
     path.dirname(DATA_DIRECTORY),
     'backups',
