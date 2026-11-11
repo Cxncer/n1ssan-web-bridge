@@ -39,11 +39,9 @@ async function startServer(): Promise<void> {
       cwd: process.cwd(),
       env: {
         ...process.env,
+        NODE_ENV: 'test',
         N1SSAN_PORT: String(PORT),
-        N1SSAN_DATA_FILE: dataFile,
-        N1SSAN_ARMORY_FILE: path.join(tempDir, 'armory-data.json'),
-        N1SSAN_ARMORY_INVENTORY_FILE: path.join(tempDir, 'armory-inventory.json'),
-        N1SSAN_EQUIPMENT_FILE: path.join(tempDir, 'armory-equipment.json'),
+        N1SSAN_TEST_CONFIG_DIR: tempDir,
       },
       stdio: 'ignore',
     },
@@ -87,7 +85,7 @@ async function stopServer(): Promise<void> {
 
 before(async () => {
   tempDir = await mkdtemp(path.join(os.tmpdir(), 'n1ssan-bridge-test-'))
-  dataFile = path.join(tempDir, 'test-data.json')
+  dataFile = path.join(tempDir, 'n1ssan-data.json')
   await startServer()
 })
 

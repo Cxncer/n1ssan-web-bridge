@@ -22,7 +22,7 @@ this file.
 ```
 Shared skin catalogue (skins.json + knife-skins.json)
         ↓  Loadout profile selections (catalogue IDs + float/seed)
-loadout-profiles.json   (active Loadout profile, Bridge-owned)
+%LOCALAPPDATA%\\n1ssan\\configs\\loadout-profiles.json   (active Loadout profile, Bridge-owned)
         ↓  catalogue resolution (Bridge)
 n1ssan-data.json        (this contract)
         ↓  file watcher, staged, adopted on the game thread
@@ -31,7 +31,7 @@ n1ssan-dll.dll runtime  (g_targets)
 
 ## File format
 
-`n1ssan-data.json` in the Bridge working directory (or `N1SSAN_DATA_FILE`).
+`%LOCALAPPDATA%\\n1ssan\\configs\\n1ssan-data.json`. All persistent Bridge and DLL configuration files share this canonical directory; Bridge working-directory and environment-variable data-path overrides are retired.
 Written atomically (`.tmp` + rename). The native parser accepts the same legacy
 shape as before:
 
@@ -90,7 +90,7 @@ destination page opens, through `POST /runtime-mode`.
   skips Loadout application — the `FrameStageNotify` apply pass and PlanA's
   SOCache injection are disabled, so `n1ssan-data.json` cannot override the
   skins equipped in game. `n1ssan-data.json` is ignored.
-- No mode file yet means Loadout (backward compatible).
+- No mode file yet means neutral/Unknown; the Launcher waits for an explicit workspace selection.
 
 Switching mode takes effect within about a second. Items created by the previous
 mode are not deleted automatically yet; restart CS2 (or the injection) in the

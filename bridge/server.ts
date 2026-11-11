@@ -1,7 +1,8 @@
 import express from 'express'
 import type { Request, Response, NextFunction } from 'express'
-import { copyFile, readFile, writeFile, rename } from 'node:fs/promises'
+import { copyFile, readFile, writeFile, rename, mkdir, rm, access, cp } from 'node:fs/promises'
 import path from 'node:path'
+import os from 'node:os'
 import {
   ArmoryRevisionConflictError,
   ArmoryStore,
@@ -55,38 +56,91 @@ function publishArmoryEvent(event: string, payload: Record<string, unknown>): vo
 const PORT = Number(process.env.N1SSAN_PORT ?? 3210)
 const HOST = '127.0.0.1'
 const MAX_ITEMS = 100
-const DATA_DIRECTORY = process.env.N1SSAN_DATA_DIR
-  ? path.resolve(process.env.N1SSAN_DATA_DIR)
-  : null
-const DATA_FILE = process.env.N1SSAN_DATA_FILE
-  ? path.resolve(process.env.N1SSAN_DATA_FILE)
-  : DATA_DIRECTORY
-    ? path.join(DATA_DIRECTORY, 'n1ssan-data.json')
-    : path.join(process.cwd(), 'n1ssan-data.json')
-const ARMORY_FILE = process.env.N1SSAN_ARMORY_FILE
-  ? path.resolve(process.env.N1SSAN_ARMORY_FILE)
-  : path.join(DATA_DIRECTORY ?? process.cwd(), 'armory-data.json')
+// All persistent user data has one canonical location. Environment overrides
+// are intentionally not supported: Bridge, Launcher and DLL must agree.
+const DATA_DIRECTORY = process.env.NODE_ENV === 'test' && process.env.N1SSAN_TEST_CONFIG_DIR
+  ? path.resolve(process.env.N1SSAN_TEST_CONFIG_DIR)
+  : path.join(
+      process.env.LOCALAPPDATA ?? path.join(os.homedir(), 'AppData', 'Local'),
+      'n1ssan',
+      'configs',
+    )
+const DATA_FILE = path.join(DATA_DIRECTORY, 'n1ssan-data.json')
+const ARMORY_FILE = path.join(DATA_DIRECTORY, 'armory-data.json')
 const armoryStore = new ArmoryStore(ARMORY_FILE)
-const EQUIPMENT_FILE = process.env.N1SSAN_EQUIPMENT_FILE
-  ? path.resolve(process.env.N1SSAN_EQUIPMENT_FILE)
-  : path.join(path.dirname(ARMORY_FILE), 'armory-equipment.json')
+const EQUIPMENT_FILE = path.join(DATA_DIRECTORY, 'armory-equipment.json')
 const equipmentStore = new ArmoryEquipmentStore(EQUIPMENT_FILE)
-const ARMORY_INVENTORY_FILE = process.env.N1SSAN_ARMORY_INVENTORY_FILE
-  ? path.resolve(process.env.N1SSAN_ARMORY_INVENTORY_FILE)
-  : path.join(path.dirname(ARMORY_FILE), 'armory-inventory.json')
-const MODE_FILE = process.env.N1SSAN_MODE_FILE
-  ? path.resolve(process.env.N1SSAN_MODE_FILE)
-  : path.join(path.dirname(ARMORY_FILE), 'runtime-mode.json')
-const LOADOUT_FILE = process.env.N1SSAN_LOADOUT_FILE
-  ? path.resolve(process.env.N1SSAN_LOADOUT_FILE)
-  : path.join(path.dirname(ARMORY_FILE), 'loadout-profiles.json')
+const ARMORY_INVENTORY_FILE = path.join(DATA_DIRECTORY, 'armory-inventory.json')
+const MODE_FILE = path.join(DATA_DIRECTORY, 'runtime-mode.json')
+const LOADOUT_FILE = path.join(DATA_DIRECTORY, 'loadout-profiles.json')
 const loadoutStore = new LoadoutProfilesStore(LOADOUT_FILE)
-const ATTACHMENTS_FILE = process.env.N1SSAN_ATTACHMENTS_FILE
-  ? path.resolve(process.env.N1SSAN_ATTACHMENTS_FILE)
-  : path.join(path.dirname(ARMORY_FILE), 'armory-detected-attachments.json')
-const ATTACHMENTS_ACK_FILE = process.env.N1SSAN_ATTACHMENTS_ACK_FILE
-  ? path.resolve(process.env.N1SSAN_ATTACHMENTS_ACK_FILE)
-  : path.join(path.dirname(ARMORY_FILE), 'armory-attachments-ack.json')
+const ATTACHMENTS_FILE = path.join(DATA_DIRECTORY, 'armory-detected-attachments.json')
+const ATTACHMENTS_ACK_FILE = path.join(DATA_DIRECTORY, 'armory-attachments-ack.json')
+
+// One-time, lossless retirement of legacy Bridge-local configuration variants.
+// Conflicting files are preserved in LocalAppData\\n1ssan\\backups; the
+// canonical file is never overwritten by an older copy.
+const LEGACY_CONFIG_FILES = [
+  'n1ssan-data.json',
+  'n1ssan-data.json.bak',
+  'armory-data.json',
+  'armory-data.json.bak',
+  'armory-equipment.json',
+  'armory-equipment.json.bak',
+  'armory-inventory.json',
+  'armory-native-equipment.json',
+  'runtime-mode.json',
+  'runtime-mode-active.json',
+  'loadout-profiles.json',
+  'loadout-profiles.json.bak',
+  'armory-detected-attachments.json',
+  'armory-attachments-ack.json',
+]
+
+async function fileExists(filePath: string): Promise<boolean> {
+  try { await access(filePath); return true } catch { return false }
+}
+
+async function migrateLegacyConfigurations(): Promise<void> {
+  if (process.env.NODE_ENV === 'test') return
+
+  const backupRoot = path.join(
+    path.dirname(DATA_DIRECTORY),
+    'backups',
+    `operation-reforge-${new Date().toISOString().replace(/[:.]/g, '-')}`,
+  )
+  await mkdir(DATA_DIRECTORY, { recursive: true })
+
+  const legacyConfigsDirectory = path.join(process.cwd(), 'configs')
+  const archivedConfigsDirectory = path.join(backupRoot, 'bridge-configs')
+  if (await fileExists(legacyConfigsDirectory)) {
+    await mkdir(backupRoot, { recursive: true })
+    await cp(legacyConfigsDirectory, archivedConfigsDirectory, { recursive: true, errorOnExist: false, force: false })
+    await rm(legacyConfigsDirectory, { recursive: true, force: true })
+    console.log('Archived and retired legacy Bridge configs directory')
+  }
+
+  const sources = [
+    ...LEGACY_CONFIG_FILES.map(name => ({ file: path.join(process.cwd(), name), relative: `bridge-root/${name}` })),
+    ...LEGACY_CONFIG_FILES.map(name => ({ file: path.join(archivedConfigsDirectory, name), relative: `bridge-configs/${name}` })),
+  ]
+
+  for (const source of sources) {
+    if (!(await fileExists(source.file))) continue
+    const backupFile = path.join(backupRoot, source.relative)
+    await mkdir(path.dirname(backupFile), { recursive: true })
+    if (!(await fileExists(backupFile))) await copyFile(source.file, backupFile)
+
+    // A mode acknowledgement is transient and must be regenerated by the DLL.
+    const isAcknowledgement = path.basename(source.file) === 'runtime-mode-active.json'
+    const canonicalFile = path.join(DATA_DIRECTORY, path.basename(source.file))
+    if (!isAcknowledgement && !(await fileExists(canonicalFile))) {
+      await copyFile(source.file, canonicalFile)
+    }
+    await rm(source.file, { force: true })
+  }
+}
+
 
 // Shared skin metadata. Loadout resolves catalogue IDs directly; Armory
 // inventory is a separate feature and is never consulted here.
@@ -1153,6 +1207,10 @@ app.use(
 )
 
 async function start(): Promise<void> {
+  // Create the sole persistent-data directory before any store reads or writes.
+  await mkdir(DATA_DIRECTORY, { recursive: true })
+  console.log('Canonical configuration directory:', DATA_DIRECTORY)
+  await migrateLegacyConfigurations()
   // If recovery fails, don't launch with empty state.
   await restoreState()
   await armoryStore.initialize()
