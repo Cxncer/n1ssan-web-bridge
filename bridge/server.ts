@@ -2,6 +2,8 @@ import express from 'express'
 import type { Request, Response, NextFunction } from 'express'
 import { copyFile, readFile, writeFile, rename } from 'node:fs/promises'
 import path from 'node:path'
+import os from 'node:os'
+import { mkdir } from 'node:fs/promises'
 import {
   ArmoryRevisionConflictError,
   ArmoryStore,
@@ -55,38 +57,24 @@ function publishArmoryEvent(event: string, payload: Record<string, unknown>): vo
 const PORT = Number(process.env.N1SSAN_PORT ?? 3210)
 const HOST = '127.0.0.1'
 const MAX_ITEMS = 100
-const DATA_DIRECTORY = process.env.N1SSAN_DATA_DIR
-  ? path.resolve(process.env.N1SSAN_DATA_DIR)
-  : null
-const DATA_FILE = process.env.N1SSAN_DATA_FILE
-  ? path.resolve(process.env.N1SSAN_DATA_FILE)
-  : DATA_DIRECTORY
-    ? path.join(DATA_DIRECTORY, 'n1ssan-data.json')
-    : path.join(process.cwd(), 'n1ssan-data.json')
-const ARMORY_FILE = process.env.N1SSAN_ARMORY_FILE
-  ? path.resolve(process.env.N1SSAN_ARMORY_FILE)
-  : path.join(DATA_DIRECTORY ?? process.cwd(), 'armory-data.json')
+// All persistent user data has one canonical location. Environment overrides
+// are intentionally not supported: Bridge, Launcher and DLL must agree.
+const DATA_DIRECTORY = path.join(
+  process.env.LOCALAPPDATA ?? path.join(os.homedir(), 'AppData', 'Local'),
+  'n1ssan',
+  'configs',
+)
+const DATA_FILE = path.join(DATA_DIRECTORY, 'n1ssan-data.json')
+const ARMORY_FILE = path.join(DATA_DIRECTORY, 'armory-data.json')
 const armoryStore = new ArmoryStore(ARMORY_FILE)
-const EQUIPMENT_FILE = process.env.N1SSAN_EQUIPMENT_FILE
-  ? path.resolve(process.env.N1SSAN_EQUIPMENT_FILE)
-  : path.join(path.dirname(ARMORY_FILE), 'armory-equipment.json')
+const EQUIPMENT_FILE = path.join(DATA_DIRECTORY, 'armory-equipment.json')
 const equipmentStore = new ArmoryEquipmentStore(EQUIPMENT_FILE)
-const ARMORY_INVENTORY_FILE = process.env.N1SSAN_ARMORY_INVENTORY_FILE
-  ? path.resolve(process.env.N1SSAN_ARMORY_INVENTORY_FILE)
-  : path.join(path.dirname(ARMORY_FILE), 'armory-inventory.json')
-const MODE_FILE = process.env.N1SSAN_MODE_FILE
-  ? path.resolve(process.env.N1SSAN_MODE_FILE)
-  : path.join(path.dirname(ARMORY_FILE), 'runtime-mode.json')
-const LOADOUT_FILE = process.env.N1SSAN_LOADOUT_FILE
-  ? path.resolve(process.env.N1SSAN_LOADOUT_FILE)
-  : path.join(path.dirname(ARMORY_FILE), 'loadout-profiles.json')
+const ARMORY_INVENTORY_FILE = path.join(DATA_DIRECTORY, 'armory-inventory.json')
+const MODE_FILE = path.join(DATA_DIRECTORY, 'runtime-mode.json')
+const LOADOUT_FILE = path.join(DATA_DIRECTORY, 'loadout-profiles.json')
 const loadoutStore = new LoadoutProfilesStore(LOADOUT_FILE)
-const ATTACHMENTS_FILE = process.env.N1SSAN_ATTACHMENTS_FILE
-  ? path.resolve(process.env.N1SSAN_ATTACHMENTS_FILE)
-  : path.join(path.dirname(ARMORY_FILE), 'armory-detected-attachments.json')
-const ATTACHMENTS_ACK_FILE = process.env.N1SSAN_ATTACHMENTS_ACK_FILE
-  ? path.resolve(process.env.N1SSAN_ATTACHMENTS_ACK_FILE)
-  : path.join(path.dirname(ARMORY_FILE), 'armory-attachments-ack.json')
+const ATTACHMENTS_FILE = path.join(DATA_DIRECTORY, 'armory-detected-attachments.json')
+const ATTACHMENTS_ACK_FILE = path.join(DATA_DIRECTORY, 'armory-attachments-ack.json')
 
 // Shared skin metadata. Loadout resolves catalogue IDs directly; Armory
 // inventory is a separate feature and is never consulted here.
@@ -1153,6 +1141,9 @@ app.use(
 )
 
 async function start(): Promise<void> {
+  // Create the sole persistent-data directory before any store reads or writes.
+  await mkdir(DATA_DIRECTORY, { recursive: true })
+  console.log('Canonical configuration directory:', DATA_DIRECTORY)
   // If recovery fails, don't launch with empty state.
   await restoreState()
   await armoryStore.initialize()
