@@ -1,6 +1,7 @@
 // bridge/server.ts
 import express from "express";
 import { copyFile as copyFile5, readFile as readFile6, writeFile as writeFile5, rename as rename5, mkdir as mkdir4 } from "node:fs/promises";
+import { randomUUID } from "node:crypto";
 import path4 from "node:path";
 import os from "node:os";
 
@@ -38528,6 +38529,7 @@ var DATA_DIRECTORY = process.env.NODE_ENV === "test" && process.env.N1SSAN_TEST_
   "configs"
 );
 var DATA_FILE = path4.join(DATA_DIRECTORY, "n1ssan-data.json");
+var LEGACY_STATE_FILE = path4.join(DATA_DIRECTORY, "n1ssan-legacy-loadout.json");
 var ARMORY_FILE = path4.join(DATA_DIRECTORY, "armory-data.json");
 var armoryStore = new ArmoryStore(ARMORY_FILE);
 var EQUIPMENT_FILE = path4.join(DATA_DIRECTORY, "armory-equipment.json");
@@ -38635,7 +38637,12 @@ async function projectInventoryOrReport() {
 }
 async function writeRuntimeMode(mode) {
   const temporaryPath = `${MODE_FILE}.tmp`;
-  await writeFile5(temporaryPath, `${JSON.stringify({ mode, updatedAt: (/* @__PURE__ */ new Date()).toISOString() }, null, 2)}
+  const document = {
+    mode,
+    selectionId: mode === "unknown" ? null : randomUUID(),
+    updatedAt: (/* @__PURE__ */ new Date()).toISOString()
+  };
+  await writeFile5(temporaryPath, `${JSON.stringify(document, null, 2)}
 `, "utf8");
   await rename5(temporaryPath, MODE_FILE);
 }
@@ -38792,19 +38799,19 @@ function validateSkin(value, index) {
   return errors;
 }
 async function saveState(state) {
-  const temporaryFile = `${DATA_FILE}.tmp`;
-  const backupFile = `${DATA_FILE}.bak`;
+  const temporaryFile = `${LEGACY_STATE_FILE}.tmp`;
+  const backupFile = `${LEGACY_STATE_FILE}.bak`;
   const contents = `${JSON.stringify(state, null, 2)}
 `;
   await writeFile5(temporaryFile, contents, "utf8");
   try {
-    await copyFile5(DATA_FILE, backupFile);
+    await copyFile5(LEGACY_STATE_FILE, backupFile);
   } catch (error) {
     if (error.code !== "ENOENT") {
       throw error;
     }
   }
-  await rename5(temporaryFile, DATA_FILE);
+  await rename5(temporaryFile, LEGACY_STATE_FILE);
 }
 function queueSave(state) {
   const operation = saveQueue.then(() => saveState(state));
@@ -38844,9 +38851,9 @@ async function readValidState(filePath) {
   };
 }
 async function restoreState() {
-  const backupFile = `${DATA_FILE}.bak`;
+  const backupFile = `${LEGACY_STATE_FILE}.bak`;
   try {
-    const saved = await readValidState(DATA_FILE);
+    const saved = await readValidState(LEGACY_STATE_FILE);
     selectedSkins = saved.skins;
     latestLoadout = saved.loadout;
     nextLoadoutId = saved.nextLoadoutId;
@@ -38880,9 +38887,9 @@ Backup error: ${String(backupError)}`,
     );
   }
   try {
-    await readFile6(DATA_FILE, "utf8");
-    const damagedCopy = `${DATA_FILE}.corrupt-${Date.now()}`;
-    await copyFile5(DATA_FILE, damagedCopy);
+    await readFile6(LEGACY_STATE_FILE, "utf8");
+    const damagedCopy = `${LEGACY_STATE_FILE}.corrupt-${Date.now()}`;
+    await copyFile5(LEGACY_STATE_FILE, damagedCopy);
     console.error(`Preserved the original primary save as: ${damagedCopy}`);
   } catch (error) {
     if (error.code !== "ENOENT") {
@@ -38892,14 +38899,14 @@ Backup error: ${String(backupError)}`,
       );
     }
   }
-  const recoveryFile = `${DATA_FILE}.recovery.tmp`;
+  const recoveryFile = `${LEGACY_STATE_FILE}.recovery.tmp`;
   await writeFile5(
     recoveryFile,
     `${JSON.stringify(backup, null, 2)}
 `,
     "utf8"
   );
-  await rename5(recoveryFile, DATA_FILE);
+  await rename5(recoveryFile, LEGACY_STATE_FILE);
   selectedSkins = backup.skins;
   latestLoadout = backup.loadout;
   nextLoadoutId = backup.nextLoadoutId;
@@ -38991,7 +38998,9 @@ app.post("/loadout/apply", async (req, res) => {
     });
     const runtime = await projectRuntimeOrReport();
     const equipment = await syncEquipmentFromActiveLoadout();
-    res.status(200).json({ data: saved, runtime, equipment });
+    const mode = runtime?.written ? "loadout" : null;
+    if (mode) await writeRuntimeMode(mode);
+    res.status(200).json({ data: saved, runtime, equipment, mode });
   } catch (error) {
     if (error instanceof LoadoutValidationError) {
       res.status(400).json({ error: { code: "VALIDATION_FAILED", message: error.message, details: error.details } });
@@ -39033,14 +39042,7 @@ app.post("/armory/apply", async (_req, res) => {
 });
 app.post("/runtime-mode/reset", async (_req, res) => {
   try {
-    const temporaryPath = `${MODE_FILE}.tmp`;
-    await writeFile5(
-      temporaryPath,
-      `${JSON.stringify({ mode: "unknown", updatedAt: (/* @__PURE__ */ new Date()).toISOString() }, null, 2)}
-`,
-      "utf8"
-    );
-    await rename5(temporaryPath, MODE_FILE);
+    await writeRuntimeMode("unknown");
     res.status(200).json({ mode: "unknown" });
   } catch (error) {
     console.error("Failed to reset runtime mode:", error);
@@ -39153,8 +39155,9 @@ app.get("/session/active", (_req, res) => {
   res.setHeader("Cache-Control", "no-store");
   res.json({ active: hasActiveBrowserSession(), sessions: browserSessions.size });
 });
-app.get("/health", (_req, res) => {
+app.get("/health", async (_req, res) => {
   res.json({
+    runtimeMode: await readRuntimeMode(),
     app: "n1ssan-bridge",
     status: "online",
     port: PORT,
@@ -39298,7 +39301,7 @@ async function start() {
   await armoryStore.initialize();
   await equipmentStore.initialize(armoryStore.read());
   await loadoutStore.initialize();
-  await projectActiveMode(await readRuntimeMode());
+  await writeRuntimeMode("unknown");
   bridgeHttpServer = app.listen(PORT, HOST, () => {
     console.log(`n1ssan Bridge running at http://${HOST}:${PORT}`);
     console.log(`Health check: http://${HOST}:${PORT}/health`);

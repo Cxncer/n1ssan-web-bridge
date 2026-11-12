@@ -1,5 +1,5 @@
 import { readFile, rename, writeFile } from 'node:fs/promises'
-import type { ArmoryDocument, ItemAttachments } from '../src/armory/contracts.ts'
+import type { ArmoryDocument, InventoryItemInstance, ItemAttachments } from '../src/armory/contracts.ts'
 import { validateAttachments } from '../src/armory/contracts.ts'
 
 /**
@@ -35,6 +35,8 @@ export type DetectionDocument = {
 export type AttachmentsSyncOptions = {
   detectionPath: string
   ackPath: string
+  /** Live StatTrak counts written by the DLL, merged into every instance. */
+  killsPath?: string
   read: () => ArmoryDocument
   replace: (expectedRevision: number, candidate: unknown) => Promise<ArmoryDocument>
   /** Called after a successful merge, e.g. to re-project the inventory. */
@@ -60,6 +62,7 @@ export class AttachmentsSync {
   private readonly options: AttachmentsSyncOptions
   private lastAckedSeq = 0
   private running = false
+  private runningKills = false
 
   constructor(options: AttachmentsSyncOptions) {
     this.options = options
@@ -76,6 +79,77 @@ export class AttachmentsSync {
       return await this.mergeOnce()
     } finally {
       this.running = false
+    }
+  }
+
+  /**
+   * Merges the StatTrak counts the DLL read off the equipped weapons.
+   *
+   * The game keeps the live counter; the DLL hands it back per Armory instance
+   * and this is the only place that writes it into the profile, so reloading the
+   * same skin continues from the count it stopped at.
+   */
+  async pollKills(): Promise<number> {
+    const path = this.options.killsPath
+
+    if (!path || this.runningKills) return 0
+    this.runningKills = true
+
+    try {
+      let parsed: unknown
+
+      try {
+        parsed = JSON.parse(await readFile(path, 'utf8'))
+      } catch {
+        return 0
+      }
+
+      if (!isRecord(parsed) || !isRecord(parsed.kills)) return 0
+
+      const document = this.options.read()
+      const candidate = structuredClone(document) as ArmoryDocument
+      const profile = candidate.profiles.find(item => item.id === candidate.activeProfileId)
+
+      if (!profile) return 0
+
+      const mergedInstanceIds: string[] = []
+
+      for (const [instanceId, value] of Object.entries(parsed.kills as Record<string, unknown>)) {
+        if (typeof value !== 'number' || !Number.isSafeInteger(value) || value <= 0) continue
+
+        const instance = profile.items.find(item => item.id === instanceId)
+
+        if (!instance) continue
+
+        const saved = instance.customization?.statTrak?.kills
+        const current = typeof saved === 'number' && Number.isSafeInteger(saved) ? saved : 0
+
+        if (value <= current) continue
+
+        instance.customization = {
+          ...instance.customization,
+          statTrak: { enabled: true, kills: value },
+        } as InventoryItemInstance['customization']
+        instance.updatedAt = new Date().toISOString()
+        mergedInstanceIds.push(instanceId)
+      }
+
+      if (mergedInstanceIds.length === 0) return 0
+
+      try {
+        await this.options.replace(document.revision, candidate)
+      } catch (error) {
+        console.error('StatTrak merge deferred:', error instanceof Error ? error.message : error)
+        return 0
+      }
+
+      if (this.options.onMerged) {
+        await this.options.onMerged(mergedInstanceIds)
+      }
+
+      return mergedInstanceIds.length
+    } finally {
+      this.runningKills = false
     }
   }
 

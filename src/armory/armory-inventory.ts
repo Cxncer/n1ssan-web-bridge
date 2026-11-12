@@ -21,6 +21,8 @@ export type ArmoryInventoryItem = {
   float: number
   seed: number
   statTrak: boolean
+  /** Kills saved on the instance; the runtime continues the counter from here. */
+  statTrakKills?: number
   quality: number
   rarity: number
   customName: string | null
@@ -298,6 +300,9 @@ export function projectArmoryInventory(
       float: clampFloat(customization?.float ?? entry.definition.minFloat, 0.001),
       seed: typeof customization?.seed === 'number' ? customization.seed : 0,
       statTrak,
+      ...(statTrak
+        ? { statTrakKills: Math.max(0, Math.trunc(customization?.statTrak?.kills ?? 0)) }
+        : {}),
       quality: statTrak ? 9 : definitionIndex >= 500 ? 3 : 4,
       rarity: rarityNumber(entry.definition.rarity),
       customName: customization?.customName?.trim() || null,

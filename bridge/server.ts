@@ -1,6 +1,8 @@
 import express from 'express'
 import type { Request, Response, NextFunction } from 'express'
 import { copyFile, readFile, writeFile, rename, mkdir } from 'node:fs/promises'
+import { readdirSync } from 'node:fs'
+import { randomUUID } from 'node:crypto'
 import path from 'node:path'
 import os from 'node:os'
 import { migrateLegacyConfigurations } from './config-migration.ts'
@@ -30,7 +32,10 @@ import type { CatalogueSourceRecord } from '../src/armory/catalogue-identity.ts'
 
 const app = express()
 
-const BROWSER_SESSION_TIMEOUT_MS = 30_000
+// Browsers throttle background timers to about one tick per minute, so a tab
+// the user switched away from looks silent for up to 60s. A 30s expiry killed
+// the Bridge mid-session and the next Armory save failed to connect.
+const BROWSER_SESSION_TIMEOUT_MS = 150_000
 
 const browserSessions = new Map<string, number>()
 
@@ -54,6 +59,14 @@ function publishArmoryEvent(event: string, payload: Record<string, unknown>): vo
   }
 }
 
+// The launcher starts this process with piped stdout/stderr and exits on
+// handoff, which closes both pipes. Without a listener the next log line raises
+// EPIPE and Node terminates the Bridge while the browser still needs it - the
+// cause of "Could not connect to the n1ssan Bridge while saving Armory".
+for (const stream of [process.stdout, process.stderr]) {
+  stream?.on('error', () => {})
+}
+
 const PORT = Number(process.env.N1SSAN_PORT ?? 3210)
 const HOST = '127.0.0.1'
 const MAX_ITEMS = 100
@@ -66,7 +79,12 @@ const DATA_DIRECTORY = process.env.NODE_ENV === 'test' && process.env.N1SSAN_TES
       'n1ssan',
       'configs',
     )
+// The file the native runtime reads. It only ever holds the runtime projection.
 const DATA_FILE = path.join(DATA_DIRECTORY, 'n1ssan-data.json')
+// The obsolete /skins API keeps its own saved state. It must never share the
+// runtime document: a legacy snapshot and a runtime projection have different
+// schemas, and mixing them makes the DLL read items the game cannot create.
+const LEGACY_STATE_FILE = path.join(DATA_DIRECTORY, 'n1ssan-legacy-loadout.json')
 const ARMORY_FILE = path.join(DATA_DIRECTORY, 'armory-data.json')
 const armoryStore = new ArmoryStore(ARMORY_FILE)
 const EQUIPMENT_FILE = path.join(DATA_DIRECTORY, 'armory-equipment.json')
@@ -223,9 +241,19 @@ async function projectInventoryOrReport(): Promise<InventoryWriteResult | null> 
 
 type RuntimeMode = 'loadout' | 'armory'
 
-async function writeRuntimeMode(mode: RuntimeMode): Promise<void> {
+/**
+ * A mode selection is a per-session user action. `selectionId` is what the DLL
+ * watches: it makes every Apply a fresh event, so a selection made in an
+ * earlier session can never be re-applied just because the file still names it.
+ */
+async function writeRuntimeMode(mode: RuntimeMode | 'unknown'): Promise<void> {
   const temporaryPath = `${MODE_FILE}.tmp`
-  await writeFile(temporaryPath, `${JSON.stringify({ mode, updatedAt: new Date().toISOString() }, null, 2)}\n`, 'utf8')
+  const document = {
+    mode,
+    selectionId: mode === 'unknown' ? null : randomUUID(),
+    updatedAt: new Date().toISOString(),
+  }
+  await writeFile(temporaryPath, `${JSON.stringify(document, null, 2)}\n`, 'utf8')
   await rename(temporaryPath, MODE_FILE)
 }
 
@@ -381,9 +409,15 @@ let nextLoadoutId = 1
 let saveQueue = Promise.resolve()
 
 // Owns the only write path from the native runtime into the Armory profile.
+const STATTRAK_KILLS_FILE = ATTACHMENTS_FILE.replace(
+  /armory-detected-attachments\.json$/,
+  'armory-stattrak-kills.json',
+)
+
 const attachmentsSync = new AttachmentsSync({
   detectionPath: ATTACHMENTS_FILE,
   ackPath: ATTACHMENTS_ACK_FILE,
+  killsPath: STATTRAK_KILLS_FILE,
   read: () => armoryStore.read(),
   replace: (expectedRevision, candidate) => armoryStore.replace(expectedRevision, candidate),
   onMerged: async () => {
@@ -415,8 +449,52 @@ function hasActiveBrowserSession(): boolean {
   pruneBrowserSessions()
   return browserSessions.size > 0 || Date.now() < browserSessionGraceUntil
 }
-function stopBridgeAfterBrowserSession(): void {
+
+const STATUS_DIRECTORY = path.join(
+  process.env.LOCALAPPDATA ?? path.join(os.homedir(), 'AppData', 'Local'),
+  'n1ssan',
+  'status',
+)
+
+/**
+ * True while an injected n1ssan-dll is alive in a game process. The DLL writes
+ * one `cs2-<pid>.status` file per session, so the PID in the name is what
+ * decides: a stale file from a closed game must not keep the Bridge alive.
+ */
+function hasLiveDllSession(): boolean {
+  let entries: string[]
+
+  try {
+    entries = readdirSync(STATUS_DIRECTORY)
+  } catch {
+    return false // No status directory yet: nothing is injected.
+  }
+
+  for (const entry of entries) {
+    const match = /^cs2-(\d+)\.status$/.exec(entry)
+    if (!match) continue
+
+    const pid = Number(match[1])
+    if (!Number.isInteger(pid) || pid <= 0) continue
+
+    try {
+      process.kill(pid, 0) // Signal 0 only probes; nothing is delivered.
+      return true
+    } catch {
+      // The game exited.
+    }
+  }
+
+  return false
+}
+async function stopBridgeAfterBrowserSession(): Promise<void> {
   if (bridgeShutdownStarted || !hasSeenBrowserSession || hasActiveBrowserSession()) return
+
+  // Saving Armory must keep working while the game is open even if the browser
+  // tab went silent (background tabs stop heartbeating), so a running game with
+  // an injected n1ssan-dll holds the Bridge up.
+  if (hasLiveDllSession()) return
+
   bridgeShutdownStarted = true
   if (browserSessionSweep) clearInterval(browserSessionSweep)
   if (attachmentSyncTimer) clearInterval(attachmentSyncTimer)
@@ -497,21 +575,21 @@ function validateSkin(value: unknown, index: number): string[] {
 }
 
 async function saveState(state: SavedState): Promise<void> {
-  const temporaryFile = `${DATA_FILE}.tmp`
-  const backupFile = `${DATA_FILE}.bak`
+  const temporaryFile = `${LEGACY_STATE_FILE}.tmp`
+  const backupFile = `${LEGACY_STATE_FILE}.bak`
   const contents = `${JSON.stringify(state, null, 2)}\n`
 
   await writeFile(temporaryFile, contents, 'utf8')
 
   try {
-    await copyFile(DATA_FILE, backupFile)
+    await copyFile(LEGACY_STATE_FILE, backupFile)
   } catch (error) {
     if ((error as NodeJS.ErrnoException).code !== 'ENOENT') {
       throw error
     }
   }
 
-  await rename(temporaryFile, DATA_FILE)
+  await rename(temporaryFile, LEGACY_STATE_FILE)
 }
 
 function queueSave(state: SavedState): Promise<void> {
@@ -592,10 +670,10 @@ async function readValidState(filePath: string): Promise<SavedState> {
 }
 
 async function restoreState(): Promise<void> {
-  const backupFile = `${DATA_FILE}.bak`
+  const backupFile = `${LEGACY_STATE_FILE}.bak`
 
   try {
-    const saved = await readValidState(DATA_FILE)
+    const saved = await readValidState(LEGACY_STATE_FILE)
 
     selectedSkins = saved.skins
     latestLoadout = saved.loadout
@@ -639,10 +717,10 @@ async function restoreState(): Promise<void> {
 
   // Preserve an existing damaged primary file without modifying it.
   try {
-    await readFile(DATA_FILE, 'utf8')
+    await readFile(LEGACY_STATE_FILE, 'utf8')
 
-    const damagedCopy = `${DATA_FILE}.corrupt-${Date.now()}`
-    await copyFile(DATA_FILE, damagedCopy)
+    const damagedCopy = `${LEGACY_STATE_FILE}.corrupt-${Date.now()}`
+    await copyFile(LEGACY_STATE_FILE, damagedCopy)
     console.error(`Preserved the original primary save as: ${damagedCopy}`)
   } catch (error) {
     if ((error as NodeJS.ErrnoException).code !== 'ENOENT') {
@@ -654,7 +732,7 @@ async function restoreState(): Promise<void> {
   }
 
   // Restore using a temporary file. The backup remains untouched.
-  const recoveryFile = `${DATA_FILE}.recovery.tmp`
+  const recoveryFile = `${LEGACY_STATE_FILE}.recovery.tmp`
 
   await writeFile(
     recoveryFile,
@@ -662,7 +740,7 @@ async function restoreState(): Promise<void> {
     'utf8',
   )
 
-  await rename(recoveryFile, DATA_FILE)
+  await rename(recoveryFile, LEGACY_STATE_FILE)
 
   selectedSkins = backup.skins
   latestLoadout = backup.loadout
@@ -780,7 +858,13 @@ app.post('/loadout/apply', async (req: Request, res: Response) => {
     // so the same save publishes the assignments the native runtime consumes.
     const equipment = await syncEquipmentFromActiveLoadout()
 
-    res.status(200).json({ data: saved, runtime, equipment })
+    // Apply is the user's explicit choice, so it is also what selects the
+    // runtime source. Saving or importing a profile never does this on its own.
+    // Only select Loadout when its document is actually on disk.
+    const mode = runtime?.written ? 'loadout' : null
+    if (mode) await writeRuntimeMode(mode)
+
+    res.status(200).json({ data: saved, runtime, equipment, mode })
   } catch (error) {
     if (error instanceof LoadoutValidationError) {
       res.status(400).json({ error: { code: 'VALIDATION_FAILED', message: error.message, details: error.details } })
@@ -837,13 +921,7 @@ app.post('/armory/apply', async (_req: Request, res: Response) => {
 
 app.post('/runtime-mode/reset', async (_req: Request, res: Response) => {
   try {
-    const temporaryPath = `${MODE_FILE}.tmp`
-    await writeFile(
-      temporaryPath,
-      `${JSON.stringify({ mode: 'unknown', updatedAt: new Date().toISOString() }, null, 2)}\n`,
-      'utf8',
-    )
-    await rename(temporaryPath, MODE_FILE)
+    await writeRuntimeMode('unknown')
     res.status(200).json({ mode: 'unknown' })
   } catch (error) {
     console.error('Failed to reset runtime mode:', error)
@@ -973,8 +1051,9 @@ app.get('/session/active', (_req: Request, res: Response) => {
   res.json({ active: hasActiveBrowserSession(), sessions: browserSessions.size })
 })
 
-app.get('/health', (_req: Request, res: Response) => {
+app.get('/health', async (_req: Request, res: Response) => {
   res.json({
+    runtimeMode: await readRuntimeMode(),
     app: 'n1ssan-bridge',
     status: 'online',
     port: PORT,
@@ -1161,7 +1240,11 @@ async function start(): Promise<void> {
   await armoryStore.initialize()
   await equipmentStore.initialize(armoryStore.read())
   await loadoutStore.initialize()
-  await projectActiveMode(await readRuntimeMode())
+
+  // Nothing is applied until the user picks a profile and clicks Apply to CS2.
+  // The mode file is neutralised on every start: a selection belongs to the
+  // session that made it, and the DLL ignores a selection it did not see change.
+  await writeRuntimeMode('unknown')
 
   bridgeHttpServer = app.listen(PORT, HOST, () => {
     console.log(`n1ssan Bridge running at http://${HOST}:${PORT}`)
@@ -1170,12 +1253,13 @@ async function start(): Promise<void> {
     console.log(`Persistent loadout data file: ${DATA_FILE}`)
     console.log(`Persistent Armory data file: ${ARMORY_FILE}`)
   })
-  browserSessionSweep = setInterval(stopBridgeAfterBrowserSession, 2_000)
+  browserSessionSweep = setInterval(() => { void stopBridgeAfterBrowserSession() }, 2_000)
   attachmentSyncTimer = setInterval(syncObservedAttachments, 2_000)
 }
 
 async function syncObservedAttachments(): Promise<void> {
   try {
+    await attachmentsSync.pollKills()
     const result = await attachmentsSync.poll()
     if (result.merged > 0) {
       const document = armoryStore.read()
