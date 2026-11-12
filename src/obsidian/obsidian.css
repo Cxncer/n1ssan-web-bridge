@@ -2429,3 +2429,5 @@ body,button,input,select{font-family:'Barlow',sans-serif}
 .obsidian-shell-redesign .ob-add-skin-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:12px;flex:1 1 auto;min-height:0;max-height:min(54vh,510px);overflow-y:auto;padding:4px 20px 16px;align-content:start;justify-items:center;scrollbar-width:thin;scrollbar-color:#454b46 transparent}
 .obsidian-shell-redesign .ob-add-skin-grid .universal-inv-card{width:100%;max-width:160px}
 @media(max-width:900px){.obsidian-shell-redesign .ob-heading-actions{flex-wrap:wrap;justify-content:flex-end}.obsidian-shell-redesign .armory-connection-status{padding:8px 10px}}
+
+.obsidian-shell-redesign .ob-overview{display:block;min-height:0;border:0;background:none;overflow:visible}
