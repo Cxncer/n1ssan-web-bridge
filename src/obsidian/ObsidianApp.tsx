@@ -15,7 +15,11 @@ import rickshawImage from '../../assets/images/Rickshaw-clay.jpg'
 import n1ssanLogo from '../../assets/icons/n1ssan-icon-white.png'
 import LineSidebar from './LineSidebar'
 import { ShimmerButton } from './ShimmerButton'
-import { CS2SkinCard } from './CS2SkinCard'
+import { CS2SkinCard } from './components/CS2SkinCard'
+import { CS2AttachmentCard } from './components/CS2AttachmentCard'
+import { OverviewCard } from './components/OverviewCard'
+import { ProfileCard } from './components/ProfileCard'
+import AddtoInvSkinCard from './components/AddtoInvSkinCard'
 import ObsidianDropdown from './ObsidianDropdown'
 
 type ItemKind = 'skin' | 'sticker' | 'charm'
@@ -605,7 +609,7 @@ export default function ObsidianApp() {
           if (index === 2) setDialog('diagnostics')
         }}
       />
-      <div className="ob-line-sidebar-foot"><span className="armory-status-dot" /><span>{armoryStatus === 'connected' && !armorySaveError ? 'CONNECTED' : armorySaveError ? 'SAVE BLOCKED' : 'CONNECTING'}</span></div>
+      <div className="ob-line-sidebar-profile"><ProfileCard name="Cxncer" badge="Developer" bio="Building n1ssan · CS2 Lore" githubUrl="https://github.com/Cxncer" /></div>
     </aside>
 
     {armorySaveError && <div className="ob-armory-save-error" role="alert">
@@ -659,13 +663,11 @@ export default function ObsidianApp() {
       <div className="ob-breadcrumb"><span>WORKSPACE</span><b>/</b><strong>INVENTORY</strong></div>
       <section className="ob-heading">
         <div><h1>Your Armory<span>.</span></h1></div>
-        <div className="ob-heading-actions"><div className="profile-select-label"><span>SELECTED INVENTORY PROFILE</span><ObsidianDropdown ariaLabel="Selected inventory profile" className="profile-dropdown" value={activeId} options={profiles.map(p => ({ value: p.id, label: p.name }))} onChange={switchProfile} /></div><button className="ob-button shimmer-button" onClick={() => setDialog('profiles')}>Manage profiles <span>↗</span></button><button className="ob-button shimmer-button" onClick={applyArmory} disabled={armoryApplying || !!armorySaveError || totalUnits === 0}>{armoryApplying ? 'Applying…' : 'Apply to CS2'} <span>↗</span></button></div>
+        <div className="ob-heading-actions"><div className={`armory-connection-status ${armoryStatus === 'connected' && !armorySaveError ? 'is-connected' : armorySaveError ? 'has-error' : 'is-connecting'}`}><span className="armory-status-dot" />{armoryStatus === 'connected' && !armorySaveError ? 'CONNECTED' : armorySaveError ? 'SAVE BLOCKED' : 'CONNECTING'}</div><div className="profile-select-label"><span>SELECTED INVENTORY PROFILE</span><ObsidianDropdown ariaLabel="Selected inventory profile" className="profile-dropdown" value={activeId} options={profiles.map(p => ({ value: p.id, label: p.name }))} onChange={switchProfile} /></div><button className="ob-button shimmer-button" onClick={() => setDialog('profiles')}>Manage profiles <span>↗</span></button><button className="ob-button shimmer-button" onClick={applyArmory} disabled={armoryApplying || !!armorySaveError || totalUnits === 0}>{armoryApplying ? 'Applying…' : 'Apply to CS2'} <span>↗</span></button></div>
       </section>
 
       <section className="ob-overview">
-        <div className="overview-total"><span className="metric-label">ITEMS IN INVENTORY</span><strong>{String(totalUnits).padStart(2,'0')}</strong><small>Across your collection</small></div>
-        {counts.map(c => <div className="overview-stat" key={c.label}><strong className={`quantity quantity-${c.label.toLowerCase()}`}>{String(c.count).padStart(2,'0')}</strong><small>{c.label.toUpperCase()}</small></div>)}
-        
+        <OverviewCard totalUnits={totalUnits} counts={counts} />
       </section>
 
       <section className="ob-inventory-section">
@@ -673,7 +675,16 @@ export default function ObsidianApp() {
         <div className="ob-toolbar"><label className="ob-search"><span>⌕</span><input value={search} onChange={e => setSearch(e.target.value)} placeholder="Search your inventory..." /><kbd>⌘ K</kbd></label><div className="ob-sort"><span>SORT BY</span><ObsidianDropdown ariaLabel="Sort inventory" className="sort-dropdown" value={sort} options={[{ value: "Recently Added", label: "Recently Added" }, { value: "Name A–Z", label: "Name A–Z" }, { value: "Float: Lowest", label: "Float: Lowest" }, { value: "Rarity: Highest", label: "Rarity: Highest" }]} onChange={setSort} /></div><button className="ob-button shimmer-button add-item-button" onClick={() => { setCatalogueSearch(''); setAddCategory('skin'); setDialog('add') }}><span>＋</span> Add item</button></div>
         <div className="ob-filters">{['All items','Rifles','Pistols','Mid-Tier','Snipers','Knives','Gloves','Agents','Stickers','Charms'].map(c => <button key={c} className={category === c ? 'selected' : ''} onClick={() => setCategory(c)}>{c}<small>{c === 'All items' ? totalUnits : owned.filter(x => getCategory(x.skin) === c).reduce((n,x) => n + (x.item.quantity ?? 1), 0)}</small></button>)}</div>
 
-        {visible.length ? <div className={`ob-item-grid ${searching ? 'search-active' : ''}`}>{visible.map(({ item, skin }) => <CS2SkinCard key={item.instanceId} weaponName={(item.kind ?? 'skin') === 'skin' ? `${skin.weapon} | ${skin.name}` : skin.name} rarity={skin.rarity} imageUrl={skin.image} customName={(item.kind ?? 'skin') === 'skin' ? item.customName.trim() || undefined : undefined} statTrak={(item.kind ?? 'skin') === 'skin' && getCategory(skin) !== 'Gloves' && item.stattrak} float={(item.kind ?? 'skin') === 'skin' && !isAgent(skin) ? item.float : null} seed={(item.kind ?? 'skin') === 'skin' && !isAgent(skin) ? item.seed : null} quantity={(item.kind ?? 'skin') !== 'skin' ? item.quantity ?? 1 : null} attachments={[...(item.attachments?.stickers ?? []).slice(0, 5).map(sticker => ({ key: `sticker-${sticker.slot}`, kind: 'sticker' as const, label: labelForKit('sticker', sticker.kitId), image: imageForKit('sticker', sticker.kitId) })), ...(item.attachments?.charm ? [{ key: 'charm', kind: 'charm' as const, label: labelForKit('charm', item.attachments.charm.kitId), image: imageForKit('charm', item.attachments.charm.kitId) }] : [])]} onOpen={() => { setSelectedInstance(item.instanceId); setDialog('detail') }} onRemove={() => removeInventoryItem(item)} />)}</div> : <div className="ob-empty"><span>⌕</span><h3>Nothing in this view</h3><p>Try another filter or add an item from the catalogue.</p><button className="ob-button shimmer-button" onClick={() => { setCategory('All items'); setSearch('') }}>Clear filters</button></div>}
+        {visible.length ? <div className={`ob-item-grid ${searching ? 'search-active' : ''}`}>{visible.map(({ item, skin }) => {
+          const itemKind = item.kind ?? 'skin'
+          const openItem = () => { setSelectedInstance(item.instanceId); setDialog('detail') }
+          if (itemKind !== 'skin') {
+            return <CS2AttachmentCard key={item.instanceId} itemName={skin.name} itemType={itemKind === 'sticker' ? 'Sticker' : 'Charm'} rarity={skin.rarity} imageUrl={skin.image ?? ''} quantity={item.quantity ?? 1} onOpen={openItem} onRemove={() => removeInventoryItem(item)} />
+          }
+          const stickerImages = (item.attachments?.stickers ?? []).slice(0, 5).map(sticker => imageForKit('sticker', sticker.kitId)).filter((image): image is string => !!image)
+          const charmImage = item.attachments?.charm ? imageForKit('charm', item.attachments.charm.kitId) : undefined
+          return <CS2SkinCard key={item.instanceId} weaponName={`${skin.weapon} | ${skin.name}`} rarity={skin.rarity} imageUrl={skin.image ?? ''} nameTag={item.customName.trim() || undefined} isStatTrak={getCategory(skin) !== 'Gloves' && item.stattrak} floatValue={!isAgent(skin) ? Number(item.float) : null} seed={!isAgent(skin) ? Number(item.seed) : null} stickers={stickerImages} charm={charmImage} onOpen={openItem} onRemove={() => removeInventoryItem(item)} />
+        })}</div> : <div className="ob-empty"><span>⌕</span><h3>Nothing in this view</h3><p>Try another filter or add an item from the catalogue.</p><button className="ob-button shimmer-button" onClick={() => { setCategory('All items'); setSearch('') }}>Clear filters</button></div>}
       </section>
       <footer className="ob-footer"><span>n1ssan <b>/</b> ARMORY</span><span>{'INVENTORY WORKSPACE'} <i /> PREVIEW BUILD</span><span>COUNTER-STRIKE 2</span></footer>
       </>}
@@ -695,7 +706,7 @@ export default function ObsidianApp() {
             {baseWeaponTiles.map(weapon => <button key={weapon.id} className="catalogue-weapon-card" onClick={() => { setSelectedSkinGroup('weapons'); setSelectedSkinWeapon(weapon.name); setSkinPickerLevel('finishes'); setCatalogueSearch('') }}><div className="catalogue-weapon-art">{weapon.image && <img src={weapon.image} alt="" loading="lazy" />}</div><strong>{weapon.name}</strong><small>{weapon.category?.name === 'SMGs' || weapon.category?.name === 'Heavy' ? 'Mid-Tier' : weapon.category?.name}</small></button>)}
           </div> : <div className="catalogue-state">No matching weapons found.</div>)}
           {skinPickerLevel === 'models' && <div className="catalogue-weapon-grid">{(selectedSkinGroup === 'knives' ? knifeModelTiles : gloveModelTiles).map(model => <button key={model.weapon} className="catalogue-weapon-card" onClick={() => { setSelectedSkinWeapon(model.weapon); setSkinPickerLevel('finishes'); setCatalogueSearch('') }}><div className="catalogue-weapon-art">{model.image && <img src={model.image} alt="" loading="lazy" />}</div><strong>{model.weapon}</strong></button>)}</div>}
-          {skinPickerLevel === 'finishes' && <div className="ob-catalogue-list">{skinPickerCandidates.length ? skinPickerCandidates.map(skin => <button key={skin.id} onClick={() => chooseCatalogueItem(skin)}><div className="catalogue-thumb">{skin.image && <img src={skin.image} alt="" loading="lazy" />}</div><span><strong>{skin.weapon}</strong><small>{skin.name} · <span style={{ color: rarityTextColor(skin) }}>{skin.rarity}</span></small></span><b>＋</b></button>) : <div className="catalogue-state">No finishes found for {selectedSkinWeapon}.</div>}</div>}
+          {skinPickerLevel === 'finishes' && (skinPickerCandidates.length ? <div className="ob-add-skin-grid">{skinPickerCandidates.map(skin => <AddtoInvSkinCard key={skin.id} itemName={`${skin.weapon} | ${skin.name}`} itemType={getCategory(skin)} rarity={skin.rarity} imageUrl={skin.image ?? ''} onClick={() => chooseCatalogueItem(skin)} />)}</div> : <div className="catalogue-state">No finishes found for {selectedSkinWeapon}.</div>)}
         </> : <div className="ob-catalogue-list">{specialLoading ? <div className="catalogue-state">Loading {addCategory} catalogue…</div> : specialError && !specialItems.some(item => item.kind === addCategory) ? <div className="catalogue-state">{specialError}</div> : candidates.length ? candidates.map(skin => <button key={skin.id} onClick={() => chooseCatalogueItem(skin)}><div className="catalogue-thumb">{skin.image && <img src={skin.image} alt="" loading="lazy" />}</div><span><strong>{skin.weapon}</strong><small>{skin.name} · <span style={{ color: rarityTextColor(skin) }}>{skin.rarity}</span></small></span><b>＋</b></button>) : <div className="catalogue-state">No matching items found.</div>}</div>}
         {addCategory !== 'skin' && <div className="dialog-foot">Imported into inventory only · Attach from a weapon’s detail panel.</div>}
       </section>}
