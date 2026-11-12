@@ -85,7 +85,9 @@ async function stopServer(): Promise<void> {
 
 before(async () => {
   tempDir = await mkdtemp(path.join(os.tmpdir(), 'n1ssan-bridge-test-'))
-  dataFile = path.join(tempDir, 'n1ssan-data.json')
+  // The legacy /skins API has its own saved state; n1ssan-data.json is the
+  // runtime projection and is never a legacy snapshot.
+  dataFile = path.join(tempDir, 'n1ssan-legacy-loadout.json')
   await startServer()
 })
 
