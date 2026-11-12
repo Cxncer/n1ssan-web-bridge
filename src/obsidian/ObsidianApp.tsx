@@ -13,14 +13,14 @@ import knifeData from './knife-skins.json'
 import './obsidian.css'
 import rickshawImage from '../../assets/images/Rickshaw-clay.jpg'
 import n1ssanLogo from '../../assets/icons/n1ssan-icon-white.png'
-import LineSidebar from './LineSidebar'
-import { ShimmerButton } from './ShimmerButton'
+import LineSidebar from './components/LineSidebar'
+import { ShimmerButton } from './components/ShimmerButton'
 import { CS2SkinCard } from './components/CS2SkinCard'
 import { CS2AttachmentCard } from './components/CS2AttachmentCard'
 import { OverviewCard } from './components/OverviewCard'
 import { ProfileCard } from './components/ProfileCard'
 import AddtoInvSkinCard from './components/AddtoInvSkinCard'
-import ObsidianDropdown from './ObsidianDropdown'
+import ObsidianDropdown from './components/ObsidianDropdown'
 
 type ItemKind = 'skin' | 'sticker' | 'charm'
 type Skin = { id: number | string; weapon: string; name: string; type: string; rarity: string; color: string; art: string; description: string; image?: string; minFloat?: number | null; maxFloat?: number | null; kind?: ItemKind; phase?: string; patternId?: string; paintIndex?: string; paintKit?: number | string | null; gameDefinitionId?: number | null; stickerKitId?: number | null; keychainId?: number | null; legacyOnly?: boolean }
@@ -609,7 +609,7 @@ export default function ObsidianApp() {
           if (index === 2) setDialog('diagnostics')
         }}
       />
-      <div className="ob-line-sidebar-profile"><ProfileCard name="Cxncer" badge="Developer" bio="Building n1ssan · CS2 Lore" githubUrl="https://github.com/Cxncer" /></div>
+      <div className="ob-line-sidebar-profile"><ProfileCard name="Cxncer" badge="Hobbyist" bio="KDMH" githubUrl="https://github.com/Cxncer" /></div>
     </aside>
 
     {armorySaveError && <div className="ob-armory-save-error" role="alert">

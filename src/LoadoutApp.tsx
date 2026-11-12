@@ -4,9 +4,9 @@ import './obsidian/obsidian.css'
 import './loadout-redesign.css'
 import rickshawImage from '../assets/images/Rickshaw-clay.jpg'
 import n1ssanLogo from '../assets/icons/n1ssan-icon-white.png'
-import LineSidebar from './obsidian/LineSidebar'
-import { ShimmerButton } from './obsidian/ShimmerButton'
-import ObsidianDropdown from './obsidian/ObsidianDropdown'
+import LineSidebar from './obsidian/components/LineSidebar'
+import { ShimmerButton } from './obsidian/components/ShimmerButton'
+import ObsidianDropdown from './obsidian/components/ObsidianDropdown'
 
 export type Skin = {
   id: number | string; weapon: string; name: string; type: string; rarity: string

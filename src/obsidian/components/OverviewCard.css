@@ -43,7 +43,7 @@
     radial-gradient(ellipse 50% 60% at 70% 60%, rgb(20, 1, 31) 0%, transparent 65%),
     radial-gradient(ellipse 70% 35% at 45% 25%, rgba(81, 8, 112, 0.63) 0%, transparent 60%);
   filter: blur(22px);
-  animation: wavyAurora 14s ease-in-out infinite alternate;
+  animation: wavyAurora 7s ease-in-out infinite alternate;
   pointer-events: none;
   z-index: 0;
 }

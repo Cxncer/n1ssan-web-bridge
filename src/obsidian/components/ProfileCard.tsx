@@ -14,7 +14,7 @@ export function ProfileCard({
   name = 'Cxncer',
   badge = 'Hobbyist',
   bio = 'KDMV',
-  avatarUrl = 'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?auto=format&fit=crop&w=600&q=85',
+  avatarUrl = 'https://i.pinimg.com/originals/0b/ec/c9/0becc93fd154ccd01ec2e14587f78262.gif',
   githubUrl = 'https://github.com',
   alignRight = false,
 }: ProfileCardProps) {

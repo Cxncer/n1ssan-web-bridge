@@ -335,10 +335,6 @@ body,button,input,select{font-family:'Barlow',sans-serif}
 :root{font-family:'Barlow',sans-serif}body,button,input,select,textarea{font-family:'Barlow',sans-serif}
 .ob-brand,.ob-kicker,.metric-label,.metric-index,.overview-stat small,.ob-section-meta,.ob-sort>span,.item-rarity,.ob-item-weapon,.ob-item-foot,.ob-footer,.dialog-foot,.ob-fields label,.new-profile label,.diagnostic-list b,.cs2-status-text{font-family:'DM Mono',monospace}
 .ob-heading h1,.ob-section-head h2,.dialog-head h2,.detail-preview h3,.ob-empty h3,.ob-notification-copy strong,.home-hero h1,.home-panel h2{font-family:'Barlow',sans-serif}
-.ob-overview{position:relative;isolation:isolate;overflow:hidden;border:1px solid #344b5d!important;background:linear-gradient(110deg,#151d24,#111a22)!important}
-.ob-overview:before{content:'';position:absolute;inset:-1px;border-radius:inherit;padding:1px;background:conic-gradient(from var(--beam-angle,0deg),transparent 0deg,transparent 245deg,#456fe8 276deg,#38a9df 294deg,#8368f5 315deg,transparent 350deg);-webkit-mask:linear-gradient(#000 0 0) content-box,linear-gradient(#000 0 0);-webkit-mask-composite:xor;mask-composite:exclude;opacity:.8;animation:obsidian-ocean-beam 5s linear infinite;pointer-events:none;z-index:3}
-.ob-overview:after{content:'';position:absolute;inset:0;border-radius:inherit;background:radial-gradient(ellipse at 0% 0%,#3977c51a,transparent 55%);pointer-events:none;z-index:0}
-.ob-overview>*{position:relative;z-index:1}
 .ob-item-card{position:relative;text-align:left;overflow:hidden;padding:0;border:1px solid #2b322e!important;border-radius:7px!important;background:#181d1b!important;color:#e5e9e5;transition:border-color .2s,transform .2s,box-shadow .2s}
 .ob-item-card:before,.ob-item-card:after{content:none!important}
 .ob-item-card:hover{border-color:#63776a!important;transform:translateY(-2px);box-shadow:0 8px 24px #0007}
@@ -1358,16 +1354,6 @@ body,button,input,select{font-family:'Barlow',sans-serif}
 .obsidian-shell-redesign .ob-section-meta,
 .obsidian-shell-redesign .ob-sort {
   color: var(--muted-foreground);
-}
-.obsidian-shell-redesign .ob-overview {
-  border-color: #3b2860 !important;
-  background: linear-gradient(110deg, #151020, #0d0d14) !important;
-}
-.obsidian-shell-redesign .ob-overview:before {
-  background: conic-gradient(from var(--beam-angle,0deg), transparent 0deg, transparent 245deg, #a855f7 276deg, #06b6d4 294deg, #a855f7 315deg, transparent 350deg);
-}
-.obsidian-shell-redesign .ob-overview:after {
-  background: radial-gradient(ellipse at 0% 0%, #a855f71c, transparent 55%);
 }
 .obsidian-shell-redesign .overview-total:after,
 .obsidian-shell-redesign .overview-stat:after {
