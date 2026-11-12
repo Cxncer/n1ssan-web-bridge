@@ -21,6 +21,8 @@ export interface CS2SkinCardProps {
   seed: number;
   stickers?: string[];
   charm?: string;
+  onOpen?: () => void;
+  onRemove?: () => void;
 }
 
 const RARITY_STYLES: Record<
@@ -90,7 +92,8 @@ const RARITY_STYLES: Record<
 
 const DEFAULT_THEME = RARITY_STYLES['Classified'];
 
-function getWearLabel(floatVal: number): 'FN' | 'MW' | 'FT' | 'WW' | 'BS' {
+function getWearLabel(floatVal: number | null | undefined): 'FN' | 'MW' | 'FT' | 'WW' | 'BS' | null {
+  if (floatVal == null || !Number.isFinite(floatVal)) return null;
   if (floatVal < 0.07) return 'FN';
   if (floatVal < 0.15) return 'MW';
   if (floatVal < 0.38) return 'FT';
@@ -108,6 +111,8 @@ export const CS2SkinCard: React.FC<CS2SkinCardProps> = ({
   seed,
   stickers = [],
   charm,
+  onOpen,
+  onRemove,
 }) => {
   const theme = RARITY_STYLES[rarity] || DEFAULT_THEME;
   const wearLabel = getWearLabel(floatValue);
@@ -274,6 +279,21 @@ export const CS2SkinCard: React.FC<CS2SkinCardProps> = ({
             font-weight: 600;
           }
 
+          .cs2-remove-button {
+            position: absolute;
+            top: 6px;
+            right: 6px;
+            z-index: 5;
+            width: 22px;
+            height: 22px;
+            border: 1px solid rgba(255,255,255,.2);
+            border-radius: 50%;
+            background: rgba(8,8,8,.78);
+            color: #fff;
+            cursor: pointer;
+            line-height: 1;
+          }
+
           .cs2-wear-badge {
             color: #FFFFFF;
             font-weight: 700;
@@ -282,7 +302,7 @@ export const CS2SkinCard: React.FC<CS2SkinCardProps> = ({
         `}
       </style>
 
-      <div className="cs2-card">
+      <div className="cs2-card" onClick={onOpen} onKeyDown={event => { if (onOpen && (event.key === 'Enter' || event.key === ' ')) { event.preventDefault(); onOpen(); } }} role={onOpen ? 'button' : undefined} tabIndex={onOpen ? 0 : undefined}>
         <div
           className="cs2-card-inner"
           style={{
@@ -290,6 +310,7 @@ export const CS2SkinCard: React.FC<CS2SkinCardProps> = ({
             boxShadow: `inset 0 1px 0 ${theme.topHighlight}`,
           }}
         >
+          {onRemove && <button type="button" className="cs2-remove-button" aria-label="Remove item" onClick={event => { event.stopPropagation(); onRemove(); }}>×</button>}
           <div className="cs2-glass-header">
             <h3 className="cs2-weapon-name" title={weaponName}>
               {weaponName}
@@ -348,15 +369,11 @@ export const CS2SkinCard: React.FC<CS2SkinCardProps> = ({
           )}
         </div>
 
-        <div className="cs2-footer">
-          <span>
-            FLOAT: <span className="cs2-footer-val">{floatValue}</span>
-          </span>
-          <span>
-            SEED: <span className="cs2-footer-val">{seed}</span>
-          </span>
-          <span className="cs2-wear-badge">{wearLabel}</span>
-        </div>
+        {(floatValue != null || seed != null || wearLabel) && <div className="cs2-footer">
+          {floatValue != null && <span>FLOAT: <span className="cs2-footer-val">{floatValue}</span></span>}
+          {seed != null && <span>SEED: <span className="cs2-footer-val">{seed}</span></span>}
+          {wearLabel && <span className="cs2-wear-badge">{wearLabel}</span>}
+        </div>}
       </div>
     </>
   );
