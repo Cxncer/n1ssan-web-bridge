@@ -1,3 +1,4 @@
+
 import React from 'react';
 
 export type SkinRarity =
@@ -35,55 +36,55 @@ const RARITY_STYLES: Record<
   }
 > = {
   'Consumer Grade': {
-    gradient: 'linear-gradient(165deg, #080808 -100%, #4B5563 50%, #080808 100%)',
+    gradient: 'linear-gradient(165deg, #080808 -10%, #222933 10%, #080808 90%)',
     textColor: '#E5E7EB',
     badgeBg: 'rgba(17, 24, 39, 0.55)',
     topHighlight: 'rgba(229, 231, 235, 0.25)',
   },
   'Industrial Grade': {
-    gradient: 'linear-gradient(165deg, #080808 -100%, #2B4C73 50%, #080808 100%)',
+    gradient: 'linear-gradient(165deg, #080808 -10%, #0e2541 10%, #080808 90%)',
     textColor: '#93C5FD',
     badgeBg: 'rgba(15, 23, 42, 0.55)',
     topHighlight: 'rgba(147, 197, 253, 0.25)',
   },
   'Mil-Spec Grade': {
-    gradient: 'linear-gradient(165deg, #080808 -100%, #233282 50%, #080808 100%)',
+    gradient: 'linear-gradient(165deg, #080808 -10%, #151d49 10%, #080808 90%)',
     textColor: '#93C5FD',
     badgeBg: 'rgba(15, 23, 42, 0.6)',
     topHighlight: 'rgba(147, 197, 253, 0.25)',
   },
   Restricted: {
-    gradient: 'linear-gradient(165deg, #080808 -100%, #422082 50%, #080808 100%)',
+    gradient: 'linear-gradient(165deg, #080808 -10%, #1e0c3f 10%, #080808 90%)',
     textColor: '#D8B4FE',
     badgeBg: 'rgba(24, 12, 46, 0.6)',
     topHighlight: 'rgba(216, 180, 254, 0.25)',
   },
   Classified: {
-    gradient: 'linear-gradient(165deg, #080808 -100%, #571264 50%, #080808 100%)',
+    gradient: 'linear-gradient(165deg, #080808 -10%, #2f0b36 10%, #080808 90%)',
     textColor: '#E879F9',
     badgeBg: 'rgba(42, 8, 52, 0.72)',
     topHighlight: 'rgba(240, 171, 252, 0.25)',
   },
   Covert: {
-    gradient: 'linear-gradient(165deg, #080808 -100%, #6E1616 50%, #080808 100%)',
+    gradient: 'linear-gradient(165deg, #080808 -10%, #310909 10%, #080808 90%)',
     textColor: '#FCA5A5',
     badgeBg: 'rgba(56, 10, 10, 0.72)',
     topHighlight: 'rgba(252, 165, 165, 0.25)',
   },
   Extraordinary: {
-    gradient: 'linear-gradient(165deg, #080808 -100%, #714E05 50%, #080808 100%)',
+    gradient: 'linear-gradient(165deg, #080808 -10%, #38290a 10%, #080808 90%)',
     textColor: '#FDE047',
     badgeBg: 'rgba(54, 38, 4, 0.72)',
     topHighlight: 'rgba(253, 224, 71, 0.25)',
   },
   'Exceedingly Rare': {
-    gradient: 'linear-gradient(165deg, #080808 -100%, #714E05 50%, #080808 100%)',
+    gradient: 'linear-gradient(165deg, #080808 -10%, #38290a 10%, #080808 90%)',
     textColor: '#FDE047',
     badgeBg: 'rgba(54, 38, 4, 0.72)',
     topHighlight: 'rgba(253, 224, 71, 0.25)',
   },
   Contraband: {
-    gradient: 'linear-gradient(165deg, #080808 -100%, #785314 50%, #080808 100%)',
+    gradient: 'linear-gradient(165deg, #080808 -10%, #38290a 10%, #080808 90%)',
     textColor: '#FCD34D',
     badgeBg: 'rgba(58, 39, 8, 0.72)',
     topHighlight: 'rgba(252, 211, 77, 0.25)',
@@ -92,7 +93,9 @@ const RARITY_STYLES: Record<
 
 const DEFAULT_THEME = RARITY_STYLES['Classified'];
 
-function getWearLabel(floatVal: number | null | undefined): 'FN' | 'MW' | 'FT' | 'WW' | 'BS' | null {
+function getWearLabel(
+  floatVal: number | null | undefined,
+): 'FN' | 'MW' | 'FT' | 'WW' | 'BS' | null {
   if (floatVal == null || !Number.isFinite(floatVal)) return null;
   if (floatVal < 0.07) return 'FN';
   if (floatVal < 0.15) return 'MW';
@@ -128,7 +131,7 @@ export const CS2SkinCard: React.FC<CS2SkinCardProps> = ({
             width: 200px;
             height: 292px;
             background-color: #080808;
-            border: 1px solid #171717;
+            border: 0px solid #171717;
             border-radius: 18px;
             padding: 9px 9px 10px 9px;
             box-sizing: border-box;
@@ -136,6 +139,18 @@ export const CS2SkinCard: React.FC<CS2SkinCardProps> = ({
             flex-direction: column;
             justify-content: space-between;
             user-select: none;
+            cursor: pointer;
+            transition:
+              transform 0.25s ease,
+              border-color 0.25s ease,
+              box-shadow 0.25s ease;
+          }
+
+          /* Whole card hover */
+          .cs2-card:hover {
+            transform: translateY(-3px);
+            border: 1px rgba(255, 255, 255, 0.3);
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.25);
           }
 
           .cs2-card-inner {
@@ -218,8 +233,8 @@ export const CS2SkinCard: React.FC<CS2SkinCardProps> = ({
           }
 
           .cs2-skin-img {
-            width: 120%;
-            height: 120%;
+            width: 100%;
+            height: 100%;
             object-fit: contain;
             filter: drop-shadow(0 10px 12px rgba(0, 0, 0, 0.75));
             transition: transform 0.28s cubic-bezier(0.22, 1, 0.36, 1);
@@ -286,12 +301,27 @@ export const CS2SkinCard: React.FC<CS2SkinCardProps> = ({
             z-index: 5;
             width: 22px;
             height: 22px;
-            border: 1px solid rgba(255,255,255,.2);
-            border-radius: 50%;
-            background: rgba(8,8,8,.78);
-            color: #fff;
+            border: 0px solid rgba(255,255,255,.2);
+            border-radius: 1000%;
+            background: rgba(73, 71, 71, 0.36);
+            color: #000000;
             cursor: pointer;
             line-height: 1;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.2s ease;
+          }
+
+          /* Show remove button when the whole card is hovered */
+          .cs2-card:hover .cs2-remove-button,
+          .cs2-card:focus-within .cs2-remove-button {
+            opacity: 1;
+            pointer-events: auto;
+          }
+
+          .cs2-remove-button:hover {
+            background: rgba(180, 35, 35, 0.43);
+            border-color: rgba(255, 100, 100, 0.6);
           }
 
           .cs2-wear-badge {
@@ -299,10 +329,29 @@ export const CS2SkinCard: React.FC<CS2SkinCardProps> = ({
             font-weight: 700;
             font-size: 10px;
           }
+
+          @media (prefers-reduced-motion: reduce) {
+            .cs2-card,
+            .cs2-skin-img,
+            .cs2-remove-button {
+              transition: none;
+            }
+          }
         `}
       </style>
 
-      <div className="cs2-card" onClick={onOpen} onKeyDown={event => { if (onOpen && (event.key === 'Enter' || event.key === ' ')) { event.preventDefault(); onOpen(); } }} role={onOpen ? 'button' : undefined} tabIndex={onOpen ? 0 : undefined}>
+      <div
+        className="cs2-card"
+        onClick={onOpen}
+        onKeyDown={event => {
+          if (onOpen && (event.key === 'Enter' || event.key === ' ')) {
+            event.preventDefault();
+            onOpen();
+          }
+        }}
+        role={onOpen ? 'button' : undefined}
+        tabIndex={onOpen ? 0 : undefined}
+      >
         <div
           className="cs2-card-inner"
           style={{
@@ -310,7 +359,20 @@ export const CS2SkinCard: React.FC<CS2SkinCardProps> = ({
             boxShadow: `inset 0 1px 0 ${theme.topHighlight}`,
           }}
         >
-          {onRemove && <button type="button" className="cs2-remove-button" aria-label="Remove item" onClick={event => { event.stopPropagation(); onRemove(); }}>×</button>}
+          {onRemove && (
+            <button
+              type="button"
+              className="cs2-remove-button"
+              aria-label="Remove item"
+              onClick={event => {
+                event.stopPropagation();
+                onRemove();
+              }}
+            >
+              ×
+            </button>
+          )}
+
           <div className="cs2-glass-header">
             <h3 className="cs2-weapon-name" title={weaponName}>
               {weaponName}
@@ -369,11 +431,23 @@ export const CS2SkinCard: React.FC<CS2SkinCardProps> = ({
           )}
         </div>
 
-        {(floatValue != null || seed != null || wearLabel) && <div className="cs2-footer">
-          {floatValue != null && <span>FLOAT: <span className="cs2-footer-val">{floatValue}</span></span>}
-          {seed != null && <span>SEED: <span className="cs2-footer-val">{seed}</span></span>}
-          {wearLabel && <span className="cs2-wear-badge">{wearLabel}</span>}
-        </div>}
+        {(floatValue != null || seed != null || wearLabel) && (
+          <div className="cs2-footer">
+            {floatValue != null && (
+              <span>
+                FLOAT: <span className="cs2-footer-val">{floatValue}</span>
+              </span>
+            )}
+            {seed != null && (
+              <span>
+                SEED: <span className="cs2-footer-val">{seed}</span>
+              </span>
+            )}
+            {wearLabel && (
+              <span className="cs2-wear-badge">{wearLabel}</span>
+            )}
+          </div>
+        )}
       </div>
     </>
   );

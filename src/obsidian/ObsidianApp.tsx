@@ -22,6 +22,7 @@ import { ProfileCard } from './components/ProfileCard'
 import AddtoInvSkinCard from './components/AddtoInvSkinCard'
 import ObsidianDropdown from './components/ObsidianDropdown'
 
+
 type ItemKind = 'skin' | 'sticker' | 'charm'
 type Skin = { id: number | string; weapon: string; name: string; type: string; rarity: string; color: string; art: string; description: string; image?: string; minFloat?: number | null; maxFloat?: number | null; kind?: ItemKind; phase?: string; patternId?: string; paintIndex?: string; paintKit?: number | string | null; gameDefinitionId?: number | null; stickerKitId?: number | null; keychainId?: number | null; legacyOnly?: boolean }
 type InventoryItem = ObsidianInventoryItem

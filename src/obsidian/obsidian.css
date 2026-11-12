@@ -1609,7 +1609,7 @@ body,button,input,select{font-family:'Barlow',sans-serif}
   min-height: 40px;
   padding: 0 12px 0 13px;
   border: 1px solid #3f3f46;
-  border-radius: 7px;
+  border-radius: 999px;
   background: linear-gradient(180deg, #171720, #101016);
   color: #e4e4e7;
   font: 500 12px var(--font-sans);
@@ -2406,8 +2406,8 @@ body,button,input,select{font-family:'Barlow',sans-serif}
 
 /* Armory UI refresh: profile anchor and connection state */
 .obsidian-shell-redesign .ob-line-sidebar-profile{margin-top:auto;display:flex;justify-content:center;align-items:center;padding:14px 0 12px;position:relative;z-index:60}
-.obsidian-shell-redesign .armory-connection-status{display:flex;align-items:center;gap:8px;padding:10px 12px;border:1px solid #303834;border-radius:5px;background:#111713;color:#89968d;font:9px 'DM Mono',monospace;letter-spacing:1px;white-space:nowrap}
-.obsidian-shell-redesign .armory-connection-status .armory-status-dot{width:6px;height:6px;border-radius:50%;background:#d5b66b;box-shadow:0 0 9px #d5b66b66}
+.obsidian-shell-redesign .armory-connection-status{display:flex;align-items:center;gap:8px;padding:10px 12px;border:0px solid #303834;border-radius:999px;background:#111713;color:#89968d;font:9px 'Barlow',monospace;letter-spacing:1px;white-space:nowrap}
+.obsidian-shell-redesign .armory-connection-status .armory-status-dot{width:6px;height:6px;border-radius:100%;background:#d5b66b;box-shadow:0 0 9px #d5b66b66}
 .obsidian-shell-redesign .armory-connection-status.is-connected{color:#a8c5ac;border-color:#405846}
 .obsidian-shell-redesign .armory-connection-status.is-connected .armory-status-dot{background:#83bd8c;box-shadow:0 0 10px #83bd8c77}
 .obsidian-shell-redesign .armory-connection-status.has-error{color:#e2a09a;border-color:#68403b}

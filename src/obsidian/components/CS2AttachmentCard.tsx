@@ -1,19 +1,20 @@
+
 import React from 'react';
 
 export type AttachmentRarity =
-  | 'High Grade'      // Blue
-  | 'Remarkable'      // Purple
-  | 'Exotic'          // Pink
-  | 'Extraordinary'   // Red / Gold-tier
-  | 'Contraband';     // Yellow (Howling Dawn)
+  | 'High Grade'
+  | 'Remarkable'
+  | 'Exotic'
+  | 'Extraordinary'
+  | 'Contraband';
 
 export interface CS2AttachmentCardProps {
-  itemName: string;         // e.g. "Sticker | Crown (Foil)" or "Charm | Butane Buddy"
+  itemName: string;
   itemType: 'Sticker' | 'Charm';
   rarity: AttachmentRarity | string;
   imageUrl: string;
-  qualityOrFinish?: string; // e.g. "Holo", "Foil", or "Pattern Seed: #445"
-  quantity: number;         // Replaces float/seed for counting duplicates
+  qualityOrFinish?: string;
+  quantity: number;
   onOpen?: () => void;
   onRemove?: () => void;
 }
@@ -28,31 +29,31 @@ const ATTACHMENT_RARITY_STYLES: Record<
   }
 > = {
   'High Grade': {
-    gradient: 'linear-gradient(165deg, #080808 -100%, #2B4C73 50%, #080808 100%)',
+    gradient: 'linear-gradient(165deg, #080808 -10%, #323963 10%, #080808 90%)',
     textColor: '#93C5FD',
     badgeBg: 'rgba(15, 23, 42, 0.55)',
     topHighlight: 'rgba(147, 197, 253, 0.25)',
   },
   Remarkable: {
-    gradient: 'linear-gradient(165deg, #080808 -100%, #422082 50%, #080808 100%)',
+    gradient: 'linear-gradient(165deg, #080808 -10%, #330e57 10%, #080808 90%)',
     textColor: '#D8B4FE',
     badgeBg: 'rgba(24, 12, 46, 0.6)',
     topHighlight: 'rgba(216, 180, 254, 0.25)',
   },
   Exotic: {
-    gradient: 'linear-gradient(165deg, #080808 -100%, #571264 50%, #080808 100%)',
+    gradient: 'linear-gradient(165deg, #080808 -10%, #2f0b36 10%, #080808 90%)',
     textColor: '#E879F9',
     badgeBg: 'rgba(42, 8, 52, 0.72)',
     topHighlight: 'rgba(240, 171, 252, 0.25)',
   },
   Extraordinary: {
-    gradient: 'linear-gradient(165deg, #080808 -100%, #6E1616 50%, #080808 100%)',
+    gradient: 'linear-gradient(165deg, #080808 -10%, #38290a 10%, #080808 90%)',
     textColor: '#FCA5A5',
     badgeBg: 'rgba(56, 10, 10, 0.72)',
     topHighlight: 'rgba(252, 165, 165, 0.25)',
   },
   Contraband: {
-    gradient: 'linear-gradient(165deg, #080808 -100%, #785314 50%, #080808 100%)',
+    gradient: 'linear-gradient(165deg, #080808 -10%, #38290a 10%, #080808 90%)',
     textColor: '#FCD34D',
     badgeBg: 'rgba(58, 39, 8, 0.72)',
     topHighlight: 'rgba(252, 211, 77, 0.25)',
@@ -84,7 +85,7 @@ export const CS2AttachmentCard: React.FC<CS2AttachmentCardProps> = ({
             width: 200px;
             height: 292px;
             background-color: #080808;
-            border: 1px solid #171717;
+            border: 0px solid #171717;
             border-radius: 18px;
             padding: 9px 9px 10px 9px;
             box-sizing: border-box;
@@ -92,6 +93,18 @@ export const CS2AttachmentCard: React.FC<CS2AttachmentCardProps> = ({
             flex-direction: column;
             justify-content: space-between;
             user-select: none;
+            cursor: pointer;
+            transition:
+              transform 0.25s ease,
+              border-color 0.25s ease,
+              box-shadow 0.25s ease;
+          }
+
+          /* Whole card hover */
+          .cs2-att-card:hover {
+            transform: translateY(-3px);
+            border-color: rgba(255, 255, 255, 0.3);
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.25);
           }
 
           .cs2-att-card-inner {
@@ -166,8 +179,8 @@ export const CS2AttachmentCard: React.FC<CS2AttachmentCardProps> = ({
           }
 
           .cs2-att-img {
-            max-width: 100%;
-            max-height: 100%;
+            max-width: 80%;
+            max-height: 90%;
             object-fit: contain;
             filter: drop-shadow(0 12px 16px rgba(0, 0, 0, 0.85));
             transition: transform 0.28s cubic-bezier(0.22, 1, 0.36, 1);
@@ -201,12 +214,27 @@ export const CS2AttachmentCard: React.FC<CS2AttachmentCardProps> = ({
             z-index: 5;
             width: 22px;
             height: 22px;
-            border: 1px solid rgba(255,255,255,.2);
-            border-radius: 50%;
-            background: rgba(8,8,8,.78);
-            color: #fff;
+            border: 0px solid rgba(255,255,255,.2);
+            border-radius: 1000%;
+            background: rgba(73, 71, 71, 0.36);
+            color: #000000;
             cursor: pointer;
             line-height: 1;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.2s ease;
+          }
+
+          /* Reveal remove button on whole-card hover */
+          .cs2-att-card:hover .cs2-att-remove-button,
+          .cs2-att-card:focus-within .cs2-att-remove-button {
+            opacity: 1;
+            pointer-events: auto;
+          }
+
+          .cs2-att-remove-button:hover {
+            background: rgba(180, 35, 35, 0.43);
+            border-color: rgba(255, 100, 100, 0.6);
           }
 
           .cs2-att-finish-badge {
@@ -214,10 +242,29 @@ export const CS2AttachmentCard: React.FC<CS2AttachmentCardProps> = ({
             font-weight: 500;
             font-size: 10px;
           }
+
+          @media (prefers-reduced-motion: reduce) {
+            .cs2-att-card,
+            .cs2-att-img,
+            .cs2-att-remove-button {
+              transition: none;
+            }
+          }
         `}
       </style>
 
-      <div className="cs2-att-card" onClick={onOpen} onKeyDown={event => { if (onOpen && (event.key === 'Enter' || event.key === ' ')) { event.preventDefault(); onOpen(); } }} role={onOpen ? 'button' : undefined} tabIndex={onOpen ? 0 : undefined}>
+      <div
+        className="cs2-att-card"
+        onClick={onOpen}
+        onKeyDown={event => {
+          if (onOpen && (event.key === 'Enter' || event.key === ' ')) {
+            event.preventDefault();
+            onOpen();
+          }
+        }}
+        role={onOpen ? 'button' : undefined}
+        tabIndex={onOpen ? 0 : undefined}
+      >
         <div
           className="cs2-att-card-inner"
           style={{
@@ -225,7 +272,20 @@ export const CS2AttachmentCard: React.FC<CS2AttachmentCardProps> = ({
             boxShadow: `inset 0 1px 0 ${theme.topHighlight}`,
           }}
         >
-          {onRemove && <button type="button" className="cs2-att-remove-button" aria-label="Remove item" onClick={event => { event.stopPropagation(); onRemove(); }}>×</button>}
+          {onRemove && (
+            <button
+              type="button"
+              className="cs2-att-remove-button"
+              aria-label="Remove item"
+              onClick={event => {
+                event.stopPropagation();
+                onRemove();
+              }}
+            >
+              ×
+            </button>
+          )}
+
           {/* Header */}
           <div className="cs2-att-glass-header">
             <h3 className="cs2-att-name" title={itemName}>
@@ -239,12 +299,12 @@ export const CS2AttachmentCard: React.FC<CS2AttachmentCardProps> = ({
             </div>
           </div>
 
-          {/* Type Badge moved to where the nametag used to be */}
+          {/* Type Badge */}
           <div className="cs2-att-tags-row">
             <span className="cs2-att-type-badge">{itemType}</span>
           </div>
 
-          {/* Centered Item Preview Box */}
+          {/* Item Preview */}
           <div className="cs2-att-preview-box">
             <img
               src={imageUrl}
@@ -255,7 +315,7 @@ export const CS2AttachmentCard: React.FC<CS2AttachmentCardProps> = ({
           </div>
         </div>
 
-        {/* Footer with Qty & Quality/Finish (instead of float/seed) */}
+        {/* Footer */}
         <div className="cs2-att-footer">
           <span>
             QTY: <span className="cs2-att-footer-val">x{quantity}</span>
