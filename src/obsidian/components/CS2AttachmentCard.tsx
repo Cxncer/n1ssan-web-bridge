@@ -14,6 +14,8 @@ export interface CS2AttachmentCardProps {
   imageUrl: string;
   qualityOrFinish?: string; // e.g. "Holo", "Foil", or "Pattern Seed: #445"
   quantity: number;         // Replaces float/seed for counting duplicates
+  onOpen?: () => void;
+  onRemove?: () => void;
 }
 
 const ATTACHMENT_RARITY_STYLES: Record<
@@ -66,6 +68,8 @@ export const CS2AttachmentCard: React.FC<CS2AttachmentCardProps> = ({
   imageUrl,
   qualityOrFinish,
   quantity,
+  onOpen,
+  onRemove,
 }) => {
   const theme = ATTACHMENT_RARITY_STYLES[rarity] || DEFAULT_THEME;
 
@@ -190,6 +194,21 @@ export const CS2AttachmentCard: React.FC<CS2AttachmentCardProps> = ({
             font-weight: 600;
           }
 
+          .cs2-att-remove-button {
+            position: absolute;
+            top: 6px;
+            right: 6px;
+            z-index: 5;
+            width: 22px;
+            height: 22px;
+            border: 1px solid rgba(255,255,255,.2);
+            border-radius: 50%;
+            background: rgba(8,8,8,.78);
+            color: #fff;
+            cursor: pointer;
+            line-height: 1;
+          }
+
           .cs2-att-finish-badge {
             color: #FBBF24;
             font-weight: 500;
@@ -198,7 +217,7 @@ export const CS2AttachmentCard: React.FC<CS2AttachmentCardProps> = ({
         `}
       </style>
 
-      <div className="cs2-att-card">
+      <div className="cs2-att-card" onClick={onOpen} onKeyDown={event => { if (onOpen && (event.key === 'Enter' || event.key === ' ')) { event.preventDefault(); onOpen(); } }} role={onOpen ? 'button' : undefined} tabIndex={onOpen ? 0 : undefined}>
         <div
           className="cs2-att-card-inner"
           style={{
@@ -206,6 +225,7 @@ export const CS2AttachmentCard: React.FC<CS2AttachmentCardProps> = ({
             boxShadow: `inset 0 1px 0 ${theme.topHighlight}`,
           }}
         >
+          {onRemove && <button type="button" className="cs2-att-remove-button" aria-label="Remove item" onClick={event => { event.stopPropagation(); onRemove(); }}>×</button>}
           {/* Header */}
           <div className="cs2-att-glass-header">
             <h3 className="cs2-att-name" title={itemName}>
