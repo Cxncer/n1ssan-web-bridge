@@ -17,8 +17,8 @@ export interface CS2SkinCardProps {
   imageUrl: string;
   nameTag?: string;
   isStatTrak?: boolean;
-  floatValue: number;
-  seed: number;
+  floatValue: number | null;
+  seed: number | null;
   stickers?: string[];
   charm?: string;
   onOpen?: () => void;
