@@ -1,5 +1,5 @@
 import React from 'react';
-import '../OverviewCard.css';
+import './OverviewCard.css';
 
 export interface InventoryCount {
   label: string;
