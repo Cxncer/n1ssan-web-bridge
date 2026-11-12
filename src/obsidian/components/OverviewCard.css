@@ -1,0 +1,167 @@
+.overview-card {
+  display: flex;
+  flex-wrap: nowrap; /* Prevents items from wrapping or being pushed down */
+  align-items: stretch;
+  background: #0b0a10;
+  border: 1px solid rgba(139, 92, 246, 0.2);
+  border-radius: 20px;
+  padding: 10px;
+  color: #ffffff;
+  font-family: barlow, sans-serif;
+  box-shadow: 0 16px 40px rgba(87, 17, 145, 0.6);
+  width: 100%;
+  box-sizing: border-box;
+  overflow-x: auto; /* Handles safe horizontal scrolling on extremely narrow screens */
+}
+
+/* Left Total Section with Animated Purple Gradient + Grain */
+.overview-total-section {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  flex-shrink: 0; /* Keeps the total counter fixed and prevents it from squishing */
+  padding: 10px 35px 10px 15px;
+  margin-right: 12px;
+  border-right: 1px solid rgba(255, 255, 255, 0.08);
+  min-width: 220px;
+  border-radius: 12px;
+  overflow: hidden;
+  background: #13101c;
+}
+
+/* 1. Wavy Purple Aurora Glow Layer */
+.overview-total-section::before {
+  content: '';
+  position: absolute;
+  top: -60%;
+  left: -60%;
+  width: 220%;
+  height: 220%;
+  background: 
+    radial-gradient(ellipse 65% 40% at 30% 45%, rgba(130, 13, 231, 0.911) 0%, transparent 65%),
+    radial-gradient(ellipse 50% 60% at 70% 60%, rgb(20, 1, 31) 0%, transparent 65%),
+    radial-gradient(ellipse 70% 35% at 45% 25%, rgba(81, 8, 112, 0.63) 0%, transparent 60%);
+  filter: blur(22px);
+  animation: wavyAurora 14s ease-in-out infinite alternate;
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* 2. Grainy Noise Overlay Layer */
+.overview-total-section::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='1' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)' opacity='0.07'/%3E%3C/svg%3E");
+  opacity: 2; 
+  pointer-events: none;
+  z-index: 1; 
+}
+
+/* Slow, fluid wave motion */
+@keyframes wavyAurora {
+  0% {
+    transform: translate(-8%, -5%) rotate(-6deg) scale(1, 0.9);
+  }
+  50% {
+    transform: translate(6%, 8%) rotate(5deg) scale(1.1, 1.05);
+  }
+  100% {
+    transform: translate(-4%, 4%) rotate(-3deg) scale(0.95, 1.1);
+  }
+}
+
+/* Ensure text stays safely above both the glow and grain layers */
+.metric-label,
+.total-value,
+.overview-subtitle {
+  position: relative;
+  z-index: 2;
+  white-space: nowrap;
+}
+
+.metric-label {
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.06em;
+  color: rgba(243, 240, 240, 0.993);
+  line-height: 1.3;
+  margin-bottom: 10px;
+}
+
+.total-value {
+  font-size: 48px;
+  font-weight: 700;
+  line-height: 0.8;
+  color: #ffffff;
+  margin-bottom: 7px;
+  letter-spacing: -0.02em;
+}
+
+.overview-subtitle {
+  font-size: 12px;
+  color: rgba(255, 255, 255, 0.5);
+}
+
+/* Right Stats Grid */
+.overview-stats-grid {
+  display: flex;
+  flex: 1 1 auto; /* Allows the grid to flex and fill available space */
+  min-width: 0;   /* Crucial: enables children to compress instead of overflowing */
+  justify-content: space-between;
+  align-items: center;
+}
+
+.overview-stat-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  flex: 1 1 0;    /* Distributes space evenly and lets gaps compress dynamically */
+  min-width: 0;
+  padding: 0 clamp(4px, 0.8vw, 12px); /* Shrinks side padding fluidly on resize */
+  position: relative;
+}
+
+/* Divider lines between grid columns */
+.overview-stat-item:not(:last-child)::after {
+  content: '';
+  position: absolute;
+  right: 0;
+  top: 20%;
+  height: 60%;
+  width: 1px;
+  background-color: rgba(255, 255, 255, 0.08);
+}
+
+.overview-stat-item .quantity {
+  font-size: 35px;
+  font-weight: 600;
+  color: #ffffff;
+  margin-bottom: 6px;
+  white-space: nowrap;
+}
+
+.overview-stat-item small {
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.05em;
+  color: rgba(136, 134, 138, 0.966);
+  white-space: nowrap;
+}
+
+/* Responsive adjustment: instead of stacking vertically (which pushes items down), 
+   we let the container scroll smoothly on small screens while keeping everything side-by-side */
+@media (max-width: 1024px) {
+  .overview-card {
+    padding: 8px 12px;
+  }
+  
+  .overview-stats-grid {
+    gap: 16px;
+  }
+}
