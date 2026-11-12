@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import '../ProfileCard.css';
+import './ProfileCard.css';
 
 interface ProfileCardProps {
   name?: string;
