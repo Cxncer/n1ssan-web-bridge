@@ -3,6 +3,7 @@ import skinData from './skins.json'
 import './App.css'
 import './ColorSearch.css'
 import { findImageColorMatches } from './skinColorDetection'
+import { BackToTop } from './shared/components/BackToTop'
 
 type Skin = { id: number; weapon: string; name: string; type: string; rarity: string; color: string; art: string; description: string; image?: string; minFloat?: number | null; maxFloat?: number | null }
 type Page = 'catalogue' | 'favorites'
@@ -44,8 +45,6 @@ function App() {
   const [colorScanBusy, setColorScanBusy] = useState(false)
   const [favorites, setFavorites] = useState<number[]>([])
   const [selected, setSelected] = useState<Skin | null>(null)
-  const [showBackToTop, setShowBackToTop] = useState(false)
-  useEffect(() => { const fn = () => setShowBackToTop(window.scrollY > 400); window.addEventListener('scroll', fn, { passive: true }); fn(); return () => window.removeEventListener('scroll', fn) }, [])
   useEffect(() => { const fn = (e: KeyboardEvent) => { if (e.key === 'Escape') setSelected(null) }; window.addEventListener('keydown', fn); return () => window.removeEventListener('keydown', fn) }, [])
   // Scans skin images when a color is selected. Reset of the scan state
   // happens in setColorFilter() below, so this effect never calls setState
@@ -121,7 +120,7 @@ function App() {
       <footer className="site-footer"><a className="brand footer-brand" href="#catalogue" onClick={e => { e.preventDefault(); navigate('catalogue') }}><span className="brand-mark">n.</span><span>n1ssan</span></a><span>PERSONAL COUNTER-STRIKE SKIN ARCHIVE</span><span>BUILT FOR THE LOVE OF THE GAME.</span></footer>
     </div>
     {selected && <div className="modal-backdrop" onClick={() => setSelected(null)} role="presentation"><section className="detail-modal" role="dialog" aria-modal="true" aria-label={`${selected.weapon} | ${selected.name}`} onClick={e => e.stopPropagation()}><button type="button" className="modal-close" onClick={() => setSelected(null)} aria-label="Close details">×</button><div className={`detail-art rarity-art rarity-art-${getRarityKey(selected)}`}><span className="art-glow" />{selected.image ? <img className="detail-image" src={selected.image} alt={`${selected.weapon} | ${selected.name}`} /> : <span className="weapon-silhouette detail-silhouette">{selected.art}</span>}</div><div className="detail-content"><div className="eyebrow">ITEM DETAILS</div><div className="detail-weapon">{selected.weapon}</div><h2>{selected.name}</h2><div className="detail-rarity"><span className={`rarity-dot rarity-${getRarityKey(selected)}`} />{getDisplayRarity(selected)}</div><p>{selected.description || 'An item from the Counter-Strike collection.'}</p><div className="detail-facts"><div><span>ITEM</span><strong>{selected.weapon}</strong></div><div><span>TYPE</span><strong>{selected.type}</strong></div><div><span>RARITY</span><strong>{getDisplayRarity(selected)}</strong></div></div><button type="button" className={`detail-favorite ${favorites.includes(selected.id) ? 'active' : ''}`} onClick={() => toggleFavorite(selected.id)}>{favorites.includes(selected.id) ? '♥  Remove from favorites' : '♡  Add to favorites'}</button></div></section></div>}
-    {showBackToTop && <button type="button" className="back-to-top" onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })} aria-label="Back to top" title="Back to top">↑</button>}
+    <BackToTop />
   </div>
 }
 export default App

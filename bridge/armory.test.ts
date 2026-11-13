@@ -371,7 +371,7 @@ const staticSkins = JSON.parse(
   readFileSync(new URL('../src/skins.json', import.meta.url), 'utf8'),
 ) as Array<Parameters<typeof toCatalogueDefinition>[0]>
 const expandedKnives = JSON.parse(
-  readFileSync(new URL('../src/obsidian/knife-skins.json', import.meta.url), 'utf8'),
+  readFileSync(new URL('../src/armory/ui/knife-skins.json', import.meta.url), 'utf8'),
 ) as Array<Parameters<typeof toCatalogueDefinition>[0]>
 
 test('static catalogues contain complete, collision-free canonical definition identities', () => {

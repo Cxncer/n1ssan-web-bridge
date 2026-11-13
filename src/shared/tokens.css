@@ -1,0 +1,84 @@
+/* n1ssan design tokens — the single source of truth for every surface
+   (skins catalogue, Armory/Obsidian, Loadout) and mirrored by the WPF
+   launcher's Theme/DesignTokens.xaml. Surfaces alias these into their own
+   local variables instead of restating hex values. */
+:root {
+  color-scheme: dark;
+
+  /* Surfaces */
+  --n1-surface-0: #101213;
+  --n1-surface-1: #171c1a;
+  --n1-surface-2: #1b211d;
+  --n1-surface-3: #242c27;
+  --n1-surface-4: #2c342f;
+
+  /* Lines */
+  --n1-border: #303834;
+  --n1-border-strong: #45564a;
+  --n1-border-subtle: #252a2a;
+
+  /* Text */
+  --n1-text: #eef0ed;
+  --n1-text-secondary: #b0b8b2;
+  --n1-text-muted: #89918c;
+  --n1-text-faint: #68736d;
+  --n1-text-inverse: #131815;
+
+  /* Accents */
+  --n1-accent: #a0b2a5;
+  --n1-accent-strong: #dce9df;
+  --n1-accent-glow: #9bd3a3;
+  --n1-accent-positive: #1ed760;
+  --n1-info: #83b6d9;
+  --n1-info-strong: #527fbd;
+  --n1-info-hsl: 221 87% 53%;
+
+  /* Status */
+  --n1-warning: #e5a36d;
+  --n1-warning-strong: #c49b65;
+  --n1-danger: #d28c85;
+  --n1-danger-strong: #e5484d;
+  --n1-success: #8fd0a0;
+
+  /* Runtime condition — shared by status records and diagnostics */
+  --n1-condition-ready: #8fd0a0;
+  --n1-condition-degraded: #e5a36d;
+  --n1-condition-stale: #c49b65;
+  --n1-condition-failed: #e5484d;
+  --n1-condition-unknown: #89918c;
+
+  /* Rarity — CS2 grade scale */
+  --n1-rarity-consumer: #b0c3d9;
+  --n1-rarity-industrial: #5e98d9;
+  --n1-rarity-milspec: #4b69ff;
+  --n1-rarity-restricted: #8847ff;
+  --n1-rarity-classified: #d32ce6;
+  --n1-rarity-covert: #eb4b4b;
+  --n1-rarity-extraordinary: #e4ae39;
+  --n1-rarity-contraband: #e4ae39;
+  --n1-rarity-default: #a9b5ac;
+
+  /* Typography */
+  --n1-font-display: 'Barlow', 'DM Sans', system-ui, sans-serif;
+  --n1-font-body: 'Barlow', 'DM Sans', system-ui, sans-serif;
+  --n1-font-mono: 'DM Mono', ui-monospace, monospace;
+
+  /* Geometry */
+  --n1-radius-xs: 3px;
+  --n1-radius-sm: 5px;
+  --n1-radius-md: 8px;
+  --n1-radius-lg: 12px;
+  --n1-radius-pill: 999px;
+  --n1-space-1: 4px;
+  --n1-space-2: 8px;
+  --n1-space-3: 12px;
+  --n1-space-4: 16px;
+  --n1-space-5: 24px;
+  --n1-space-6: 32px;
+  --n1-focus-ring: #9bb5a0;
+
+  /* Motion */
+  --n1-ease: cubic-bezier(.4, 0, .2, 1);
+  --n1-duration-fast: .18s;
+  --n1-duration-normal: .28s;
+}

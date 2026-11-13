@@ -1,0 +1,35 @@
+.n1-back-to-top {
+  position: fixed;
+  z-index: 90;
+  right: 25px;
+  bottom: 25px;
+  display: grid;
+  width: 44px;
+  height: 44px;
+  place-items: center;
+  padding: 0;
+  border: 1px solid #2b3230;
+  border-radius: 50%;
+  background: #141917;
+  color: #e6ebe7;
+  cursor: pointer;
+  transition: background 150ms ease, transform 150ms ease, border-color 150ms ease;
+}
+
+.n1-back-to-top:hover {
+  border-color: #3a4340;
+  background: #1d2421;
+  transform: translateY(-3px);
+}
+
+.n1-back-to-top-arrow {
+  display: block;
+  width: 20px;
+  height: 20px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .n1-back-to-top {
+    transition: none;
+  }
+}

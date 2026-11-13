@@ -7,33 +7,34 @@
    ========================================================= */
 
 :root {
-  font-family: 'DM Sans', sans-serif;
-  color: #f5f5f5;
-  background: #121212;
+  font-family: var(--n1-font-body);
+  color: var(--n1-text);
+  background: var(--n1-surface-0);
   font-synthesis: none;
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 
-  --bg: #121212;
-  --panel: #181818;
-  --panel-raised: #202020;
-  --panel-hover: #282828;
-  --border: #303030;
-  --text: #f5f5f5;
-  --muted: #a7a7a7;
-  --subtle: #737373;
-  --green: #1ed760;
-  --green-hover: #3be477;
+  /* Surface aliases — values live in shared/tokens.css. */
+  --bg: var(--n1-surface-0);
+  --panel: var(--n1-surface-1);
+  --panel-raised: var(--n1-surface-2);
+  --panel-hover: var(--n1-surface-3);
+  --border: var(--n1-border);
+  --text: var(--n1-text);
+  --muted: var(--n1-text-secondary);
+  --subtle: var(--n1-text-muted);
+  --green: var(--n1-accent-positive);
+  --green-hover: var(--n1-success);
 
-  --rarity-consumer: #b0b0b0;
-  --rarity-industrial: #8bb8e8;
-  --rarity-milspec: #4d8bdb;
-  --rarity-restricted: #9a67db;
-  --rarity-classified: #d86bd9;
-  --rarity-covert: #e55353;
-  --rarity-extraordinary: #e3b54f;
-  --rarity-contraband: #df8b43;
+  --rarity-consumer: var(--n1-rarity-consumer);
+  --rarity-industrial: var(--n1-rarity-industrial);
+  --rarity-milspec: var(--n1-rarity-milspec);
+  --rarity-restricted: var(--n1-rarity-restricted);
+  --rarity-classified: var(--n1-rarity-classified);
+  --rarity-covert: var(--n1-rarity-covert);
+  --rarity-extraordinary: var(--n1-rarity-extraordinary);
+  --rarity-contraband: var(--n1-rarity-contraband);
 }
 
 * {
@@ -1107,34 +1108,6 @@ select {
   font-weight: 700;
   letter-spacing: 1.2px;
   text-align: center;
-}
-
-/* =========================================================
-   BACK TO TOP
-   ========================================================= */
-
-.back-to-top {
-  position: fixed;
-  z-index: 90;
-  right: 25px;
-  bottom: 25px;
-  display: grid;
-  width: 43px;
-  height: 43px;
-  place-items: center;
-  color: #101010;
-  background: var(--green);
-  border: 0;
-  border-radius: 50%;
-  box-shadow: 0 5px 25px rgb(0 0 0 / 35%);
-  font-size: 22px;
-  cursor: pointer;
-  transition: background 150ms ease, transform 150ms ease;
-}
-
-.back-to-top:hover {
-  background: var(--green-hover);
-  transform: translateY(-3px);
 }
 
 /* =========================================================

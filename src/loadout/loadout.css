@@ -1,5 +1,6 @@
 /* n1ssan Loadout Builder — complete stylesheet */
-.lb-section{--lb-accent:#527fbd;--lb-bg:#101112;--lb-panel:#171819;--lb-panel-hover:#152238;--lb-border:#263a56;--lb-muted:#9aacc4;--lb-text:#f0f2f0;width:100%;min-width:0;color:var(--lb-text);font-family:inherit}
+/* Palette aliases — values live in shared/tokens.css. */
+.lb-section{--lb-accent:var(--n1-info-strong);--lb-bg:var(--n1-surface-0);--lb-panel:var(--n1-surface-1);--lb-panel-hover:#152238;--lb-border:#263a56;--lb-muted:var(--n1-text-secondary);--lb-text:var(--n1-text);width:100%;min-width:0;color:var(--lb-text);font-family:var(--n1-font-body)}
 .lb-section *,.lb-section *:before,.lb-section *:after{box-sizing:border-box}
 .lb-section button,.lb-section input{font:inherit}.lb-section button{-webkit-tap-highlight-color:transparent;cursor:pointer}
 .lb-heading{display:flex;align-items:center;justify-content:space-between;gap:20px;margin-bottom:24px}

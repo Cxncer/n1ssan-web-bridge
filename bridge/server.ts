@@ -17,7 +17,7 @@ import { AttachmentsSync } from './attachments-sync.ts'
 import { createEmptyEquipmentDocument, validateArmoryEquipmentDocument } from '../src/armory/equipment.ts'
 import { simulateLocalIntegration } from '../src/integration/simulator.ts'
 import skinCatalogueData from '../src/skins.json' with { type: 'json' }
-import knifeCatalogueData from '../src/obsidian/knife-skins.json' with { type: 'json' }
+import knifeCatalogueData from '../src/armory/ui/knife-skins.json' with { type: 'json' }
 import liveSchemaData from '../src/armory/n1ssan-cs2-schema.json' with { type: 'json' }
 import { LoadoutProfilesStore, LoadoutValidationError, type StoredLoadoutProfile } from './loadout-profiles-store.ts'
 import { buildEquipmentAssignments, type LoadoutCatalogueItem } from '../src/armory/loadout-adapter.ts'
@@ -29,6 +29,7 @@ import {
   type LoadoutSelectionSnapshot,
 } from '../src/armory/runtime-config.ts'
 import type { CatalogueSourceRecord } from '../src/armory/catalogue-identity.ts'
+import { buildDiagnostics, readLatestDllStatus } from './diagnostics.ts'
 
 const app = express()
 
@@ -1049,6 +1050,23 @@ app.post('/session/heartbeat', (req: Request, res: Response) => {
 app.get('/session/active', (_req: Request, res: Response) => {
   res.setHeader('Cache-Control', 'no-store')
   res.json({ active: hasActiveBrowserSession(), sessions: browserSessions.size })
+})
+
+// Consolidated diagnostics: DLL status record + Bridge state + loader outcome,
+// classified with the shared failure taxonomy (failure-taxonomy.md).
+app.get('/diagnostics', async (_req: Request, res: Response) => {
+  const status = readLatestDllStatus()
+  const document = buildDiagnostics({
+    dll: status?.record ?? null,
+    bridge: {
+      online: true,
+      runtimeMode: (await readRuntimeMode()) ?? 'unknown',
+      armoryRevision: armoryStore.read().revision,
+      itemCount: selectedSkins.length,
+    },
+  })
+  res.setHeader('Cache-Control', 'no-store')
+  res.json(document)
 })
 
 app.get('/health', async (_req: Request, res: Response) => {

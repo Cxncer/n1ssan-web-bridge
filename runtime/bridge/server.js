@@ -1,9 +1,10 @@
 // bridge/server.ts
 import express from "express";
 import { copyFile as copyFile5, readFile as readFile6, writeFile as writeFile5, rename as rename5, mkdir as mkdir4 } from "node:fs/promises";
+import { readdirSync as readdirSync2 } from "node:fs";
 import { randomUUID } from "node:crypto";
-import path4 from "node:path";
-import os from "node:os";
+import path5 from "node:path";
+import os2 from "node:os";
 
 // bridge/config-migration.ts
 import { copyFile, readFile, mkdir, rm, rmdir, access, readdir, stat } from "node:fs/promises";
@@ -626,6 +627,7 @@ var AttachmentsSync = class {
   options;
   lastAckedSeq = 0;
   running = false;
+  runningKills = false;
   constructor(options) {
     this.options = options;
   }
@@ -638,6 +640,59 @@ var AttachmentsSync = class {
       return await this.mergeOnce();
     } finally {
       this.running = false;
+    }
+  }
+  /**
+   * Merges the StatTrak counts the DLL read off the equipped weapons.
+   *
+   * The game keeps the live counter; the DLL hands it back per Armory instance
+   * and this is the only place that writes it into the profile, so reloading the
+   * same skin continues from the count it stopped at.
+   */
+  async pollKills() {
+    const path6 = this.options.killsPath;
+    if (!path6 || this.runningKills) return 0;
+    this.runningKills = true;
+    try {
+      let parsed;
+      try {
+        parsed = JSON.parse(await readFile4(path6, "utf8"));
+      } catch {
+        return 0;
+      }
+      if (!isRecord3(parsed) || !isRecord3(parsed.kills)) return 0;
+      const document = this.options.read();
+      const candidate = structuredClone(document);
+      const profile = candidate.profiles.find((item) => item.id === candidate.activeProfileId);
+      if (!profile) return 0;
+      const mergedInstanceIds = [];
+      for (const [instanceId, value] of Object.entries(parsed.kills)) {
+        if (typeof value !== "number" || !Number.isSafeInteger(value) || value <= 0) continue;
+        const instance = profile.items.find((item) => item.id === instanceId);
+        if (!instance) continue;
+        const saved = instance.customization?.statTrak?.kills;
+        const current = typeof saved === "number" && Number.isSafeInteger(saved) ? saved : 0;
+        if (value <= current) continue;
+        instance.customization = {
+          ...instance.customization,
+          statTrak: { enabled: true, kills: value }
+        };
+        instance.updatedAt = (/* @__PURE__ */ new Date()).toISOString();
+        mergedInstanceIds.push(instanceId);
+      }
+      if (mergedInstanceIds.length === 0) return 0;
+      try {
+        await this.options.replace(document.revision, candidate);
+      } catch (error) {
+        console.error("StatTrak merge deferred:", error instanceof Error ? error.message : error);
+        return 0;
+      }
+      if (this.options.onMerged) {
+        await this.options.onMerged(mergedInstanceIds);
+      }
+      return mergedInstanceIds.length;
+    } finally {
+      this.runningKills = false;
     }
   }
   async mergeOnce() {
@@ -28942,7 +28997,7 @@ var skins_default = [
   }
 ];
 
-// src/obsidian/knife-skins.json
+// src/armory/ui/knife-skins.json
 var knife_skins_default = [
   {
     id: "skin-95831ce7c492",
@@ -38374,6 +38429,7 @@ function projectArmoryInventory(armory, catalogue, schemaItems) {
       float: clampFloat(customization?.float ?? entry.definition.minFloat, 1e-3),
       seed: typeof customization?.seed === "number" ? customization.seed : 0,
       statTrak,
+      ...statTrak ? { statTrakKills: Math.max(0, Math.trunc(customization?.statTrak?.kills ?? 0)) } : {},
       quality: statTrak ? 9 : definitionIndex >= 500 ? 3 : 4,
       rarity: rarityNumber(entry.definition.rarity),
       customName: customization?.customName?.trim() || null,
@@ -38499,9 +38555,224 @@ function projectLoadoutRuntime(selection, catalogue, schema, loadoutProfileId = 
   };
 }
 
+// bridge/diagnostics.ts
+import { readFileSync, readdirSync, statSync } from "node:fs";
+import path4 from "node:path";
+import os from "node:os";
+var STATUS_PROTOCOL = 2;
+var HEARTBEAT_TIMEOUT_MS = 3e4;
+var STATUS_FIELD_COUNT_V1 = 7;
+var STATUS_FIELD_COUNT_V2 = 8;
+function parseStatusRecord(line) {
+  const text = line.trim();
+  if (!text) return null;
+  const fields = text.split("|");
+  if (fields[0] !== "N1SSAN_STATUS") return null;
+  if (fields.length !== STATUS_FIELD_COUNT_V1 && fields.length !== STATUS_FIELD_COUNT_V2) return null;
+  const protocol = Number(fields[1]);
+  if (!Number.isInteger(protocol) || protocol < 1 || protocol > STATUS_PROTOCOL) return null;
+  const processId = Number(fields[3]);
+  if (!Number.isInteger(processId) || processId <= 0) return null;
+  if (!fields[6].startsWith("reason=")) return null;
+  const reason = fields[6].slice("reason=".length);
+  if (!reason) return null;
+  let code = "";
+  if (fields.length === STATUS_FIELD_COUNT_V2 && fields[7].startsWith("code="))
+    code = fields[7].slice("code=".length);
+  return {
+    protocol,
+    timestamp: fields[2],
+    processId,
+    buildId: fields[4],
+    state: fields[5].trim(),
+    reason,
+    code
+  };
+}
+var DLL_FAILURE_ACTIONS = {
+  E_MINHOOK_LOAD: "Check that MinHook.dll sits next to n1ssan-dll.dll and re-inject.",
+  E_CLIENT_MODULE: "Wait for Counter-Strike 2 to finish loading, then re-inject.",
+  E_BRIDGE_DIRECTORY: "Start the Bridge from the launcher so the DLL can find its runtime directory.",
+  E_FUNCTION_RESOLUTION: "The build predates this CS2 update. Update signatures before injecting.",
+  E_INVENTORY_RUNTIME: "Close CS2, restart it with -allow_third_party_software, then re-inject.",
+  E_FSN_HOOK: "Another module already hooks FrameStageNotify. Close overlay software and re-inject.",
+  E_MODE_WORKER: "Restart CS2; the runtime-mode worker thread could not be created."
+};
+function resolveAction(code) {
+  return DLL_FAILURE_ACTIONS[code] ?? "Review the DLL session log in %LOCALAPPDATA%\\n1ssan\\logs.";
+}
+function classifyDllStatus(record, nowMs = Date.now()) {
+  if (!record) {
+    return {
+      condition: "UNKNOWN",
+      code: "W_STATUS_MISSING",
+      message: "No DLL status record yet",
+      action: "Start Counter-Strike 2 and apply from the launcher so the DLL can publish a status record.",
+      updatedAt: null
+    };
+  }
+  const reported = Date.parse(record.timestamp);
+  const age = Number.isFinite(reported) ? nowMs - reported : Number.POSITIVE_INFINITY;
+  const updatedAt = Number.isFinite(reported) ? new Date(reported).toISOString() : null;
+  if (!Number.isFinite(age)) {
+    return {
+      condition: "UNKNOWN",
+      code: "E_STATUS_INVALID",
+      message: `Unreadable status timestamp \xB7 ${record.reason}`,
+      action: "The status record is corrupt; re-inject the DLL to rewrite it.",
+      updatedAt
+    };
+  }
+  if (record.state === "FAILED") {
+    return {
+      condition: "FAILED",
+      code: record.code || "E_DLL_INIT_FAILED",
+      message: `DLL initialization failed \xB7 ${record.reason}`,
+      action: record.code ? resolveAction(record.code) : resolveAction(""),
+      updatedAt
+    };
+  }
+  if (age > HEARTBEAT_TIMEOUT_MS) {
+    return {
+      condition: "STALE",
+      code: "W_STATUS_STALE",
+      message: `DLL status stale (${Math.max(0, Math.round(age / 1e3))}s since the last heartbeat)`,
+      action: "CS2 may have closed or the DLL unloaded. Confirm the game is running, then re-inject.",
+      updatedAt
+    };
+  }
+  switch (record.state) {
+    case "READY":
+      return {
+        condition: "READY",
+        code: "OK",
+        message: `DLL ready \xB7 ${record.reason}`,
+        action: "No action required.",
+        updatedAt
+      };
+    case "DEGRADED":
+      return {
+        condition: "DEGRADED",
+        code: record.code || "W_OPTIONAL_FEATURE_UNAVAILABLE",
+        message: `DLL ready with a missing optional feature \xB7 ${record.reason}`,
+        action: "Skins and attachments still apply; glove schema support needs a signature refresh.",
+        updatedAt
+      };
+    case "CHECKS_PASSED":
+      return {
+        condition: "READY",
+        code: record.code || "OK",
+        message: "Initialization checks passed \xB7 awaiting the first heartbeat",
+        action: "No action required.",
+        updatedAt
+      };
+    case "INITIALIZING":
+      return {
+        condition: "UNKNOWN",
+        code: "OK",
+        message: "DLL initializing",
+        action: "No action required.",
+        updatedAt
+      };
+    default:
+      return {
+        condition: "UNKNOWN",
+        code: "E_STATUS_INVALID",
+        message: `Unknown DLL state "${record.state}"`,
+        action: "The DLL and this Bridge disagree about the status contract; update both components.",
+        updatedAt
+      };
+  }
+}
+function statusDirectories(env = process.env, tempDirectory = os.tmpdir(), homeDirectory = os.homedir()) {
+  const local = env.LOCALAPPDATA ?? path4.join(homeDirectory, "AppData", "Local");
+  return [
+    path4.join(local, "n1ssan", "status"),
+    path4.join(tempDirectory, "n1ssan", "status")
+  ];
+}
+function readLatestDllStatus(directories = statusDirectories()) {
+  for (const directory of directories) {
+    let files;
+    try {
+      files = readdirSync(directory).filter((name) => /^cs2-\d+\.status$/.test(name));
+    } catch {
+      continue;
+    }
+    let newest = null;
+    for (const name of files) {
+      const file = path4.join(directory, name);
+      try {
+        const mtime = statSync(file).mtimeMs;
+        if (!newest || mtime > newest.mtime) newest = { file, mtime };
+      } catch {
+      }
+    }
+    if (!newest) continue;
+    try {
+      const record = parseStatusRecord(readFileSync(newest.file, "utf8"));
+      if (record) return { record, file: newest.file };
+    } catch {
+    }
+  }
+  return null;
+}
+var SEVERITY = {
+  READY: 0,
+  UNKNOWN: 1,
+  STALE: 2,
+  DEGRADED: 3,
+  FAILED: 4
+};
+function worstCondition(conditions) {
+  return conditions.reduce(
+    (worst, next) => SEVERITY[next] > SEVERITY[worst] ? next : worst,
+    "READY"
+  );
+}
+function buildDiagnostics(input) {
+  const nowMs = input.nowMs ?? Date.now();
+  const dll = classifyDllStatus(input.dll, nowMs);
+  const sources = [
+    {
+      id: "dll",
+      label: "Native runtime",
+      condition: dll.condition,
+      code: dll.code,
+      message: dll.message,
+      action: dll.action,
+      updatedAt: dll.updatedAt
+    },
+    {
+      id: "bridge",
+      label: "Bridge connection",
+      condition: input.bridge.online ? "READY" : "FAILED",
+      code: input.bridge.online ? "OK" : "E_BRIDGE_UNAVAILABLE",
+      message: input.bridge.online ? `Bridge online \xB7 ${input.bridge.runtimeMode} mode \xB7 revision ${input.bridge.armoryRevision}` : "Bridge API is not reachable",
+      action: input.bridge.online ? "No action required." : "Start the launcher (or the Bridge) before opening the Armory.",
+      updatedAt: new Date(nowMs).toISOString()
+    },
+    {
+      id: "injector",
+      label: "Loader result",
+      condition: input.injectorOutcome ? input.injectorOutcome.code === "OK" ? "READY" : "FAILED" : "UNKNOWN",
+      code: input.injectorOutcome?.code ?? "W_STATUS_MISSING",
+      message: input.injectorOutcome?.message ?? "No injector result recorded for this session",
+      action: input.injectorOutcome?.code === "OK" ? "No action required." : "Injection is reported by the launcher; re-run Apply to retry.",
+      updatedAt: input.injectorOutcome?.updatedAt ?? null
+    }
+  ];
+  return {
+    protocol: STATUS_PROTOCOL,
+    generatedAt: new Date(nowMs).toISOString(),
+    condition: worstCondition(sources.map((source) => source.condition)),
+    sources
+  };
+}
+
 // bridge/server.ts
 var app = express();
-var BROWSER_SESSION_TIMEOUT_MS = 3e4;
+var BROWSER_SESSION_TIMEOUT_MS = 15e4;
 var browserSessions = /* @__PURE__ */ new Map();
 var browserSessionGraceUntil = 0;
 var hasSeenBrowserSession = false;
@@ -38520,26 +38791,30 @@ function publishArmoryEvent(event, payload) {
     }
   }
 }
+for (const stream of [process.stdout, process.stderr]) {
+  stream?.on("error", () => {
+  });
+}
 var PORT = Number(process.env.N1SSAN_PORT ?? 3210);
 var HOST = "127.0.0.1";
 var MAX_ITEMS = 100;
-var DATA_DIRECTORY = process.env.NODE_ENV === "test" && process.env.N1SSAN_TEST_CONFIG_DIR ? path4.resolve(process.env.N1SSAN_TEST_CONFIG_DIR) : path4.join(
-  process.env.LOCALAPPDATA ?? path4.join(os.homedir(), "AppData", "Local"),
+var DATA_DIRECTORY = process.env.NODE_ENV === "test" && process.env.N1SSAN_TEST_CONFIG_DIR ? path5.resolve(process.env.N1SSAN_TEST_CONFIG_DIR) : path5.join(
+  process.env.LOCALAPPDATA ?? path5.join(os2.homedir(), "AppData", "Local"),
   "n1ssan",
   "configs"
 );
-var DATA_FILE = path4.join(DATA_DIRECTORY, "n1ssan-data.json");
-var LEGACY_STATE_FILE = path4.join(DATA_DIRECTORY, "n1ssan-legacy-loadout.json");
-var ARMORY_FILE = path4.join(DATA_DIRECTORY, "armory-data.json");
+var DATA_FILE = path5.join(DATA_DIRECTORY, "n1ssan-data.json");
+var LEGACY_STATE_FILE = path5.join(DATA_DIRECTORY, "n1ssan-legacy-loadout.json");
+var ARMORY_FILE = path5.join(DATA_DIRECTORY, "armory-data.json");
 var armoryStore = new ArmoryStore(ARMORY_FILE);
-var EQUIPMENT_FILE = path4.join(DATA_DIRECTORY, "armory-equipment.json");
+var EQUIPMENT_FILE = path5.join(DATA_DIRECTORY, "armory-equipment.json");
 var equipmentStore = new ArmoryEquipmentStore(EQUIPMENT_FILE);
-var ARMORY_INVENTORY_FILE = path4.join(DATA_DIRECTORY, "armory-inventory.json");
-var MODE_FILE = path4.join(DATA_DIRECTORY, "runtime-mode.json");
-var LOADOUT_FILE = path4.join(DATA_DIRECTORY, "loadout-profiles.json");
+var ARMORY_INVENTORY_FILE = path5.join(DATA_DIRECTORY, "armory-inventory.json");
+var MODE_FILE = path5.join(DATA_DIRECTORY, "runtime-mode.json");
+var LOADOUT_FILE = path5.join(DATA_DIRECTORY, "loadout-profiles.json");
 var loadoutStore = new LoadoutProfilesStore(LOADOUT_FILE);
-var ATTACHMENTS_FILE = path4.join(DATA_DIRECTORY, "armory-detected-attachments.json");
-var ATTACHMENTS_ACK_FILE = path4.join(DATA_DIRECTORY, "armory-attachments-ack.json");
+var ATTACHMENTS_FILE = path5.join(DATA_DIRECTORY, "armory-detected-attachments.json");
+var ATTACHMENTS_ACK_FILE = path5.join(DATA_DIRECTORY, "armory-attachments-ack.json");
 var runtimeCatalogue = buildLoadoutRuntimeCatalogue([
   ...skins_default,
   ...knife_skins_default
@@ -38714,9 +38989,14 @@ var selectedSkins = [];
 var latestLoadout = null;
 var nextLoadoutId = 1;
 var saveQueue = Promise.resolve();
+var STATTRAK_KILLS_FILE = ATTACHMENTS_FILE.replace(
+  /armory-detected-attachments\.json$/,
+  "armory-stattrak-kills.json"
+);
 var attachmentsSync = new AttachmentsSync({
   detectionPath: ATTACHMENTS_FILE,
   ackPath: ATTACHMENTS_ACK_FILE,
+  killsPath: STATTRAK_KILLS_FILE,
   read: () => armoryStore.read(),
   replace: (expectedRevision, candidate) => armoryStore.replace(expectedRevision, candidate),
   onMerged: async () => {
@@ -38746,8 +39026,34 @@ function hasActiveBrowserSession() {
   pruneBrowserSessions();
   return browserSessions.size > 0 || Date.now() < browserSessionGraceUntil;
 }
-function stopBridgeAfterBrowserSession() {
+var STATUS_DIRECTORY = path5.join(
+  process.env.LOCALAPPDATA ?? path5.join(os2.homedir(), "AppData", "Local"),
+  "n1ssan",
+  "status"
+);
+function hasLiveDllSession() {
+  let entries;
+  try {
+    entries = readdirSync2(STATUS_DIRECTORY);
+  } catch {
+    return false;
+  }
+  for (const entry of entries) {
+    const match = /^cs2-(\d+)\.status$/.exec(entry);
+    if (!match) continue;
+    const pid = Number(match[1]);
+    if (!Number.isInteger(pid) || pid <= 0) continue;
+    try {
+      process.kill(pid, 0);
+      return true;
+    } catch {
+    }
+  }
+  return false;
+}
+async function stopBridgeAfterBrowserSession() {
   if (bridgeShutdownStarted || !hasSeenBrowserSession || hasActiveBrowserSession()) return;
+  if (hasLiveDllSession()) return;
   bridgeShutdownStarted = true;
   if (browserSessionSweep) clearInterval(browserSessionSweep);
   if (attachmentSyncTimer) clearInterval(attachmentSyncTimer);
@@ -39155,6 +39461,20 @@ app.get("/session/active", (_req, res) => {
   res.setHeader("Cache-Control", "no-store");
   res.json({ active: hasActiveBrowserSession(), sessions: browserSessions.size });
 });
+app.get("/diagnostics", async (_req, res) => {
+  const status = readLatestDllStatus();
+  const document = buildDiagnostics({
+    dll: status?.record ?? null,
+    bridge: {
+      online: true,
+      runtimeMode: await readRuntimeMode() ?? "unknown",
+      armoryRevision: armoryStore.read().revision,
+      itemCount: selectedSkins.length
+    }
+  });
+  res.setHeader("Cache-Control", "no-store");
+  res.json(document);
+});
 app.get("/health", async (_req, res) => {
   res.json({
     runtimeMode: await readRuntimeMode(),
@@ -39260,8 +39580,8 @@ app.post("/skins", async (req, res) => {
   }
 });
 if (process.env.N1SSAN_WEB_DIST) {
-  const webDistDirectory = path4.resolve(process.env.N1SSAN_WEB_DIST);
-  const webIndexFile = path4.join(webDistDirectory, "index.html");
+  const webDistDirectory = path5.resolve(process.env.N1SSAN_WEB_DIST);
+  const webIndexFile = path5.join(webDistDirectory, "index.html");
   app.get("/loadout", (_req, res, next) => {
     res.sendFile(webIndexFile, (err) => {
       if (err) next(err);
@@ -39309,11 +39629,14 @@ async function start() {
     console.log(`Persistent loadout data file: ${DATA_FILE}`);
     console.log(`Persistent Armory data file: ${ARMORY_FILE}`);
   });
-  browserSessionSweep = setInterval(stopBridgeAfterBrowserSession, 2e3);
+  browserSessionSweep = setInterval(() => {
+    void stopBridgeAfterBrowserSession();
+  }, 2e3);
   attachmentSyncTimer = setInterval(syncObservedAttachments, 2e3);
 }
 async function syncObservedAttachments() {
   try {
+    await attachmentsSync.pollKills();
     const result = await attachmentsSync.poll();
     if (result.merged > 0) {
       const document = armoryStore.read();

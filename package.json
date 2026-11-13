@@ -9,7 +9,7 @@
     "build": "tsc -b && vite build",
     "lint": "eslint .",
     "preview": "vite preview",
-    "test": "node --import tsx --test bridge/server.test.ts bridge/armory-contract.test.ts bridge/armory.test.ts bridge/armory-store.test.ts bridge/armory-bridge-client.test.ts bridge/integration-contract.test.ts bridge/armory-equipment.test.ts bridge/armory-equipment-client.test.ts bridge/armory-loadout-adapter.test.ts bridge/integration-simulator.test.ts bridge/runtime-config.test.ts bridge/config-migration.test.ts bridge/armory-inventory.test.ts bridge/attachments-sync.test.ts",
+    "test": "node --import tsx --test bridge/server.test.ts bridge/armory-contract.test.ts bridge/armory.test.ts bridge/armory-store.test.ts bridge/armory-bridge-client.test.ts bridge/integration-contract.test.ts bridge/armory-equipment.test.ts bridge/armory-equipment-client.test.ts bridge/armory-loadout-adapter.test.ts bridge/integration-simulator.test.ts bridge/runtime-config.test.ts bridge/config-migration.test.ts bridge/armory-inventory.test.ts bridge/attachments-sync.test.ts bridge/diagnostics.test.ts",
     "build:bridge": "node bridge/build.mjs",
     "build:production": "npm run build && npm run build:bridge && npm install --omit=dev --prefix ./runtime"
   },
