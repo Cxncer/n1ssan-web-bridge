@@ -627,8 +627,8 @@ export default function ObsidianApp() {
     setRecentCatalogueSearches(rememberSearch(catalogueSearchKey, value))
   }
 
-  if (booting) return <div className="ob-boot-screen"><span className="ob-mark">n.</span><strong>CONNECTING TO ARMORY</strong><small>Establishing a local Bridge session…</small></div>
-  if (armoryError) return <div className="ob-boot-screen ob-boot-error"><span className="ob-mark">n.</span><strong>ARMORY CONNECTION INTERRUPTED</strong><small>{armoryError}</small><button className="ob-button shimmer-button" onClick={() => window.location.reload()}>Retry connection</button></div>
+  if (booting) return <div className="ob-boot-screen"><AppVersion /><span className="ob-mark">n.</span><strong>CONNECTING TO ARMORY</strong><small>Establishing a local Bridge session…</small></div>
+  if (armoryError) return <div className="ob-boot-screen ob-boot-error"><AppVersion /><span className="ob-mark">n.</span><strong>ARMORY CONNECTION INTERRUPTED</strong><small>{armoryError}</small><button className="ob-button shimmer-button" onClick={() => window.location.reload()}>Retry connection</button></div>
 
   return <div className="obsidian-shell obsidian-shell-redesign">
     <AppVersion />
