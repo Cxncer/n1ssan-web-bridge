@@ -8,6 +8,7 @@ import LineSidebar from '../shared/components/LineSidebar'
 import { ShimmerButton } from '../shared/components/ShimmerButton'
 import ObsidianDropdown from '../shared/components/ObsidianDropdown'
 import { BackToTop } from '../shared/components/BackToTop'
+import { AppVersion } from '../shared/components/AppVersion'
 import { SearchSuggestions, readRecentSearches, rememberSearch } from '../shared/components/SearchSuggestions'
 
 export type Skin = {
@@ -514,6 +515,7 @@ export default function LoadoutApp({ skins }: LoadoutBuilderProps) {
 
   const activeCount = team === 'T' ? equippedCountT : equippedCountCT
   return <div className="obsidian-shell obsidian-shell-redesign loadout-redesign">
+    <AppVersion />
     <aside className="ob-line-sidebar" aria-label="Loadout navigation">
       <a className="ob-line-brand" href="#home" onClick={event => { event.preventDefault(); setPage('home'); setActiveNavIndex(0) }} aria-label="n1ssan Home"><img src={n1ssanLogo} alt="n1ssan" /></a>
       <LineSidebar key={activeNavIndex} className="ob-line-nav" items={['Home','Loadout','Diagnostics']} accentColor="#3677ef" textColor="#8b909e" markerColor="#272b36" showIndex showMarker proximityRadius={100} maxShift={30} falloff="smooth" markerLength={60} markerGap={0} tickScale={0.5} scaleTick itemGap={20} fontSize={1.1} smoothing={100} defaultActive={activeNavIndex} onItemClick={index => { setActiveNavIndex(index); setPage(index === 0 ? 'home' : index === 1 ? 'loadout' : 'diagnostics') }} />

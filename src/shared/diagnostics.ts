@@ -44,3 +44,20 @@ export async function fetchDiagnostics(fetcher: typeof fetch = fetch): Promise<D
 export function conditionTone(condition: DiagnosticCondition): string {
   return condition.toLowerCase()
 }
+
+// Armory API failures use the shared taxonomy too (failure-taxonomy.md). A code
+// from the Bridge wins; otherwise the HTTP status decides the classification.
+export type ArmoryFailureCode =
+  | 'E_ARMORY_UNAVAILABLE'
+  | 'E_ARMORY_CONFLICT'
+  | 'E_ARMORY_VALIDATION'
+  | 'E_ARMORY_REJECTED'
+
+export function armoryFailureCode(status: number, reported: string | null): string {
+  if (reported) return reported
+  if (status === 409) return 'E_ARMORY_CONFLICT'
+  if (status === 400 || status === 422) return 'E_ARMORY_VALIDATION'
+  if (status === 404) return 'E_ARMORY_REJECTED'
+  if (status === 0 || status >= 500) return 'E_ARMORY_UNAVAILABLE'
+  return 'E_ARMORY_REJECTED'
+}

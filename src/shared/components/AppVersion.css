@@ -1,0 +1,25 @@
+.n1-version-badge {
+  position: fixed;
+  top: 14px;
+  right: 20px;
+  z-index: 14;
+  padding: 5px 10px;
+  border: 1px solid var(--n1-border, #303834);
+  border-radius: var(--n1-radius-pill, 999px);
+  background: color-mix(in srgb, var(--n1-surface-0, #101213) 82%, transparent);
+  color: var(--n1-text-muted, #89918c);
+  font: 10px/1.2 var(--n1-font-mono, 'DM Mono', monospace);
+  letter-spacing: .08em;
+  white-space: nowrap;
+  pointer-events: none;
+  backdrop-filter: blur(8px);
+}
+
+@media (max-width: 680px) {
+  .n1-version-badge {
+    top: 10px;
+    right: 12px;
+    font-size: 9px;
+    padding: 4px 8px;
+  }
+}

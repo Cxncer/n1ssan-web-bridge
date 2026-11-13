@@ -2,6 +2,7 @@ import {
   validateArmoryDocument,
   type ArmoryDocument,
 } from './contracts.ts'
+import { armoryFailureCode } from '../shared/diagnostics.ts'
 
 export const ARMORY_BRIDGE_URL = 'http://127.0.0.1:3210'
 
@@ -42,7 +43,9 @@ function responseError(payload: unknown, status: number): ArmoryBridgeError {
   const message = typeof error.message === 'string'
     ? error.message
     : `Armory request failed (HTTP ${status}).`
-  const code = typeof error.code === 'string' ? error.code : null
+  const reportedCode = typeof error.code === 'string' ? error.code : null
+  // Every Armory failure carries a shared taxonomy code, not just an HTTP status.
+  const code = armoryFailureCode(status, reportedCode)
   const details = Array.isArray(error.details)
     ? error.details.filter((detail): detail is string => typeof detail === 'string')
     : []

@@ -1,12 +1,17 @@
 import assert from 'node:assert/strict'
+import { mkdtempSync, writeFileSync, rmSync } from 'node:fs'
+import { tmpdir } from 'node:os'
+import path from 'node:path'
 import { test } from 'node:test'
 import {
   buildDiagnostics,
   classifyDllStatus,
   parseStatusRecord,
+  readInjectorOutcome,
   statusDirectories,
   worstCondition,
 } from './diagnostics.ts'
+import { armoryFailureCode } from '../src/shared/diagnostics.ts'
 
 const NOW = Date.parse('2026-11-13T10:00:00Z')
 const stamp = (offsetMs: number) => new Date(NOW + offsetMs).toISOString().replace(/\.\d{3}Z$/, 'Z')
@@ -95,6 +100,56 @@ test('a dead Bridge is a failure with a Bridge code', () => {
 
   assert.equal(document.condition, 'FAILED')
   assert.equal(document.sources.find(source => source.id === 'bridge')?.code, 'E_BRIDGE_UNAVAILABLE')
+})
+
+test('the injector outcome file is classified by the Bridge', () => {
+  const directory = mkdtempSync(path.join(tmpdir(), 'n1ssan-injector-'))
+
+  try {
+    writeFileSync(
+      path.join(directory, 'injector.json'),
+      JSON.stringify({
+        code: 'E_MODULE_REJECTED',
+        ok: false,
+        pid: 4242,
+        message: 'CS2 unloaded the module',
+        atUtc: '2026-11-13T10:00:00Z',
+      }),
+    )
+
+    const outcome = readInjectorOutcome([directory])
+    assert.equal(outcome?.code, 'E_MODULE_REJECTED')
+    assert.equal(outcome?.message, 'CS2 unloaded the module')
+    assert.equal(outcome?.updatedAt, '2026-11-13T10:00:00Z')
+
+    const document = buildDiagnostics({
+      dll: null,
+      bridge: { online: true, runtimeMode: 'armory', armoryRevision: 1, itemCount: 0 },
+      injectorOutcome: outcome,
+      nowMs: NOW,
+    })
+
+    const injector = document.sources.find(source => source.id === 'injector')
+    assert.equal(injector?.condition, 'FAILED')
+    assert.equal(injector?.code, 'E_MODULE_REJECTED')
+  }
+  finally {
+    rmSync(directory, { recursive: true, force: true })
+  }
+})
+
+test('a missing injector outcome stays unknown', () => {
+  assert.equal(readInjectorOutcome([path.join(tmpdir(), 'n1ssan-nonexistent-status')]), null)
+})
+
+test('Armory HTTP failures carry the shared taxonomy code', () => {
+  assert.equal(armoryFailureCode(409, null), 'E_ARMORY_CONFLICT')
+  assert.equal(armoryFailureCode(400, null), 'E_ARMORY_VALIDATION')
+  assert.equal(armoryFailureCode(422, null), 'E_ARMORY_VALIDATION')
+  assert.equal(armoryFailureCode(404, null), 'E_ARMORY_REJECTED')
+  assert.equal(armoryFailureCode(0, null), 'E_ARMORY_UNAVAILABLE')
+  assert.equal(armoryFailureCode(503, null), 'E_ARMORY_UNAVAILABLE')
+  assert.equal(armoryFailureCode(409, 'E_CUSTOM'), 'E_CUSTOM')
 })
 
 test('status directories mirror the DLL and launcher lookup order', () => {

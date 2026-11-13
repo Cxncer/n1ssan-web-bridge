@@ -205,6 +205,38 @@ export function statusDirectories(
   ]
 }
 
+// The injector writes its outcome next to the DLL status record so the Bridge can
+// classify the loader without parsing console output.
+export type InjectorOutcome = { code: string; message: string; updatedAt: string | null }
+
+export function readInjectorOutcome(
+  directories: string[] = statusDirectories(),
+): InjectorOutcome | null {
+  for (const directory of directories) {
+    let raw: string
+    try {
+      raw = readFileSync(path.join(directory, 'injector.json'), 'utf8')
+    } catch {
+      continue
+    }
+
+    try {
+      const parsed = JSON.parse(raw) as Record<string, unknown>
+      const code = typeof parsed.code === 'string' ? parsed.code : null
+      if (!code) continue
+      return {
+        code,
+        message: typeof parsed.message === 'string' ? parsed.message : code,
+        updatedAt: typeof parsed.atUtc === 'string' ? parsed.atUtc : null,
+      }
+    } catch {
+      continue
+    }
+  }
+
+  return null
+}
+
 export function readLatestDllStatus(
   directories: string[] = statusDirectories(),
 ): { record: DllStatusRecord; file: string } | null {

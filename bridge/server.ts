@@ -29,7 +29,7 @@ import {
   type LoadoutSelectionSnapshot,
 } from '../src/armory/runtime-config.ts'
 import type { CatalogueSourceRecord } from '../src/armory/catalogue-identity.ts'
-import { buildDiagnostics, readLatestDllStatus } from './diagnostics.ts'
+import { buildDiagnostics, readInjectorOutcome, readLatestDllStatus } from './diagnostics.ts'
 
 const app = express()
 
@@ -1058,6 +1058,7 @@ app.get('/diagnostics', async (_req: Request, res: Response) => {
   const status = readLatestDllStatus()
   const document = buildDiagnostics({
     dll: status?.record ?? null,
+    injectorOutcome: readInjectorOutcome(),
     bridge: {
       online: true,
       runtimeMode: (await readRuntimeMode()) ?? 'unknown',

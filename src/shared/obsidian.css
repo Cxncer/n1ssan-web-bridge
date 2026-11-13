@@ -189,6 +189,7 @@ body,.obsidian-shell{color:#f2f4f2}
 .diagnostic-summary strong{font:600 13px 'Barlow',sans-serif;letter-spacing:.6px;color:var(--n1-text)}
 .diagnostic-summary small{margin-left:auto;font:9px 'DM Mono',monospace;color:var(--n1-text-muted)}
 .diagnostic-list .diagnostic-action{color:var(--n1-text-faint);line-height:1.5}
+.diagnostic-refresh{padding:6px 12px;font-size:10px;box-shadow:none}
 .diagnostic-state.ready{background:var(--n1-condition-ready);box-shadow:0 0 10px color-mix(in srgb,var(--n1-condition-ready) 45%,transparent)}
 .diagnostic-state.degraded{background:var(--n1-condition-degraded);box-shadow:0 0 10px color-mix(in srgb,var(--n1-condition-degraded) 45%,transparent)}
 .diagnostic-state.stale{background:var(--n1-condition-stale);box-shadow:0 0 10px color-mix(in srgb,var(--n1-condition-stale) 45%,transparent)}

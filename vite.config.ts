@@ -1,5 +1,10 @@
+import { readFileSync } from 'node:fs'
 import react from '@vitejs/plugin-react'
 import { defineConfig, type Plugin } from 'vite'
+
+// The release version lives in the repository root VERSION file and is shared
+// by the build script, the release manifest, and the UI badge.
+const appVersion = readFileSync(new URL('../../VERSION', import.meta.url), 'utf8').trim()
 
 function browserSessionLifecycle(): Plugin {
   return {
@@ -46,6 +51,9 @@ function browserSessionLifecycle(): Plugin {
 // Keep the existing application and Obsidian as independent HTML entry points.
 export default defineConfig({
   plugins: [react(), browserSessionLifecycle()],
+  define: {
+    __N1SSAN_VERSION__: JSON.stringify(appVersion),
+  },
   build: {
     rollupOptions: {
       input: {

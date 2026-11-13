@@ -38691,6 +38691,29 @@ function statusDirectories(env = process.env, tempDirectory = os.tmpdir(), homeD
     path4.join(tempDirectory, "n1ssan", "status")
   ];
 }
+function readInjectorOutcome(directories = statusDirectories()) {
+  for (const directory of directories) {
+    let raw;
+    try {
+      raw = readFileSync(path4.join(directory, "injector.json"), "utf8");
+    } catch {
+      continue;
+    }
+    try {
+      const parsed = JSON.parse(raw);
+      const code = typeof parsed.code === "string" ? parsed.code : null;
+      if (!code) continue;
+      return {
+        code,
+        message: typeof parsed.message === "string" ? parsed.message : code,
+        updatedAt: typeof parsed.atUtc === "string" ? parsed.atUtc : null
+      };
+    } catch {
+      continue;
+    }
+  }
+  return null;
+}
 function readLatestDllStatus(directories = statusDirectories()) {
   for (const directory of directories) {
     let files;
@@ -39465,6 +39488,7 @@ app.get("/diagnostics", async (_req, res) => {
   const status = readLatestDllStatus();
   const document = buildDiagnostics({
     dll: status?.record ?? null,
+    injectorOutcome: readInjectorOutcome(),
     bridge: {
       online: true,
       runtimeMode: await readRuntimeMode() ?? "unknown",
